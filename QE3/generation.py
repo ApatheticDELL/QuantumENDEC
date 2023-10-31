@@ -210,11 +210,3 @@ def SendDiscord(InputHeader, InputText, InputConfig):
         webhook.execute()
     else:
         print("Discord webhook not configured.")
-    
-    #WXV24 special: EASOC webhook
-    webhook = DiscordWebhook(url="https://discord.com/api/webhooks/1091545324306317422/6sjVSPa1oetqBjEac_p2WpH98aSVp5glYo_XWky_MFE577oGMV7T20WACaltfdypU80I", rate_limit_retry=True, content=GeneratedHeader)
-    embed = DiscordEmbed(title="EMEGRENCY ALERT // ALERTE D'URGENCE", description=InputText, color=Wcolor,)
-    embed.set_author(name=Wauthorname, url=Wauthorurl, icon_url=Wiconurl)
-    embed.set_footer(text="QuantumENDEC 3: The Rewrite")
-    webhook.add_embed(embed)
-    webhook.execute()
