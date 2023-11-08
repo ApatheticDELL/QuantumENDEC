@@ -1,0 +1,7 @@
+EASGen
+EAS2Text
+discord_webhook
+pyttsx3
+sounddevice
+numpy
+scipy
