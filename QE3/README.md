@@ -4,14 +4,17 @@ Version 3: The clean up
 
 ### Credits
 Developed by...
-
+```
 Dell ... ApatheticDELL
 Aaron ... fire-tech5000
 BunnyTub ... gadielisawesome
+```
 
 Assisted by...
+```
 AC ... AC5230
 ChatGPT ... chat.openai.com
+```
 
 ### Description
 QuantumENDEC is a Canadian CAP Emergency Alerting Software. Its primary goal is to encode Canadian Emergency Alerts into S.A.M.E alerts!
