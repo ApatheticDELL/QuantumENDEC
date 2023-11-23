@@ -10,6 +10,7 @@ def ConfigFilters(InputXML, ConfigDt):
         Final = ConfigDt[re.search(r'<status>\s*(.*?)\s*</status>', InputXML, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)]
         Final = ConfigDt[re.search(r'<severity>\s*(.*?)\s*</severity>', InputXML, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)]
         Final = ConfigDt[re.search(r'<urgency>\s*(.*?)\s*</urgency>', InputXML, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)]
+        Final = ConfigDt[re.search(r'<msgType>\s*(.*?)\s*</msgType>', InputXML, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)] #new
         
     if len(ConfigDt['AllowedLocations_Geocodes']) == 0:
         pass
