@@ -1,4 +1,6 @@
 {
+    "QuantumENDEC Version":"v3.1.0",
+    
     "SAME_callsign": "QUANTUM8",
  
     "Experimental Setting 0": "These are not working yet so don't even try",
@@ -22,19 +24,24 @@
     "Test": true,
     "Actual": true,
 
-    "COMMENT2": "Allow/Dis-Allow the relay of the following CAP-CP severity...",
+    "COMMENT2 *new": "Allow/Dis-Allow the relay of the following CAP-CP message types...",
+    "Alert": true,
+    "Update": true,
+    "Test": true,
+
+    "COMMENT3": "Allow/Dis-Allow the relay of the following CAP-CP severity...",
     "Extreme": true,
     "Severe": true,
     "Moderate": true,
     "Minor": true,
     "Unknown": true,
 
-    "COMMENT3": "Allow/Dis-Allow the relay of the following CAP-CP urgency...",
+    "COMMENT4": "Allow/Dis-Allow the relay of the following CAP-CP urgency...",
     "Immediate": true,
     "Expected": true,
     "Future": true,
     "Past": true,
 
-    "COMMENT4": "Input CAP-CP Geocodes to relay from instead of relaying Canada-wide (yes it does that by default). You'll need to figure this out a little. (Hint, read GeoToCLC.csv)",
+    "COMMENT5": "Input CAP-CP Geocodes to relay from instead of relaying Canada-wide (yes it does that by default). You'll need to figure this out a little. (Hint, read GeoToCLC.csv)",
     "AllowedLocations_Geocodes": []
 }
