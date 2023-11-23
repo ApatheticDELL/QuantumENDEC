@@ -1,6 +1,6 @@
 ApatheticDELL presents...
 # QuantumENDEC
-Version 3: The clean up
+v3.1.0
 
 ### Credits
 Developed by...
