@@ -30,7 +30,9 @@ You will first require the following...
 It is advised to use the latest version of Python!
 
 Then install the Python modules required using pip:
-```pip3 install {the modules required.. can be more than one?}```
+```pip3 install -r requirements.tx```
+
+(Soon we will set up a batch and bash script to install everything...)
 
 ### Setup
 The alert audio will play on your default sound device, whether it be on Linux or Windows.
