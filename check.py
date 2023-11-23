@@ -20,13 +20,12 @@ def ConfigFilters(InputXML, ConfigDt):
         for i in Geocodes:
             if i in ConfigDt['AllowedLocations_Geocodes']:
                 GeoMatch = True
-        if GeoMatch is True:
-            Final = True
-        else:
-            Final = False
+        if GeoMatch is False:
+            print("No relay... Geocode filters blocked this one.")
+            exit()
     
     if Final is False:
-        print("No relay...")
+        print("No relay... Config filters blocked this one.")
         exit()
 
 def Heartbeat(InputXML):
