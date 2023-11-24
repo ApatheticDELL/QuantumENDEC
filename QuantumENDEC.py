@@ -7,7 +7,7 @@ QuantumENDEC ({version})
 
 Developed by...
 Dell ... ApatheticDELL
-Aaron ... secludedcfox.com :3
+Aaron ... secludedfox.com :3
 BunnyTub ... gadielisawesome
 """)
 
