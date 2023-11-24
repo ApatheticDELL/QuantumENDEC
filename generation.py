@@ -205,7 +205,7 @@ def SendDiscord(InputHeader, InputText, InputConfig):
         webhook = DiscordWebhook(url=Wurl, rate_limit_retry=True, content=InputHeader)
         embed = DiscordEmbed(title="EMEGRENCY ALERT // ALERTE D'URGENCE", description=InputText, color=Wcolor,)
         embed.set_author(name=Wauthorname, url=Wauthorurl, icon_url=Wiconurl)
-        embed.set_footer(text="QuantumENDEC 3: The Rewrite")
+        embed.set_footer(text="QuantumENDEC")
         webhook.add_embed(embed)
         webhook.execute()
     else:
