@@ -1,6 +1,5 @@
 ApatheticDELL presents...
-# QuantumENDEC
-v3.1.1
+# QuantumENDEC (v3.1.1)
 
 ### Credits
 Developed by...
