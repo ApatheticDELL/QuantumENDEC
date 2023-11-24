@@ -29,7 +29,7 @@ You will first require the following...
 It is advised to use the latest version of Python!
 
 Then install the Python modules required using pip:
-```pip3 install -r requirements.tx```
+```pip3 install -r requirements.txt```
 
 (Soon we will set up a batch and bash script to install everything...)
 
