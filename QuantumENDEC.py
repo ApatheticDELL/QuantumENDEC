@@ -1,13 +1,15 @@
 import threading, os, time
 #QUANTUMENDEC LAUNCH FILE
+version = "v3.1.1"
 
-print("QuantumENDEC")
-print("Version 3: The Clean Up")
-print("")
-print("Devloped by...")
-print("Dell ... ApatheticDELL")
-print("Aaron ... secludedcfox.com :3")
-print("BunnyTub ... gadielisawesome")
+print(f"""
+QuantumENDEC ({version})
+
+Developed by...
+Dell ... ApatheticDELL
+Aaron ... secludedcfox.com :3
+BunnyTub ... gadielisawesome
+""")
 
 time.sleep(3)
 
