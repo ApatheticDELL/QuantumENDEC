@@ -5,7 +5,7 @@ ApatheticDELL presents...
 Developed by...
 ```
 Dell ... ApatheticDELL
-Aaron ... fire-tech5000
+Aaron ... secludedfox.com
 BunnyTub ... gadielisawesome
 ```
 
