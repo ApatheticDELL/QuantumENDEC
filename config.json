@@ -23,9 +23,10 @@
     "Actual": true,
 
     "COMMENT2 *new": "Allow/Dis-Allow the relay of the following CAP-CP message types...",
-    "Alert": true,
-    "Update": true,
-    "Test": true,
+    "<msgType>Alert": true,
+    "<msgType>Update": true,
+    "<msgType>Cancel": true,
+    "<msgType>Test": true,
 
     "COMMENT3": "Allow/Dis-Allow the relay of the following CAP-CP severity...",
     "Extreme": true,

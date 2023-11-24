@@ -34,7 +34,7 @@ def PlayAlert(InputConfig):
 
     # play pre
     if os.path.exists("./Audio/pre.wav"):
-        print("Playing Pre Audio")
+        print("Playing Pre (Lead In) Audio")
         play("./Audio/pre.wav")
 
     # play same
@@ -53,6 +53,11 @@ def PlayAlert(InputConfig):
     print("Playing EOM Tones")
     play("./Audio/eom.wav")
 
+    # play post
+    if os.path.exists("./Audio/post.wav"):
+        print("Playing Post (Lead Out) Audio")
+        play("./Audio/post.wav")
+    
     # unmute V
     if MuteV is True:
         os.system(f"pactl set-sink-mute {Vcable} 0")
