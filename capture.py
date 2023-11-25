@@ -61,7 +61,7 @@ while True:
         try:
             identifier = re.search(r"<identifier>\s*(.*?)\s*</identifier>", str(data), re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)
             identifier = identifier.replace("-","_").replace("+", "p").replace(":","_")
-            print("sent =", str(identifier))
+            print("identifier =", str(identifier))
         except:
             print("somthing really brokey :P")
         
@@ -116,7 +116,7 @@ else:
     try:
         identifier = re.search(r"<identifier>\s*(.*?)\s*</identifier>", str(data), re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)
         identifier = identifier.replace("-","_").replace("+", "p").replace(":","_")
-        print("sent =", str(identifier))
+        print("identifier =", str(identifier))
     except:
         print("somthing really brokey :P")
         
