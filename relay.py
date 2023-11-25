@@ -30,9 +30,7 @@ else:
     print("Starting Generation...")
     InfoEN = re.search(r'<info><language>en-CA</language>\s*(.*?)\s*</info>', RelayXML, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(0)
     GeneratedHeader = generation.GenerateSAME(InfoEN, ConfigData)
-    
-    MessageType = re.search(r'<msgType>\s*(.*?)\s*</msgType>', RelayXML, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)
-    BroadcastText = generation.GenerateBroadcastText(InfoEN, RelayXML, GeneratedHeader, MessageType)
+    BroadcastText = generation.GenerateBroadcastText(InfoEN, RelayXML, GeneratedHeader)
 
     print("Generating TTS...")
     generation.GenTTS(BroadcastText, InfoEN)

@@ -116,7 +116,7 @@ def GenerateSAME(InputXML, InputConfig):
 
     return HeaderSAME
 
-def GenerateBroadcastText(InfoInputXML, FullInputXML, InputSAME, InputMsgType):
+def GenerateBroadcastText(InfoInputXML, FullInputXML, InputSAME):
     if("<valueName>layer:SOREM:1.0:Broadcast_Text</valueName>" in InfoInputXML):
         BroadcastText = re.search(r'<valueName>layer:SOREM:1.0:Broadcast_Text</valueName><value>\s*(.*?)\s*</value>', InfoInputXML, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)
     else:
@@ -131,11 +131,12 @@ def GenerateBroadcastText(InfoInputXML, FullInputXML, InputSAME, InputMsgType):
         AREAS = AREAS + "."
 
         #Issued, Updated, Cancelled
-        if InputMsgType == "Alert":
+        MessageType = re.search(r'<msgType>\s*(.*?)\s*</msgType>', FullInputXML, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)
+        if MessageType == "Alert":
             MsgIssue = "issued"
-        elif InputMsgType == "Update":
+        elif MessageType == "Update":
             MsgIssue = "updated"
-        elif InputMsgType == "Cancel":
+        elif MessageType == "Cancel":
             MsgIssue = "cancelled"
         else:
             MsgIssue = "issued"
