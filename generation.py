@@ -116,7 +116,7 @@ def GenerateSAME(InputXML, InputConfig):
 
     return HeaderSAME
 
-def GenerateBroadcastText(InfoInputXML, FullInputXML, InputSAME):
+def GenerateBroadcastText(InfoInputXML, FullInputXML, InputSAME, InputMsgType):
     if("<valueName>layer:SOREM:1.0:Broadcast_Text</valueName>" in InfoInputXML):
         BroadcastText = re.search(r'<valueName>layer:SOREM:1.0:Broadcast_Text</valueName><value>\s*(.*?)\s*</value>', InfoInputXML, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)
     else:
@@ -129,6 +129,16 @@ def GenerateBroadcastText(InfoInputXML, FullInputXML, InputSAME):
         AREAS = ", ".join(AREAS)
         AREAS = ".".join(AREAS.rsplit(",",1))
         AREAS = AREAS + "."
+
+        #Issued, Updated, Cancelled
+        if InputMsgType == "Alert":
+            MsgIssue = "issued"
+        elif InputMsgType == "Update":
+            MsgIssue = "updated"
+        elif InputMsgType == "Cancel":
+            MsgIssue = "cancelled"
+        else:
+            MsgIssue = "issued"
 
         if("layer:EC-MSC-SMC:1.0:Alert_Coverage" in InfoInputXML):
             regexcoverage = re.search(r'<valueName>layer:EC-MSC-SMC:1.0:Alert_Coverage</valueName><value>\s*(.*?)\s*</value>', InfoInputXML, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)
@@ -145,7 +155,7 @@ def GenerateBroadcastText(InfoInputXML, FullInputXML, InputSAME):
             INSTRUCTION =  re.search(r'<instruction>\s*(.*?)\s*</instruction>', InfoInputXML, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1).replace("###","")
         except:
             INSTRUCTION = ""
-        BroadcastText = f"At {DATE} {SENDER} has issued {HEADLINE} {COVERAGE} {AREAS} {DESCRIPTION}. {INSTRUCTION}."
+        BroadcastText = f"At {DATE} {SENDER} has {MsgIssue} {HEADLINE} {COVERAGE} {AREAS} {DESCRIPTION}. {INSTRUCTION}."
     
     f = open("Broadcast.txt", "w")
     f.write(BroadcastText)
