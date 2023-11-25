@@ -1,6 +1,6 @@
 import threading, os, time
 #QUANTUMENDEC LAUNCH FILE
-version = "v3.3.1"
+version = "v3.3.2"
 
 print(f"""
 QuantumENDEC ({version})

@@ -122,7 +122,7 @@ def GenerateBroadcastText(InfoInputXML, FullInputXML, InputSAME):
     else:
         #Manually generates the BroadcastText if there's no broadcast text value
         Sent = re.search(r'<sent>\s*(.*?)\s*</sent>', FullInputXML, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)
-        DATE = datetime.fromisoformat(Sent).strftime("%H:%M Coordinated Universal Time, %B %d, %Y.")
+        DATE = datetime.fromisoformat(datetime.fromisoformat(Sent).astimezone(timezone.utc).isoformat()).strftime("%H:%M %Z, %B %d, %Y.")
         SENDER = re.search(r'<senderName>\s*(.*?)\s*</senderName>', InfoInputXML, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)
         HEADLINE = EAS2Text(InputSAME).evntText
         AREAS = re.findall(r'<areaDesc>\s*(.*?)\s*</areaDesc>', InfoInputXML, re.MULTILINE | re.IGNORECASE | re.DOTALL)
