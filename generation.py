@@ -28,7 +28,8 @@ def GenerateSAME(InputXML, InputConfig):
     if("<valueName>SAME</valueName>" in InputXML):
         EEE = re.search(r'<eventCode><valueName>SAME</valueName><value>\s*(.*?)\s*</value>', InputXML, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)
     else:
-        EEE = re.search(r'<event>\s*(.*?)\s*</event>', InputXML, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)
+        #Fixed to get CAP-CP event code!
+        EEE = re.search(r'<eventCode><valueName>profile:CAP-CP:Event:0.4</valueName><value>\s*(.*?)\s*</value></eventCode>', InputXML, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)
         try:
             EEE = Conversions.CapEventToSameEvent[EEE]
         except:

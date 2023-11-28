@@ -1,6 +1,6 @@
 import threading, os, time
 #QUANTUMENDEC LAUNCH FILE
-version = "v3.3.2"
+version = "v3.3.3"
 
 print(f"""
 QuantumENDEC ({version})
@@ -20,9 +20,13 @@ except:
         f.write(f"ZXZX-STARTER-\n")
     f.close()
 
-dir = 'XMLhistory'
-for f in os.listdir(dir):
-    os.remove(os.path.join(dir, f))
+#Clears folders
+def ClearFolder(dir):
+    for f in os.listdir(dir):
+        os.remove(os.path.join(dir, f))
+ClearFolder('XMLhistory')
+ClearFolder('XMLprocess')
+ClearFolder('XMLqueue')
 
 # start capture.py and relay.py and loop them
 def startRelay():
