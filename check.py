@@ -4,10 +4,15 @@ from urllib.request import Request, urlopen
 def ConfigFilters(InputXML, ConfigDt):
     Final = False
     BroadI = re.search(r'<valueName>layer:SOREM:1.0:Broadcast_Immediately</valueName><value>\s*(.*?)\s*</value>', InputXML, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)
+    Status = ConfigDt[re.search(r'<status>\s*(.*?)\s*</status>', InputXML, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)]
+    
+    if Status is False:
+        print("No relay... Status filters blocked this one.")
+        exit()
+    
     if "Yes" in BroadI:
         Final = True
     else:
-        Final = ConfigDt[re.search(r'<status>\s*(.*?)\s*</status>', InputXML, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)]
         Final = ConfigDt[re.search(r'<severity>\s*(.*?)\s*</severity>', InputXML, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)]
         Final = ConfigDt[re.search(r'<urgency>\s*(.*?)\s*</urgency>', InputXML, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)]
         VmsgType = re.search(r'<msgType>\s*(.*?)\s*</msgType>', InputXML, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)
