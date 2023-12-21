@@ -1,7 +1,27 @@
-import re, os, time, shutil
+import re, os, time, shutil, datetime
 from urllib.request import Request, urlopen
+import dateutil.parser as DP
 
-def ConfigFilters(InputXML, ConfigDt):
+def ConfigFilters(InputXML, ConfigDt): 
+    #Expire check
+    try:
+        XMLexpdt = re.search(r'<expires>\s*(.*?)\s*</expires>', InputXML, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)
+        ExpireTag = True
+    except: ExpireTag = False
+    
+    if ExpireTag is True:
+        expire = datetime.datetime.fromisoformat(datetime.datetime.fromisoformat(XMLexpdt).astimezone(datetime.timezone.utc).isoformat()).strftime('%Y-%m-%dT%H:%M:%S-00:00')
+        Current = datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%S-00:00')
+        print("Expire", expire, "Current", Current)
+        s = [Current, expire]
+        t = [DP.parse(si) for si in s]; t
+        if t[0] > t[1]:
+            print("Alert expired.")
+            exit()
+        else:
+            print("Alert valid.")
+    else: print("No expire tag.")
+    
     Final = False
     BroadI = re.search(r'<valueName>layer:SOREM:1.0:Broadcast_Immediately</valueName><value>\s*(.*?)\s*</value>', InputXML, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)
     Status = ConfigDt[re.search(r'<status>\s*(.*?)\s*</status>', InputXML, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)]
