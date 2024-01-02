@@ -5,3 +5,5 @@ pyttsx3
 sounddevice
 numpy
 scipy
+discord_webhook
+pydub
