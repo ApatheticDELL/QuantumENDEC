@@ -7,3 +7,4 @@ numpy
 scipy
 discord_webhook
 pydub
+pathlib
