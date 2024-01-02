@@ -159,6 +159,18 @@ def GenerateBroadcastText(InfoInputXML, FullInputXML, InputSAME):
             INSTRUCTION = ""
         BroadcastText = f"At {DATE} {SENDER} has {MsgIssue} {HEADLINE} {COVERAGE} {AREAS} {DESCRIPTION}. {INSTRUCTION}."
     
+    #Manage Periods
+    def ManagePeriods(input):
+        result = ''
+        for i in range(len(input)):
+            char = input[i]
+            if char == '.' and (i == len(input) - 1 or input[i + 1] != ' '):
+                result += '. '
+            else:
+                result += char
+        return result
+    BroadcastText = ManagePeriods(BroadcastText)
+    
     f = open("Broadcast.txt", "w")
     f.write(BroadcastText)
     f.close()
