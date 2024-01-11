@@ -55,6 +55,10 @@ Everything should work on its own!
 ### Some Extra Additional Information
 This software ENDEC will NOT work with American CAP alerts, since it's designed for the CAP Canadian Profile. Also, the way it grabs alerts is different from FEMA CAP, in Canada, there is one centralized internet TCP feed that ENDECs across Canada connect to. The system is designed by Pelmorex.
 
+You can run QuantumENDEC with arguments now...
+```python QuantumENDEC.py -h```
+For more information.
+
 If you see anything about matches or match files, it just means that the software already processed the thing/file in question.
 
 Finally, even though this was coded from (mostly) the ground up, I'd still like to credit libmarleu's BashENDEC (which no longer exists on their page) for starting out the QuantumENDEC journey all the way in 2021...
