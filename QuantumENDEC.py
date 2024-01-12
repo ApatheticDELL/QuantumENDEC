@@ -73,7 +73,7 @@ def CreateConfig(SameCallsign="QUANTUM8",
     }
     with open("config.json", 'w') as json_file:
         json.dump(NewConfig, json_file, indent=2)
-    debug("CREATE CONFIG","Config has been created!")
+    debug(1,"Config has been created!")
 
 def QEsetup():
     def YesNo():
