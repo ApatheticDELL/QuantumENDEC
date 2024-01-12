@@ -61,6 +61,8 @@ For more information.
 
 If you see anything about matches or match files, it just means that the software already processed the thing/file in question.
 
+Emergency information does come from offical resources, though one shouldn't fully rely on QE for emergency information as errors could still occur
+
 Finally, even though this was coded from (mostly) the ground up, I'd still like to credit libmarleu's BashENDEC (which no longer exists on their page) for starting out the QuantumENDEC journey all the way in 2021...
 
 And thanks to all who worked on this one, hell of an ENDEC...
