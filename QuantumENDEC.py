@@ -6,7 +6,6 @@ import sys
 if sys.version_info.major >= 3: pass
 else: print("You are not running this program with Python 3, run it with Python 3. (Or update python)"); exit()
 
-# Import all the crap
 try:
     import re, xmltodict, pyttsx3, requests, shutil, time, socket, threading, json, os, argparse
     import sounddevice as sd
@@ -20,248 +19,9 @@ except: print("IMPORT FAIL: One or more modules has failed to inport please run 
 try: os.system("ffmpeg -version")
 except: print("Uh oh, FFMPEG dosen't apper to be installed on your system, you will need to install it so it can be ran on a command line. Some functions of QuantumENDEC depend on FFMPEG"); exit()
 
-QEversion = "4.1.0"
+QEversion = "4.2.0"
 
 def Clear(): os.system('cls' if os.name == 'nt' else 'clear')
-
-def CreateConfig(SameCallsign="QUANTUM8",
-                 UseSpcAudio=False, SpcAudio="",
-                 PlayNoSAME=False,
-                 discWeb=False, dwCol="ffffff", dwAutNam="QUANTUMENDEC", dwAuURL="", dwAuIcoURL="", dwWebURL="", 
-                 statTest=True, statActual=True,
-                 mestypAlert=True, mestypUpdate=True, mestypCancel=True, mestypTest=True,
-                 sevrExtreme=True, sevrSevere=True, sevrModerate=True, sevrMinor=True, sevrUnknown=True,
-                 urgImmediate=True, urgExpected=True, urgFuture=True, urgPast=True,
-                 GeoCods=[], CLC=[]):
-    debug(1,"Creating configuration...")
-    NewConfig = {
-        "SAME_callsign": SameCallsign,
-    
-        "UseSpecifiedAudioDevice": UseSpcAudio,
-        "SpecifiedAudioDevice": SpcAudio,
-
-        "PlayoutNoSAME": PlayNoSAME,
-        
-        "enable_discord_webhook": discWeb,
-        "webhook_color": dwCol,
-        "webhook_author_name": dwAutNam,
-        "webhook_author_URL": dwAuURL,
-        "webhook_author_iconURL": dwAuIcoURL,
-        "webhook_URL": dwWebURL,
-        
-        "statusTest": statTest,
-        "statusActual": statActual,
-        
-        "messagetypeAlert": mestypAlert,
-        "messagetypeUpdate": mestypUpdate,
-        "messagetypeCancel": mestypCancel,
-        "messagetypeTest": mestypTest,
-
-        "severityExtreme": sevrExtreme,
-        "severitySevere": sevrSevere,
-        "severityModerate": sevrModerate,
-        "severityMinor": sevrMinor,
-        "severityUnknown": sevrUnknown,
-
-        "urgencyImmediate": urgImmediate,
-        "urgencyExpected": urgExpected,
-        "urgencyFuture": urgFuture,
-        "urgencyPast": urgPast,
-
-        "AllowedLocations_Geocodes": GeoCods,
-        "AllowedLocations_CLC": CLC,
-    }
-    with open("config.json", 'w') as json_file:
-        json.dump(NewConfig, json_file, indent=2)
-    debug(1,"Config has been created!")
-
-def QEsetup():
-    def YesNo():
-        while True:
-            q = input(">")
-            if q == "y" or q == "Y" or q == "yes" or q == "Yes" or q == "YES": return True
-            elif q == "n" or q == "N" or q == "no" or q == "No" or q == "NO": return False
-            else: print("Please try again")
-
-    requirments = [
-        'EASGen',
-        'EAS2Text',
-        'discord_webhook',
-        'pyttsx3',
-        'sounddevice',
-        'numpy',
-        'scipy',
-    ]
-    err = ""
-    while True:
-        Clear()
-        print("Hello and welcome to QuantumENDEC\nPlease select a setup option...")
-        print("1 - Install dependencies\n2 - Do configuration setup\n3 - Credits")
-        print(err)
-        p = input(">")
-        if p == "1":
-            Clear()
-            print("Installing dependencies...")
-            for i in requirments:
-                try: os.system(f"pip3 install {i}"); print(f"I've installed {i}")
-                except: print(f"[!!!] I've tried installing this pip package: {i}\nBut it failed, you may need pip3 installed, try just again, or do it manually")
-            break
-        elif p == "2":
-            Clear()
-            print("Configuration setup...\nLet's setup your endec, press enter when ready.")
-            input(">")
-            err = ""
-            while True:
-                Clear()
-                print("Input your callsign.")
-                print(err)
-                ConSet1 = input(">")
-                if len(ConSet1) > 8 or len(ConSet1) < 8 or "-" in ConSet1: err = "Your callsign contains an error, please try again."
-                else: break
-            Clear()
-            print("Do you want to output alerts using a specified audio device? (y/n)")
-            print("(By default (no/false) it uses FFMPEG, which usually outputs to the default device)")
-            print("! This might not work on Linux. !")
-            ConSet2 = YesNo()
-            if ConSet2 is True:
-                try: import sounddevice as sd
-                except: print("IMPORT FAIL: One or more modules has failed to inport please run QuantumENDEC with the --setup (-s) flag and install dependencies"); exit()
-                def print_available_devices():
-                    print("Available audio devices:")
-                    devices = sd.query_devices()
-                    for i, device in enumerate(devices):
-                        print(f"{i}: {device['name']} (Host API: {sd.query_hostapis()[device['hostapi']]['name']})")
-                def select_audio_device(device_index):
-                    devices = sd.query_devices()
-                    if 0 <= device_index < len(devices):
-                        selected_device = devices[device_index]
-                        selected_hostapi_name = sd.query_hostapis()[selected_device['hostapi']]['name']
-                        sd.default.device = selected_device['name']
-                        return f"{selected_device['name']}, {selected_hostapi_name}"
-                    else: return False
-                err = ""
-                while True:
-                    Clear()
-                    print("\nYou will need to select an audio device.")
-                    print_available_devices()
-                    print("\nSelect output device (select number of it)")
-                    print(err)
-                    ConSet3 = select_audio_device(int(input(">")))
-                    if ConSet3 is False: err = "Invalid device selection: please try again."
-                    else: break
-            else: ConSet3 = ""
-            err = ""
-            while True:
-                Clear()
-                print("How should alerts play out?")
-                print("1 - With SAME\n2 - Without SAME (only attention tone and audio)")
-                print(err)
-                ConSet4 = input(">")
-                if ConSet4 == "1": ConSet4 = False; break
-                elif ConSet4 == "2": ConSet4 = True; break
-                else: err = "Input error, try again."
-            Clear()
-            print("Would you like to setup a discord webhook? (y/n)")
-            ConSet5 = YesNo()
-            if ConSet5 is True:
-                print("Set up your discord webhook...")
-                print("\nInput webhook color. (in hex)")
-                ConSet6 = input(">")
-                print("\nInput webhook author name.")
-                ConSet7 = input(">")
-                print("\nInput author URL. (could be to a website)")
-                ConSet8 = input(">")
-                print("\nInput author icon URL.")
-                ConSet9 = input(">")
-                print("\nInput webhook URL.")
-                ConSet10 = input(">")
-            else:
-                ConSet6 = ""
-                ConSet7 = ""
-                ConSet8 = ""
-                ConSet9 = ""
-                ConSet10 = ""
-            Clear()
-            print("Alert config setup.\n")
-            print("Allow status: Test? (y/n)")
-            ConSet11 = YesNo()
-            print("Allow status: Actual? (y/n)")
-            ConSet12 = YesNo()
-            print("Allow message type: Alert? (y/n)")
-            ConSet13 = YesNo()
-            print("Allow message type: Update? (y/n)")
-            ConSet14 = YesNo()
-            print("Allow message type: Cancel? (y/n)")
-            ConSet15 = YesNo()
-            print("Allow message type: Test? (y/n)")
-            ConSet16 = YesNo()
-            print("Allow severity: Extreme? (y/n)")
-            ConSet17 = YesNo()
-            print("Allow severity: Severe? (y/n)")
-            ConSet18 = YesNo()
-            print("Allow severity: Moderate? (y/n)")
-            ConSet19 = YesNo()
-            print("Allow severity: Minor? (y/n)")
-            ConSet20 = YesNo()
-            print("Allow severity: Unknown? (y/n)")
-            ConSet21 = YesNo()
-            print("Allow urgency: Immediate? (y/n)")
-            ConSet22 = YesNo()
-            print("Allow urgency: Expected? (y/n)")
-            ConSet23 = YesNo()
-            print("Allow urgency: Future? (y/n)")
-            ConSet24 = YesNo()
-            print("Allow urgency: Past? (y/n)")
-            ConSet25 = YesNo()
-            Clear()
-            print("Do you want to filter locations via CAP-CP Geocodes? (y/n)")
-            if YesNo() is True:
-                print("Please input the CAP-CP location Geocodes you want to relay for. (Seprate by comma, no spaces)")
-                print("! These are not FIPS or CLC, they are CAP-CP Geocodes, you may need to look them up.")
-                ConSet26 = input(">")
-                ConSet26 = ConSet26.split(',')
-            else: ConSet26 = []
-            print("Do you want to filter locations via EC's CLC (Canada's FIPS)? (y/n)")
-            if YesNo() is True:
-                print("Please input the CLC you want to relay for. (Seprate by comma, no spaces)")
-                print("These are FIPS/CLC, used in the SAME headers.")
-                ConSet27 = input(">")
-                ConSet27 = ConSet27.split(',')
-            else: ConSet27 = []
-            CreateConfig(ConSet1,ConSet2,ConSet3,ConSet4,ConSet5,ConSet6,ConSet7,ConSet8,ConSet9,ConSet10,ConSet11,ConSet12,ConSet13,ConSet14,ConSet15,
-                         ConSet16,ConSet17,ConSet18,ConSet19,ConSet20,ConSet21,ConSet22,ConSet23,ConSet24,ConSet25,ConSet26,ConSet27)
-            print("Config file created!")
-            break
-        elif p == "3":
-            Clear()
-            print("QuantumENDEC Credits")
-            print(f"QuantumENDEC\nVersion: {QEversion}\n\nDeveloped by:\nDell ... ApatheticDELL\nAaron ... secludedfox.com :3\nBunnyTub ... gadielisawesome")
-            break
-        else: err = "Sorry, please try that again..."
-    exit()
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='QuantumENDEC')
-    parser.add_argument('-v', '--version', action='store_true', help='Displays QuantumENDECs version')
-    parser.add_argument('-s', '--setup', action='store_true', help='Setup QuantumENDEC: Configure and install modules.')
-    parser.add_argument('-d', '--debug', action='store_true', help='Print out debug messages.')
-    args = parser.parse_args()
-    if args.debug is True:
-        def debug(level,message):
-            if level == 1: level = "INFO"
-            elif level == 2: level = "WARN"
-            elif level == 3: level = "CAUTION"
-            else: level = "UNKN"
-            print(f"[{level}]: {message}")
-        debug(1,"Full debug is now active!")
-    else:
-        def debug(level,message):
-            if level == 1: pass
-            elif level == 2: print(f"[WARN]: {message}")
-            elif level == 3: print(f"[CAUTION]: {message}")
-            else: level = "UNKN"
-    if args.version is True: print(f"QuantumENDEC {QEversion}"); exit()
-    if args.setup is True: QEsetup()
 
 class Capture:
     def __init__(self):
@@ -273,7 +33,7 @@ class Capture:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.connect((host, port))
             s.settimeout(100)
-            debug(1,f"Connected to {host}")
+            print(f"[Capture]: Connected to {host}")
             data_received = ""
             try:
                 while True:
@@ -281,7 +41,10 @@ class Capture:
                     data_received += chunk
                     if delimiter in chunk: return data_received
             except socket.timeout:
-                debug(2,f"Connection timed out for {host}")
+                print(f"[Capture]: Connection timed out for {host}")
+                return False
+            except:
+                print(f"[Capture]: Something brokey when connecting to {host}")
                 return False
 
     def start(self):
@@ -294,10 +57,12 @@ class Capture:
             CapturedSent = CapturedSent.replace("-","_").replace("+", "p").replace(":","_")
             CapturedIdent = CapturedIdent.replace("-","_").replace("+", "p").replace(":","_")
             NAADsFilename = f"{CapturedSent}I{CapturedIdent}.xml"
-        except: return False
+        except:
+            print("[Capture]: Something brokey :P")
+            return False
         with open(f"./{self.OutputFolder}/{NAADsFilename}", 'w', encoding='utf-8') as file: file.write(NAADs)
         file.close()
-        debug(1,f"I captured an XML, and saved it to: {self.OutputFolder}/{NAADsFilename}")
+        print(f"[Capture]: I captured an XML, and saved it to: {self.OutputFolder}/{NAADsFilename}")
         return True
 
 class Check:
@@ -349,7 +114,7 @@ class Check:
         return False
 
     def Heartbeat(References, QueueFolder, HistoryFolder):
-        debug(1,"Downloading alerts from recived heartbeat...")
+        print("Downloading alerts from recived heartbeat...")
         RefList = References.split(" ")
         for i in RefList:
             j = re.sub(r'^.*?,', '', i)
@@ -363,9 +128,9 @@ class Check:
             Dom2 = 'capcp2.naad-adna.pelmorex.com'
             Output = f"{QueueFolder}/{sent}I{identifier}.xml"
             if f"{sent}I{identifier}.xml" in os.listdir(f"./{HistoryFolder}"):
-                debug(1,"Heartbeat, no download: Files matched.")
+                print("Heartbeat, no download: Files matched.")
             else:
-                debug(1, f"Downloading: {sent}I{identifier}.xml...")
+                print( f"Downloading: {sent}I{identifier}.xml...")
                 req1 = Request(url = f'http://{Dom1}/{sentDT}/{sent}I{identifier}.xml', headers={'User-Agent': 'Mozilla/5.0'})
                 req2 = Request(url = f'http://{Dom2}/{sentDT}/{sent}I{identifier}.xml', headers={'User-Agent': 'Mozilla/5.0'})
                 try: xml = urlopen(req1).read()
@@ -377,13 +142,13 @@ class Check:
                 f.close()
 
     def watchNotify(ListenFolder, HistoryFolder):
-        debug(1,"Waiting for an alert...")
+        print("Waiting for an alert...")
         def GetXMLQue(): return os.listdir(f"./{ListenFolder}")
         while True:
             ExitTicketCheck = False
             for file in GetXMLQue():
                 if file in os.listdir(f"./{HistoryFolder}"):
-                    debug(1,"No relay: watch folder files matched.")
+                    print("No relay: watch folder files matched.")
                     os.remove(f"./{ListenFolder}/{file}")
                     exit()
                 ExitTicketCheck = True
@@ -592,9 +357,9 @@ class Generate:
     
     def SAMEheader(self):
         Callsign = self.Callsign
-        if len(Callsign) > 8: Callsign = "QUANTUM0"; debug(1,"Your callsign is too long.")
-        elif len(Callsign) < 8: Callsign = "QUANTUM0"; debug(1,"Your callsign is too short.")
-        elif "-" in Callsign: Callsign = "QUANTUM0"; debug(1,"Your callsign contains an invalid symbol.")
+        if len(Callsign) > 8: Callsign = "QUANTUM0"; print("Your callsign is too long!")
+        elif len(Callsign) < 8: Callsign = "QUANTUM0"; print("Your callsign is too short!")
+        elif "-" in Callsign: Callsign = "QUANTUM0"; print("Your callsign contains an invalid symbol!")
         try: ORG = self.CapCatToSameOrg[self.InfoEN['info']['category']]
         except: ORG = "CIV"
         try:
@@ -615,9 +380,6 @@ class Generate:
             minutes, _ = divmod(remainder, 60)
             Purge = "{:02}{:02}".format(hours, minutes)
         except: Purge = "0600"
-        hours, remainder = divmod(Purge.seconds, 3600)
-        minutes, _ = divmod(remainder, 60)
-        Purge = "{:02}{:02}".format(hours, minutes)
         if "layer:EC-MSC-SMC:1.1:Newly_Active_Areas" in str(self.InfoEN):
             for parameter in self.InfoEN['info']['parameter']:
                 if parameter['valueName'] == 'layer:EC-MSC-SMC:1.1:Newly_Active_Areas':
@@ -633,7 +395,7 @@ class Generate:
             for parameter in self.InfoEN['info']['parameter']:
                 if parameter['valueName'] == 'layer:SOREM:1.0:Broadcast_Text':
                     try: BroadcastText = parameter['value']; break
-                    except: BroadcastText = ""; break
+                    except: BroadcastText = "[error getting broadcast text]"; break
         else:
             if self.MsgType == "Alert": MsgPrefix = "issued"
             elif self.MsgType == "Update": MsgPrefix = "updated"
@@ -660,32 +422,41 @@ class Generate:
         return BroadcastText
 
     def GetAudio(self, AudioLink, Output):
-        debug(1,"Downloading audio...")
+        print("Downloading audio...")
         r = requests.get(AudioLink)
         with open(Output, 'wb') as f:
             f.write(r.content)
         f.close()
     
     def Audio(self, BroadcastText, GeneratedHeader):
+        def GenTTS(Input):
+            engine = pyttsx3.init()
+            engine.save_to_file(str(Input), "Audio/audio.wav")
+            engine.runAndWait()
+        
         try:
             try:
                 for BroadcastAudio in self.InfoEN['info']['resource']:
-                    if BroadcastAudio['resourceDesc'] == 'Broadcast Audio': debug(1, "Yes broadcast audio.")
+                    if BroadcastAudio['resourceDesc'] == 'Broadcast Audio':
+                        AudioLink = BroadcastAudio['uri']
+                        AudioType = BroadcastAudio['mimeType']
             except:
-                if self.InfoEN['info']['resource']['resourceDesc'] == 'Broadcast Audio': debug(1,"Yes BroadcastAudio")
+                if self.InfoEN['info']['resource']['resourceDesc'] == 'Broadcast Audio': print("Yes BroadcastAudio")
                 AudioLink = self.InfoEN['info']['resource']['uri']
                 AudioType = self.InfoEN['info']['resource']['mimeType']
-            if AudioType == "audio/mpeg": self.GetAudio(AudioLink, "PreAudio.mp3"); os.system("ffmpeg -i PreAudio.mp3 PreAudio.wav"); os.remove("PreAudio.mp3")
-            elif AudioType == "audio/x-ms-wma": self.GetAudio(AudioLink, "PreAudio.wma"); os.system("ffmpeg -i PreAudio.wma PreAudio.wav"); os.remove("PreAudio.wma")
-            elif AudioType == "audio/wave": self.GetAudio(AudioLink, "PreAudio.wav")
-            elif AudioType == "audio/wav": self.GetAudio(AudioLink, "PreAudio.wav")
-            os.system(f"ffmpeg -y -i PreAudio.wav -filter:a volume=2.5 Audio/audio.wav"); os.remove("PreAudio.wav")
+            try:
+                if AudioType == "audio/mpeg": self.GetAudio(AudioLink, "PreAudio.mp3"); os.system("ffmpeg -i PreAudio.mp3 PreAudio.wav"); os.remove("PreAudio.mp3")
+                elif AudioType == "audio/x-ms-wma": self.GetAudio(AudioLink, "PreAudio.wma"); os.system("ffmpeg -i PreAudio.wma PreAudio.wav"); os.remove("PreAudio.wma")
+                elif AudioType == "audio/wave": self.GetAudio(AudioLink, "PreAudio.wav")
+                elif AudioType == "audio/wav": self.GetAudio(AudioLink, "PreAudio.wav")
+                os.system(f"ffmpeg -y -i PreAudio.wav -filter:a volume=2.5 Audio/audio.wav"); os.remove("PreAudio.wav")
+            except:
+                GenTTS(BroadcastText)
         except:
-            debug(1,"Generating TTS audio...")
-            engine = pyttsx3.init()
-            engine.save_to_file(str(BroadcastText), "Audio/audio.wav")
-            engine.runAndWait()
-        debug(1,"Generating SAME header...")
+            print("Generating TTS audio...")
+            GenTTS(BroadcastText)
+            
+        print("Generating SAME header...")
         SAMEheader = EASGen.genEAS(header=GeneratedHeader, attentionTone=False, endOfMessage=False)
         SAMEeom = EASGen.genEAS(header="NNNN", attentionTone=False, endOfMessage=False)
         EASGen.export_wav("Audio/same.wav", SAMEheader)
@@ -696,7 +467,6 @@ class Playout:
         self.InputConfig = InputConfig
 
     def play(self, InputFile):
-        #TODO, make this into a def setup, or seprate play def?
         UseSpecDevice = self.InputConfig['UseSpecifiedAudioDevice']
         SpecDevice = self.InputConfig['SpecifiedAudioDevice']
         time.sleep(0.5)
@@ -709,26 +479,20 @@ class Playout:
         else: os.system(f"ffplay -hide_banner -loglevel warning -nodisp -autoexit {InputFile}")
 
     def AlertSAME(self):
-        debug(1,"Playing out the alert with SAME")
-        if os.path.exists("./Audio/pre.wav"): debug(1,"Playing lead in audio (Pre-Roll)..."); self.play("./Audio/pre.wav")
-        debug(1,"Playing SAME header audio...")
+        print("Playing out the alert with SAME...")
+        if os.path.exists("./Audio/pre.wav"): print("Playing lead in audio (Pre-Roll)..."); self.play("./Audio/pre.wav")
         self.play("./Audio/same.wav")
-        debug(1,"Playing attention tone...")
         self.play("./Audio/attn.wav")
-        debug(1,"Playing broadcast audio...")
         self.play("./Audio/audio.wav")
-        debug(1,"Playing EOM tones...")
         self.play("./Audio/eom.wav")
-        if os.path.exists("./Audio/post.wav"): debug(1,"Playing lead out audio..."); self.play("./Audio/post.wav")
+        if os.path.exists("./Audio/post.wav"): print("Playing lead out audio..."); self.play("./Audio/post.wav")
 
     def AlertSTANDARD(self):
-        debug(1,"Playing out the alert in the standard boring manner.")
-        if os.path.exists("./Audio/pre.wav"): debug(1,"Playing lead in audio (Pre-Roll)..."); self.play("./Audio/pre.wav")
-        debug(1,"Playing attention tone...")
+        print("Playing out the alert in the standard boring manner...")
+        if os.path.exists("./Audio/pre.wav"): print("Playing lead in audio (Pre-Roll)..."); self.play("./Audio/pre.wav")
         self.play("./Audio/attn.wav")
-        debug(1,"Playing broadcast audio...")
         self.play("./Audio/audio.wav")
-        if os.path.exists("./Audio/post.wav"): debug(1,"Playing lead out audio..."); self.play("./Audio/post.wav")
+        if os.path.exists("./Audio/post.wav"): print("Playing lead out audio..."); self.play("./Audio/post.wav")
 
     def Alert(self):
         if self.InputConfig['PlayoutNoSAME'] is True: self.AlertSTANDARD()
@@ -742,13 +506,14 @@ def SendDiscord(InputHeader, InputText, InputConfig):
         Wauthorurl = InputConfig['webhook_author_URL']
         Wiconurl = InputConfig['webhook_author_iconURL']
         Wurl = InputConfig['webhook_URL']
-        debug(1,"Sending to discord webhook...")
+        print("Sending to discord webhook...")
         webhook = DiscordWebhook(url=Wurl, rate_limit_retry=True, content=InputHeader)
         embed = DiscordEmbed(title="EMEGRENCY ALERT // ALERTE D'URGENCE", description=InputText, color=Wcolor,)
         embed.set_author(name=Wauthorname, url=Wauthorurl, icon_url=Wiconurl)
         embed.set_footer(text="QuantumENDEC")
         webhook.add_embed(embed)
         webhook.execute()
+    else: print("Discord webhook is disabled! Didn't send anything.")
 
 def CheckFolder(folder_path, Clear):
     def ClearFolder(dir):
@@ -757,7 +522,7 @@ def CheckFolder(folder_path, Clear):
     else:
         if Clear is True: ClearFolder(folder_path)
 
-def QEstart():
+def setup():
     Clear()
     print(f"\nQuantumENDEC\nVersion: {QEversion}\n\nDeveloped by:\nDell ... ApatheticDELL\nAaron ... secludedfox.com :3\nBunnyTub ... gadielisawesome\n")
     with open("SameHistory.txt", "w") as f: f.write(f"ZXZX-STARTER-\n")
@@ -766,39 +531,29 @@ def QEstart():
     CheckFolder('XMLhistory', True)
     CheckFolder('Audio', False)
     if os.path.isfile("./config.json") is True: pass
-    else: debug(3,"Config not there, creating default config."); CreateConfig()
+    else: print("Can't find config file, please create one! I can't continue without it!"); exit()
     if os.path.isfile("./Audio/attn.wav") is True: pass
-    else:
-        debug(2,"Attention tone is missing, downloading it.")
-        response = requests.get("https://od.lk/d/MjdfMjY2MTU1ODJf/attn.wav")
-        if response.status_code == 200:
-            with open("./Audio/attn.wav", 'wb') as audio_file:
-                audio_file.write(response.content)
-        else: debug(2,"Could not get audio file, errors lay ahead.")
+    else: print("The attention tone is missing! I can't continue without it."); exit()
     if os.path.isfile("./GeoToCLC.csv") is True: pass
-    else:
-        debug(2,"GeoToCLC is missing, downloading it.")
-        response = requests.get("https://od.lk/d/MjdfMjY2MTU1ODNf/GeoToCLC.csv")
-        if response.status_code == 200:
-            with open("./GeoToCLC.csv", 'wb') as audio_file:
-                audio_file.write(response.content)
-        else: debug(2,"Could not get file, errors lay ahead.")
+    else: print("GeoToCLC is missing! I can't continue without it."); exit()
     time.sleep(3)
 
 def Relay():
     while True:
+        Clear()
         ResultFileName = Check.watchNotify("XMLqueue", "XMLhistory")
-        debug(1,f"Captured: {ResultFileName}")
+        print(f"Captured: {ResultFileName}")
         shutil.move(f"./XMLqueue/{ResultFileName}", f"./relay.xml")
         file = open("relay.xml", "r", encoding='utf-8')
         RelayXML = file.read()
         file.close()
 
         if "<sender>NAADS-Heartbeat</sender>" in RelayXML:
-            debug(1,"Heartbeat detected...")
+            print("\n\n...HEARTBEAT DETECTED...")
             References = re.search(r'<references>\s*(.*?)\s*</references>', RelayXML, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)
             Check.Heartbeat(References, "XMLqueue", "XMLhistory")
         else:
+            print("\n\n...NEW ALERT DETECTED...")
             shutil.copy(f"./relay.xml", str(f"./XMLhistory/{ResultFileName}"))
             Sent = re.search(r'<sent>\s*(.*?)\s*</sent>', RelayXML, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)
             Status = re.search(r'<status>\s*(.*?)\s*</status>', RelayXML, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)
@@ -813,36 +568,44 @@ def Relay():
             ConfigData = json.loads(config)
             JCfile.close()
             Callsign = ConfigData['SAME_callsign']
-            debug(1,f"Hello {Callsign}")
-            if Check.Config(InfoEN, ConfigData, Sent, Status, MsgType, Severity, Urgency, BroadcastImmediately) is False: debug(1,"No relay: Config filters reject.")
+            print(f"Hello {Callsign}")
+            if Check.Config(InfoEN, ConfigData, Sent, Status, MsgType, Severity, Urgency, BroadcastImmediately) is False: print("No relay: Config filters reject.")
             else:
-                debug(1,"Generating text products...")
+                print("Generating text products...")
                 Gen = Generate(InfoEN, Sent, MsgType, Callsign)
                 GeneratedHeader = Gen.SAMEheader()
                 if Check.MatchCLC(ConfigData, GeneratedHeader) is True:
-                    if Check.DuplicateSAME(GeneratedHeader) is True: debug(1,"No relay: duplicate SAME header detected.")
+                    if Check.DuplicateSAME(GeneratedHeader) is True: print("No relay: duplicate SAME header detected.")
                     else:
                         BroadcastText = Gen.BroadcastText(GeneratedHeader)
-                        debug(1,"Generating audio products...")
+                        print("Generating audio products...")
                         Gen.Audio(BroadcastText, GeneratedHeader)
-                        debug(1,f"New alert to relay...\nSAME:, {GeneratedHeader}, \nBroadcast Text:, {BroadcastText}")
-                        debug(1,"Sending alert...")
+                        print(f"\n...NEW ALERT TO RELAY...\nSAME:, {GeneratedHeader}, \nBroadcast Text:, {BroadcastText}\n")
+                        print("Sending alert...")
                         SendDiscord(GeneratedHeader, BroadcastText, ConfigData)
                         Playout(ConfigData).Alert()
-                else: debug(1,f"No relay: CLC in generated header ({GeneratedHeader}) did not match config CLC ({ConfigData['AllowedLocations_CLC']})")
+                else: print(f"No relay: CLC in generated header ({GeneratedHeader}) did not match config CLC ({ConfigData['AllowedLocations_CLC']})")
 
 def Cap():
     while True:
         while Capture().start() is True: pass
-        else: debug(3,"Capture error, I don't know why"); time.sleep(15)
+        else: print("Capture error, I don't know why"); time.sleep(15)
 
 if __name__ == "__main__": 
+    parser = argparse.ArgumentParser(description='QuantumENDEC')
+    parser.add_argument('-v', '--version', action='store_true', help='Displays QuantumENDECs version and exits.')
+    parser.add_argument('-k', '--keepScreen', action='store_true', help='Prevents the terminal screen from clearing')
+    args = parser.parse_args()
+    if args.keepScreen is True:
+        def Clear(): pass
+    if args.version is True: print(f"QuantumENDEC {QEversion}"); exit()
+
     #QUANTUMENDEC STARTS HERE
-    QEstart()
+    setup()
     CaptureThread = threading.Thread(target=Cap)
     RelayThread = threading.Thread(target=Relay)
     CaptureThread.start()
     RelayThread.start()
     CaptureThread.join()
     RelayThread.join()
-    debug(3,"The end of QuantumENDEC")
+    print("The end of QuantumENDEC")

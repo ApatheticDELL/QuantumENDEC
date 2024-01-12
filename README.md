@@ -1,5 +1,5 @@
 ApatheticDELL presents...
-# QuantumENDEC (v4.1.0)
+# QuantumENDEC (v4.2.0)
 
 ### Credits
 Developed by...
@@ -26,25 +26,25 @@ You will first require the following...
 ...to be installed on your System
 
 Then you can run:
-```python3 QuantumENDEC.py -s```
-And then select the "Install dependencies" option to install required python modules.  
+```python SetupQE.py```
+Then select the "Install dependencies" option to install the required Python modules.  
 
-If that dosen't work, you may need to install them manually.
+If that doesn't work, you may need to install them manually.
 Required modules: EASGen, EAS2Text, discord_webhook, pyttsx3, sounddevice, numpy, scipy
 
 ### Setup
-The alert audio will play on your default sound device, whether it be on Linux or Windows.
-
-Before doing anything, you need to have some knowledge on the Canadian public alerting system... more precisely, Pelmorex and its CAP-CP XML files.
+Before doing anything, you need to have some knowledge of the Canadian public alerting system... more precisely, Pelmorex and its CAP-CP XML files.
 You can read about it on this PDF from Pelmorex: https://alerts.pelmorex.com/wp-content/uploads/2021/06/NAADS-LMD-User-Guide-R10.0.pdf
 
-Go into the config.json file to configure the software.
+You need to set a config file before doing anything.
+There is a config.json file that is used to configure the software.
+You can create one by running: ```python SetupQE.py``` and selecting "Do configuration setup."
 You'll find discord webhook settings, along with filters for alert statuses, severity, and urgency.
 
-There's also some Experimental Settings with audio, but, best to leave them be since mostly they're for the future.
-
 After you're done configuring, start QuantumENDEC by just running...
-```python3 QuantumENDEC.py```
+```python QuantumENDEC.py```
+
+You can run QuantumENDEC with arguments, run it with "-h" for more info.
 
 NOTE!!
 In the audio folder, attn.wav is static! Try not to remove it.
@@ -61,8 +61,8 @@ For more information.
 
 If you see anything about matches or match files, it just means that the software already processed the thing/file in question.
 
-Emergency information does come from offical resources, though one shouldn't fully rely on QE for emergency information as errors could still occur
+Emergency information does come from official resources, though one shouldn't fully rely on QE for emergency information as errors could still occur
 
-Finally, even though this was coded from (mostly) the ground up, I'd still like to credit libmarleu's BashENDEC (which no longer exists on their page) for starting out the QuantumENDEC journey all the way in 2021...
+Finally, even though this was coded from (mostly) the ground up, I'd still like to credit Libmarleu's BashENDEC (which no longer exists on their page) for starting the QuantumENDEC journey in 2021...
 
 And thanks to all who worked on this one, hell of an ENDEC...
