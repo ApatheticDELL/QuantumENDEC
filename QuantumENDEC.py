@@ -20,7 +20,7 @@ except: print("IMPORT FAIL: One or more modules has failed to inport please run 
 try: os.system("ffmpeg -version")
 except: print("Uh oh, FFMPEG dosen't apper to be installed on your system, you will need to install it so it can be ran on a command line. Some functions of QuantumENDEC depend on FFMPEG"); exit()
 
-QEversion = "4.0.0"
+QEversion = "4.0.1"
 
 def Clear(): os.system('cls' if os.name == 'nt' else 'clear')
 
@@ -277,7 +277,7 @@ class Capture:
             data_received = ""
             try:
                 while True:
-                    chunk = s.recv(buffer).decode('utf-8')
+                    chunk = str(s.recv(buffer),encoding='utf-8', errors='ignore')
                     data_received += chunk
                     if delimiter in chunk: return data_received
             except socket.timeout:
