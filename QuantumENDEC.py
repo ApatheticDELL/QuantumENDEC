@@ -480,19 +480,19 @@ class Playout:
 
     def AlertSAME(self):
         print("Playing out the alert with SAME...")
-        if os.path.exists("./Audio/pre.wav"): print("Playing lead in audio (Pre-Roll)..."); self.play("./Audio/pre.wav")
+        if os.path.exists("./Audio/pre.wav"): self.play("./Audio/pre.wav")
         self.play("./Audio/same.wav")
         self.play("./Audio/attn.wav")
         self.play("./Audio/audio.wav")
         self.play("./Audio/eom.wav")
-        if os.path.exists("./Audio/post.wav"): print("Playing lead out audio..."); self.play("./Audio/post.wav")
+        if os.path.exists("./Audio/post.wav"): self.play("./Audio/post.wav")
 
     def AlertSTANDARD(self):
         print("Playing out the alert in the standard boring manner...")
-        if os.path.exists("./Audio/pre.wav"): print("Playing lead in audio (Pre-Roll)..."); self.play("./Audio/pre.wav")
+        if os.path.exists("./Audio/pre.wav"): self.play("./Audio/pre.wav")
         self.play("./Audio/attn.wav")
         self.play("./Audio/audio.wav")
-        if os.path.exists("./Audio/post.wav"): print("Playing lead out audio..."); self.play("./Audio/post.wav")
+        if os.path.exists("./Audio/post.wav"): self.play("./Audio/post.wav")
 
     def Alert(self):
         if self.InputConfig['PlayoutNoSAME'] is True: self.AlertSTANDARD()
