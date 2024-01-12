@@ -20,7 +20,7 @@ except: print("IMPORT FAIL: One or more modules has failed to inport please run 
 try: os.system("ffmpeg -version")
 except: print("Uh oh, FFMPEG dosen't apper to be installed on your system, you will need to install it so it can be ran on a command line. Some functions of QuantumENDEC depend on FFMPEG"); exit()
 
-QEversion = "4.0.1"
+QEversion = "4.0.2"
 
 def Clear(): os.system('cls' if os.name == 'nt' else 'clear')
 
@@ -505,7 +505,12 @@ class Generate:
             except: EVE = "CEM"
         try: Effective = datetime.fromisoformat(datetime.fromisoformat(self.InfoEN['info']['effective']).astimezone(timezone.utc).isoformat()).strftime("%j%H%M")
         except: Effective = datetime.now().astimezone(timezone.utc).strftime("%j%H%M")
-        Purge = datetime.fromisoformat(self.InfoEN['info']['expires'][:-6]) - datetime.fromisoformat(self.InfoEN['info']['effective'][:-6])
+        try:
+            Purge = datetime.fromisoformat(self.InfoEN['info']['expires'][:-6]) - datetime.fromisoformat(self.InfoEN['info']['effective'][:-6])
+            hours, remainder = divmod(Purge.seconds, 3600)
+            minutes, _ = divmod(remainder, 60)
+            Purge = "{:02}{:02}".format(hours, minutes)
+        except: Purge = "0600"
         hours, remainder = divmod(Purge.seconds, 3600)
         minutes, _ = divmod(remainder, 60)
         Purge = "{:02}{:02}".format(hours, minutes)
