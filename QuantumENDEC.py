@@ -18,7 +18,7 @@ from EAS2Text import EAS2Text
 try: os.system("ffmpeg -version")
 except: print("Uh oh, FFMPEG dosen't appear to be installed on your system, you will need to install it so it can be ran on a command line. Some functions of QuantumENDEC depend on FFMPEG"); exit()
 
-QEversion = "4.2.1"
+QEversion = "4.2.2"
 
 def Clear(): os.system('cls' if os.name == 'nt' else 'clear')
 
