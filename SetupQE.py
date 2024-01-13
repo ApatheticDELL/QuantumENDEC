@@ -1,8 +1,5 @@
 #This is the setup script for QuantumENDEC
-try:
-    import json, os
-    import sounddevice as sd
-except: print("IMPORT FAIL: One or more modules has failed to inport please run QuantumENDEC with the --setup (-s) flag and install dependencies"); exit()
+import json, os
 
 def Clear(): os.system('cls' if os.name == 'nt' else 'clear')
 
@@ -106,6 +103,8 @@ while True:
         print("! This might not work on Linux. !")
         ConSet2 = YesNo()
         if ConSet2 is True:
+            try: import sounddevice as sd
+            except: print("IMPORT FAIL: One or more modules has failed to inport. Run this file again, but install dependencies this time..."); exit()    
             def print_available_devices():
                 print("Available audio devices:")
                 devices = sd.query_devices()
