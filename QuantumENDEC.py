@@ -278,7 +278,7 @@ class Generate:
             "sewer":"CEM",
             "silver":"CEM",
             "snowfall":"WSW",
-            "snowSquall":"SMW",
+            "snowSquall":"WSW",
             "spclIce":"SPS",
             "spclMarine":"SMW",
             "squall":"SMW",
