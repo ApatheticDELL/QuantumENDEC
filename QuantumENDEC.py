@@ -6,16 +6,15 @@ import sys
 if sys.version_info.major >= 3: pass
 else: print("You are not running this program with Python 3, run it with Python 3. (Or update python)"); exit()
 
-try:
-    import re, xmltodict, pyttsx3, requests, shutil, time, socket, threading, json, os, argparse
-    import sounddevice as sd
-    import numpy as np
-    import scipy.io.wavfile as wav
-    from datetime import datetime, timezone, timedelta
-    from urllib.request import Request, urlopen
-    from EASGen import EASGen
-    from EAS2Text import EAS2Text
-except: print("IMPORT FAIL: One or more modules has failed to inport please run the QuantumENDEC setup script"); exit()
+import re, xmltodict, pyttsx3, requests, shutil, time, socket, threading, json, os, argparse
+import sounddevice as sd
+import numpy as np
+import scipy.io.wavfile as wav
+from datetime import datetime, timezone, timedelta
+from urllib.request import Request, urlopen
+from EASGen import EASGen
+from EAS2Text import EAS2Text
+
 try: os.system("ffmpeg -version")
 except: print("Uh oh, FFMPEG dosen't appear to be installed on your system, you will need to install it so it can be ran on a command line. Some functions of QuantumENDEC depend on FFMPEG"); exit()
 

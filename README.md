@@ -30,7 +30,7 @@ Then you can run:
 Then select the "Install dependencies" option to install the required Python modules.  
 
 If that doesn't work, you may need to install them manually.
-Required modules: EASGen, EAS2Text, discord_webhook, pyttsx3, sounddevice, numpy, scipy
+Required modules: EASGen, EAS2Text, discord_webhook, pyttsx3, sounddevice, numpy, scipy, requests, argparse, xmltodict, pydub.
 
 ### Setup
 Before doing anything, you need to have some knowledge of the Canadian public alerting system... more precisely, Pelmorex and its CAP-CP XML files.

@@ -68,6 +68,10 @@ requirments = [
     'sounddevice',
     'numpy',
     'scipy',
+    'requests',
+    'argparse',
+    'xmltodict',
+    'pydub',
 ]
 
 err = ""
