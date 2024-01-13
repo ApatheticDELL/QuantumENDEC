@@ -19,7 +19,7 @@ except: print("IMPORT FAIL: One or more modules has failed to inport please run 
 try: os.system("ffmpeg -version")
 except: print("Uh oh, FFMPEG dosen't apper to be installed on your system, you will need to install it so it can be ran on a command line. Some functions of QuantumENDEC depend on FFMPEG"); exit()
 
-QEversion = "4.2.0"
+QEversion = "4.2.1"
 
 def Clear(): os.system('cls' if os.name == 'nt' else 'clear')
 
@@ -143,19 +143,19 @@ class Check:
 
     def watchNotify(ListenFolder, HistoryFolder):
         print("Waiting for an alert...")
-        def GetXMLQue(): return os.listdir(f"./{ListenFolder}")
+        def GetFolderQueue(): return os.listdir(f"./{ListenFolder}")
         while True:
-            ExitTicketCheck = False
-            for file in GetXMLQue():
+            ExitTicket = False
+            for file in GetFolderQueue():
                 if file in os.listdir(f"./{HistoryFolder}"):
                     print("No relay: watch folder files matched.")
                     os.remove(f"./{ListenFolder}/{file}")
-                    exit()
-                ExitTicketCheck = True
-                break
-            if ExitTicketCheck is True: break
-            else: pass
-            time.sleep(1) # Wait a little bit between looking for new files 
+                    ExitTicket = False
+                else:
+                    ExitTicket = True
+                    break
+            if ExitTicket is True: break
+            else: time.sleep(1) # Wait a little bit between looking for new files
         return file
 
 class Generate:
@@ -214,7 +214,7 @@ class Generate:
             "flashFlood":"FFW",
             "flashFreeze":"FSW",
             "flood":"FLW",
-            "foodSupply":"FLS",
+            "foodSupply":"CEM",
             "forestFire":"WFW",
             "freezeDrzl":"WSW",
             "freezeRain":"WSW",
