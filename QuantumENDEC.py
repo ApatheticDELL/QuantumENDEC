@@ -19,7 +19,7 @@ except Exception as e: print(f"IMPORT FAIL: {e}.\nOne or more modules has failed
 try: os.system("ffmpeg -version")
 except: print("Uh oh, FFMPEG dosen't apper to be installed on your system, you will need to install it so it can be ran on a command line. Some functions of QuantumENDEC depend on FFMPEG"); exit()
 
-QEversion = "4.3.0"
+QEversion = "4.3.1"
 
 def Clear(): os.system('cls' if os.name == 'nt' else 'clear')
 
