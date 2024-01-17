@@ -5,7 +5,8 @@ def Clear(): os.system('cls' if os.name == 'nt' else 'clear')
 
 def CreateConfig(SameCallsign="QUANTUM8",
                  UseSpcAudio=False, SpcAudio="",
-                 PlayNoSAME=False,
+                 PlayNoSAME=False, RelayEN=True, RelayFR=False,
+                 UseDefaultVoice=True, SelectVoiceEN="", SelectVoiceFR="",
                  discWeb=False, dwCol="ffffff", dwAutNam="QUANTUMENDEC", dwAuURL="", dwAuIcoURL="", dwWebURL="", 
                  statTest=True, statActual=True,
                  mestypAlert=True, mestypUpdate=True, mestypCancel=True, mestypTest=True,
@@ -19,7 +20,13 @@ def CreateConfig(SameCallsign="QUANTUM8",
         "SpecifiedAudioDevice": SpcAudio,
 
         "PlayoutNoSAME": PlayNoSAME,
-        
+        "relay_en": RelayEN,
+        "relay_fr": RelayFR,
+
+        "UseDefaultVoices": UseDefaultVoice,
+        "VoiceEN": SelectVoiceEN,
+        "VoiceFR": SelectVoiceFR,
+
         "enable_discord_webhook": discWeb,
         "webhook_color": dwCol,
         "webhook_author_name": dwAutNam,
@@ -52,6 +59,15 @@ def CreateConfig(SameCallsign="QUANTUM8",
     with open("config.json", 'w') as json_file:
         json.dump(NewConfig, json_file, indent=2)
 
+def SelectTTS(InputPre):
+    import pyttsx3
+    engine = pyttsx3.init()
+    voices = engine.getProperty('voices')
+    print("Available voices:")
+    for i, voice in enumerate(voices): print(f"{i + 1}. {voice.name}")
+    selected_index = int(input(f"{InputPre} > ")) - 1
+    if 0 <= selected_index < len(voices): selected_voice = voices[selected_index]; return selected_voice
+    else: return None
 
 def YesNo():
     while True:
@@ -72,6 +88,7 @@ requirments = [
     'argparse',
     'xmltodict',
     'pydub',
+    'pygame'
 ]
 
 err = ""
@@ -144,6 +161,40 @@ while True:
             elif ConSet4 == "2": ConSet4 = True; break
             else: err = "Input error, try again."
         Clear()
+        print("You can relay alerts in both English and French, or one or the other.")
+        print("Do you want to relay alerts in English?")
+        ConEN = YesNo()
+        print("Do you want to relay alerts in French?")
+        ConFR = YesNo()
+        Clear()
+        
+        print("Do you want to set up voices? (y/n)")
+
+        if YesNo() is True:
+            SelectVoice = None; err = ""
+            while SelectVoice is None:
+                Clear()
+                try:
+                    SelectVoice = SelectTTS(f"\n{err}Select English voice (number)")
+                    if SelectVoice is None: err = "Invalid input, try again!\n"
+                    else: SelectVoiceEN = SelectVoice.name
+                except: err = "Input error, try again!\n"
+
+            SelectVoice = None; err = ""
+            while SelectVoice is None:
+                Clear()
+                try:
+                    SelectVoice = SelectTTS(f"\n{err}Select French voice (number)")
+                    if SelectVoice is None: err = "Invalid input, try again!\n"
+                    else: SelectVoiceFR = SelectVoice.name
+                except: err = "Input error, try again!\n"
+            UseDefaultVoice = False
+        else:
+            UseDefaultVoice = True
+            SelectVoiceEN = ""
+            SelectVoiceFR = ""
+        
+        Clear()
         print("Would you like to setup a discord webhook? (y/n)")
         ConSet5 = YesNo()
         if ConSet5 is True:
@@ -211,7 +262,7 @@ while True:
             ConSet27 = input(">")
             ConSet27 = ConSet27.split(',')
         else: ConSet27 = []
-        CreateConfig(ConSet1,ConSet2,ConSet3,ConSet4,ConSet5,ConSet6,ConSet7,ConSet8,ConSet9,ConSet10,ConSet11,ConSet12,ConSet13,ConSet14,ConSet15,
+        CreateConfig(ConSet1,ConSet2,ConSet3,ConSet4,ConEN,ConFR,UseDefaultVoice,SelectVoiceEN,SelectVoiceFR,ConSet5,ConSet6,ConSet7,ConSet8,ConSet9,ConSet10,ConSet11,ConSet12,ConSet13,ConSet14,ConSet15,
                         ConSet16,ConSet17,ConSet18,ConSet19,ConSet20,ConSet21,ConSet22,ConSet23,ConSet24,ConSet25,ConSet26,ConSet27)
         print("Config file created!")
         break

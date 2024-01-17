@@ -6,28 +6,29 @@ import sys
 if sys.version_info.major >= 3: pass
 else: print("You are not running this program with Python 3, run it with Python 3. (Or update python)"); exit()
 
-import re, xmltodict, pyttsx3, requests, shutil, time, socket, threading, json, os, argparse
-import sounddevice as sd
-import numpy as np
-import scipy.io.wavfile as wav
-from datetime import datetime, timezone, timedelta
-from urllib.request import Request, urlopen
-from EASGen import EASGen
-from EAS2Text import EAS2Text
-
+try:
+    import re, pyttsx3, requests, shutil, time, socket, threading, json, os, argparse, base64, pygame
+    import sounddevice as sd
+    import scipy.io.wavfile as wav
+    from datetime import datetime, timezone
+    from urllib.request import Request, urlopen
+    from EASGen import EASGen
+    from EAS2Text import EAS2Text
+    from itertools import zip_longest
+except: print("IMPORT FAIL: One or more modules has failed to inport please run QuantumENDEC with the --setup (-s) flag and install dependencies"); exit()
 try: os.system("ffmpeg -version")
-except: print("Uh oh, FFMPEG dosen't appear to be installed on your system, you will need to install it so it can be ran on a command line. Some functions of QuantumENDEC depend on FFMPEG"); exit()
+except: print("Uh oh, FFMPEG dosen't apper to be installed on your system, you will need to install it so it can be ran on a command line. Some functions of QuantumENDEC depend on FFMPEG"); exit()
 
-QEversion = "4.2.2"
+QEversion = "4.3.0"
 
 def Clear(): os.system('cls' if os.name == 'nt' else 'clear')
 
 class Capture:
-    def __init__(self):
+    def __init__(self, OutputFolder):
         self.NAAD1 = "streaming1.naad-adna.pelmorex.com"
         self.NAAD2 = "streaming2.naad-adna.pelmorex.com"
-        self.OutputFolder = "XMLqueue"
-    
+        self.OutputFolder = OutputFolder
+
     def receive(self, host, port, buffer, delimiter):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.connect((host, port))
@@ -36,63 +37,49 @@ class Capture:
             data_received = ""
             try:
                 while True:
-                    chunk = str(s.recv(buffer),encoding='utf-8', errors='ignore')
+                    chunk = str(s.recv(buffer), encoding='utf-8', errors='ignore')
                     data_received += chunk
-                    if delimiter in chunk: return data_received
-            except socket.timeout:
-                print(f"[Capture]: Connection timed out for {host}")
-                return False
-            except:
-                print(f"[Capture]: Something brokey when connecting to {host}")
-                return False
-
+                    if delimiter in chunk:
+                        CapturedSent = re.search(r'<sent>\s*(.*?)\s*</sent>', data_received, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1).replace("-", "_").replace("+", "p").replace(":", "_")
+                        CapturedIdent = re.search(r'<identifier>\s*(.*?)\s*</identifier>', data_received, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1).replace("-", "_").replace("+", "p").replace(":", "_")
+                        NAADsFilename = f"{CapturedSent}I{CapturedIdent}.xml"
+                        with open(f"{self.OutputFolder}/{NAADsFilename}", 'w', encoding='utf-8') as file: file.write(data_received)
+                        print(f"[Capture]: I captured an XML, and saved it to: {self.OutputFolder}/{NAADsFilename} | From: {host}")
+                        data_received = ""
+            except socket.timeout: print(f"[Capture]: Connection timed out for {host}"); return False
+            except Exception as e: print(f"[Capture]: Something broke when connecting to {host}: {e}"); return False
+    
     def start(self):
-        NAADs = self.receive(self.NAAD1, 8080, 1024, "</alert>")
-        if NAADs is False: NAADs = self.receive(self.NAAD2, 8080, 1024, "</alert>")
-        if NAADs is False: return False
-        try:
-            CapturedSent = re.search(r'<sent>\s*(.*?)\s*</sent>', NAADs, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)
-            CapturedIdent = re.search(r'<identifier>\s*(.*?)\s*</identifier>', NAADs, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)
-            CapturedSent = CapturedSent.replace("-","_").replace("+", "p").replace(":","_")
-            CapturedIdent = CapturedIdent.replace("-","_").replace("+", "p").replace(":","_")
-            NAADsFilename = f"{CapturedSent}I{CapturedIdent}.xml"
-        except:
-            print("[Capture]: Something brokey :P")
-            return False
-        with open(f"./{self.OutputFolder}/{NAADsFilename}", 'w', encoding='utf-8') as file: file.write(NAADs)
-        file.close()
-        print(f"[Capture]: I captured an XML, and saved it to: {self.OutputFolder}/{NAADsFilename}")
-        return True
+        NAAD = self.receive(self.NAAD1, 8080, 1024, "</alert>")
+        if NAAD is False: NAAD = self.receive(self.NAAD2, 8080, 1024, "</alert>")
+        if NAAD is False: print("[Capture]: Double brokey!")
+        return False
 
 class Check:
     def __init__(self):
         pass
 
-    def Config(InfoEN, ConfigData, Sent, Status, MsgType, Severity, Urgency, BroadcastImmediately):
+    def Config(InfoX, ConfigData, Status, MsgType, Severity, Urgency, BroadcastImmediately):
         if ConfigData[f"status{Status}"] is False: return False
         if "Yes" in str(BroadcastImmediately): Final = True
         else:
-            Final = ConfigData[f"severity{Severity}"]
-            Final = ConfigData[f"urgency{Urgency}"]
-            Final = ConfigData[f"messagetype{MsgType}"]
-        if len(ConfigData['AllowedLocations_Geocodes']) == 0: pass
-        else:
-            GeocodeList = []
-            try: 
-                key = 0
-                for i in InfoEN['info']['area']:
-                    for Geocode in InfoEN['info']['area'][key]['geocode']:
-                        if Geocode['valueName'] == 'profile:CAP-CP:Location:0.3': GeocodeList.append(Geocode['value'])
-                    key = key + 1
-            except:
-                for Geocode in InfoEN['info']['area']['geocode']:
-                    if Geocode['valueName'] == 'profile:CAP-CP:Location:0.3': GeocodeList.append(Geocode['value'])
-            GeoMatch = False
-            for i in GeocodeList:
-                if i in ConfigData['AllowedLocations_Geocodes']: GeoMatch = True
-            if GeoMatch is False: return False
+            try:
+                var1 = ConfigData[f"severity{Severity}"]
+                var2 = ConfigData[f"urgency{Urgency}"]
+                var3 = ConfigData[f"messagetype{MsgType}"]
+                if var1 is True and var2 is True and var3 is True: Final = True
+                else: Final = False
+            except: Final = False
+        if Final is True:
+            if len(ConfigData['AllowedLocations_Geocodes']) == 0: pass
+            else:
+                GeocodeList = re.findall(r'<geocode>\s*<valueName>profile:CAP-CP:Location:0.3</valueName>\s*<value>\s*(.*?)\s*</value>', InfoX, re.MULTILINE | re.IGNORECASE | re.DOTALL)
+                GeoMatch = False
+                for i in GeocodeList:
+                    if i in ConfigData['AllowedLocations_Geocodes']: GeoMatch = True
+                if GeoMatch is False: return False
         return Final
-    
+        
     def MatchCLC(ConfigData, SAMEheader):
         if len(ConfigData['AllowedLocations_CLC']) == 0: return True
         else:
@@ -126,7 +113,7 @@ class Check:
             Dom1 = 'capcp1.naad-adna.pelmorex.com'
             Dom2 = 'capcp2.naad-adna.pelmorex.com'
             Output = f"{QueueFolder}/{sent}I{identifier}.xml"
-            if f"{sent}I{identifier}.xml" in os.listdir(f"./{HistoryFolder}"):
+            if f"{sent}I{identifier}.xml" in os.listdir(f"{HistoryFolder}"):
                 print("Heartbeat, no download: Files matched.")
             else:
                 print( f"Downloading: {sent}I{identifier}.xml...")
@@ -141,14 +128,14 @@ class Check:
                 f.close()
 
     def watchNotify(ListenFolder, HistoryFolder):
-        print("Waiting for an alert...")
-        def GetFolderQueue(): return os.listdir(f"./{ListenFolder}")
+        def GetFolderQueue(): return os.listdir(f"{ListenFolder}")
+        print(f"Waiting for an alert...")
         while True:
             ExitTicket = False
             for file in GetFolderQueue():
-                if file in os.listdir(f"./{HistoryFolder}"):
+                if file in os.listdir(f"{HistoryFolder}"):
                     print("No relay: watch folder files matched.")
-                    os.remove(f"./{ListenFolder}/{file}")
+                    os.remove(f"{ListenFolder}/{file}")
                     ExitTicket = False
                 else:
                     ExitTicket = True
@@ -159,7 +146,7 @@ class Check:
 
 class Generate:
     def __init__(self, InfoXML, SentDate, MsgType, SAMEcallsign):
-        self.InfoEN = InfoXML
+        self.InfoX = InfoXML
         self.MsgType = MsgType
         self.Sent = SentDate
         self.Callsign = SAMEcallsign
@@ -314,16 +301,7 @@ class Generate:
         }
 
     def GeoToCLC(self):
-        GeocodeList = []
-        try: 
-            key = 0
-            for i in self.InfoEN['info']['area']:
-                for Geocode in self.InfoEN['info']['area'][key]['geocode']:
-                    if Geocode['valueName'] == 'profile:CAP-CP:Location:0.3': GeocodeList.append(Geocode['value'])
-                key = key + 1
-        except:
-            for Geocode in self.InfoEN['info']['area']['geocode']:
-                if Geocode['valueName'] == 'profile:CAP-CP:Location:0.3': GeocodeList.append(Geocode['value'])
+        GeocodeList = re.findall(r'<geocode>\s*<valueName>profile:CAP-CP:Location:0.3</valueName>\s*<value>\s*(.*?)\s*</value>', self.InfoX, re.MULTILINE | re.IGNORECASE | re.DOTALL)
         filepath = './GeoToCLC.csv'
         SameDict = {}
         with open(filepath) as fp:
@@ -359,107 +337,120 @@ class Generate:
         if len(Callsign) > 8: Callsign = "QUANTUM0"; print("Your callsign is too long!")
         elif len(Callsign) < 8: Callsign = "QUANTUM0"; print("Your callsign is too short!")
         elif "-" in Callsign: Callsign = "QUANTUM0"; print("Your callsign contains an invalid symbol!")
-        try: ORG = self.CapCatToSameOrg[self.InfoEN['info']['category']]
+        
+        try: ORG = self.CapCatToSameOrg[re.search(r'<category>\s*(.*?)\s*</category>', self.InfoX, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)]
         except: ORG = "CIV"
-        try:
-            for eventCode in self.InfoEN['info']['eventCode']:
-                if eventCode['valueName'] == 'SAME': EVE = eventCode['value']; break
+        
+        try: EVE = re.search(r'<eventCode>\s*<valueName>SAME</valueName>\s*<value>\s*(.*?)\s*</value>', self.InfoX, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)
         except:
-            try:
-                for eventCode in self.InfoEN['info']['eventCode']:
-                    if eventCode['valueName'] == 'profile:CAP-CP:Event:0.4': EVE = eventCode['value']; break
-            except: EVE = self.InfoEN['info']['eventCode']['value']
+            EVE = re.search(r'<eventCode>\s*<valueName>profile:CAP-CP:Event:0.4</valueName>\s*<value>\s*(.*?)\s*</value>', self.InfoX, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)
             try: EVE = self.CapEventToSameEvent[EVE]
             except: EVE = "CEM"
-        try: Effective = datetime.fromisoformat(datetime.fromisoformat(self.InfoEN['info']['effective']).astimezone(timezone.utc).isoformat()).strftime("%j%H%M")
+
+        try: Effective = datetime.fromisoformat(datetime.fromisoformat(re.search(r'<effective>\s*(.*?)\s*</effective>', self.InfoX, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)).astimezone(timezone.utc).isoformat()).strftime("%j%H%M")
         except: Effective = datetime.now().astimezone(timezone.utc).strftime("%j%H%M")
+        
         try:
-            Purge = datetime.fromisoformat(self.InfoEN['info']['expires'][:-6]) - datetime.fromisoformat(self.InfoEN['info']['effective'][:-6])
+            Purge = datetime.fromisoformat(re.search(r'<effective>\s*(.*?)\s*</effective>', self.InfoX, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)[:-6]) - datetime.fromisoformat(re.search(r'<expires>\s*(.*?)\s*</expires>', self.InfoX, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)[:-6])
             hours, remainder = divmod(Purge.seconds, 3600)
             minutes, _ = divmod(remainder, 60)
             Purge = "{:02}{:02}".format(hours, minutes)
         except: Purge = "0600"
-        if "layer:EC-MSC-SMC:1.1:Newly_Active_Areas" in str(self.InfoEN):
-            for parameter in self.InfoEN['info']['parameter']:
-                if parameter['valueName'] == 'layer:EC-MSC-SMC:1.1:Newly_Active_Areas':
-                    try: CLC = parameter['value'].replace(',','-'); break
-                    except: CLC = ""; break
+        
+        if "layer:EC-MSC-SMC:1.1:Newly_Active_Areas" in str(self.InfoX):
+            try: CLC = re.search(r'<valueName>layer:EC-MSC-SMC:1.1:Newly_Active_Areas</valueName>\s*<value>\s*(.*?)\s*</value>', self.InfoX, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1).replace(',','-')
+            except: CLC = self.GeoToCLC()
         else: CLC = self.GeoToCLC()
+        
         if CLC == "": CLC = "000000"
+        
         GeneratedHeader = f"ZCZC-{ORG}-{EVE}-{CLC}+{Purge}-{Effective}-{Callsign}-"
         return GeneratedHeader
         
-    def BroadcastText(self, GeneratedHeader):
-        if "layer:SOREM:1.0:Broadcast_Text" in str(self.InfoEN):
-            for parameter in self.InfoEN['info']['parameter']:
-                if parameter['valueName'] == 'layer:SOREM:1.0:Broadcast_Text':
-                    try: BroadcastText = parameter['value']; break
-                    except: BroadcastText = "[error getting broadcast text]"; break
-        else:
-            if self.MsgType == "Alert": MsgPrefix = "issued"
-            elif self.MsgType == "Update": MsgPrefix = "updated"
-            elif self.MsgType == "Cancel": MsgPrefix = "cancelled"
+    def BroadcastText(self, lang):
+        try: BroadcastText = re.search(r'<valueName>layer:SOREM:1.0:Broadcast_Text</valueName>\s*<value>\s*(.*?)\s*</value>', self.InfoX, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1).replace('\n','').replace('  ',' ')
+        except:
+            if lang == "fr": issue = "émis"; update = "mis à jour"; cancel = "annulé"
+            else: issue = "issued"; update = "updated"; cancel = "cancelled"
+            if self.MsgType == "Alert": MsgPrefix = issue
+            elif self.MsgType == "Update": MsgPrefix = update
+            elif self.MsgType == "Cancel": MsgPrefix = cancel
             else: MsgPrefix = "issued"
-            EventTitle = EAS2Text(GeneratedHeader).evntText
-            Sent = datetime.fromisoformat(datetime.fromisoformat(self.Sent).astimezone(timezone.utc).isoformat()).strftime("%H:%M %Z, %B %d, %Y.")
-            SenderName = Description = self.InfoEN['info']['senderName']
-            try: Description = self.InfoEN['info']['description']; Description = Description.replace('\n', ' ')
-            except: Description = ""
-            try: Instruction = self.InfoEN['info']['instruction']; Instruction = Instruction.replace('\n', ' ')
-            except: Instruction = ""
+            
+            if lang == "fr": Sent = datetime.fromisoformat(datetime.fromisoformat(self.Sent).astimezone(timezone.utc).isoformat()).strftime("%Hh%M %Z.")
+            else: Sent = datetime.fromisoformat(datetime.fromisoformat(self.Sent).astimezone(timezone.utc).isoformat()).strftime("%H:%M %Z, %B %d, %Y.")
+            
+            try: EventType = re.search(r'<valueName>layer:EC-MSC-SMC:1.0:Alert_Name</valueName>\s*<value>\s*(.*?)\s*</value>', self.InfoX, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)
+            except:
+                if lang == "fr": EventType = re.search(r'<event>\s*(.*?)\s*</event>', self.InfoX, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1); EventType = f"alerte {EventType}"
+                else: EventType = re.search(r'<event>\s*(.*?)\s*</event>', self.InfoX, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1); EventType = f"{EventType} alert"
             try:
-                Areas = []
-                for AreaDesc in self.InfoEN['info']['area']: Areas.append(AreaDesc['areaDesc'])
-                Areas = ', '.join(Areas) + '.'
-            except: Areas = self.InfoEN['info']['area']['areaDesc'] + '.'
-            if "layer:EC-MSC-SMC:1.0:Alert_Coverage" in str(self.InfoEN):
-                for parameter in self.InfoEN['info']['parameter']:
-                    if parameter['valueName'] == 'layer:EC-MSC-SMC:1.0:Alert_Coverage': regexcoverage = parameter['value']
-                Coverage = f"in {regexcoverage} for:"
-            else: Coverage = "for:"
-            BroadcastText = f"At {Sent} {SenderName} has {MsgPrefix} {EventTitle} {Coverage} {Areas} {Description} {Instruction}".replace('###','').replace('  ',' ')
+                Coverage = re.search(r'<valueName>layer:EC-MSC-SMC:1.0:Alert_Coverage</valueName>\s*<value>\s*(.*?)\s*</value>', self.InfoX, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)
+                if lang == "fr": Coverage = f"en {Coverage} pour:"
+                else: Coverage = f"in {Coverage} for:"
+            except:
+                if lang == "fr": Coverage = "pour:"
+                else: Coverage = "for:" 
+            AreaDesc = re.findall(r'<areaDesc>\s*(.*?)\s*</areaDesc>', self.InfoX, re.MULTILINE | re.IGNORECASE | re.DOTALL)
+            AreaDesc = ', '.join(AreaDesc) + '.'
+            try: SenderName = re.search(r'<senderName>\s*(.*?)\s*</senderName>', self.InfoX, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)
+            except: SenderName = "an alert issuer"
+            try: Description = re.search(r'<description>\s*(.*?)\s*</description>', self.InfoX, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1).replace('\n', ' ')
+            except: Description = ""
+            try: Instruction = re.search(r'<instruction>\s*(.*?)\s*</instruction>', self.InfoX, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1).replace('\n', ' ')
+            except: Instruction = ""
+            
+            if lang == "fr": BroadcastText = f"À {Sent} {SenderName} a {MsgPrefix} une {EventType} {Coverage} {AreaDesc} {Description} {Instruction}".replace('###','').replace('  ',' ')
+            else: BroadcastText = f"At {Sent} {SenderName} has {MsgPrefix} a {EventType} {Coverage} {AreaDesc} {Description} {Instruction}".replace('###','').replace('  ',' ')
+        
         return BroadcastText
 
-    def GetAudio(self, AudioLink, Output):
-        print("Downloading audio...")
-        r = requests.get(AudioLink)
-        with open(Output, 'wb') as f:
-            f.write(r.content)
-        f.close()
-    
-    def Audio(self, BroadcastText, GeneratedHeader):
-        def GenTTS(Input):
-            engine = pyttsx3.init()
-            engine.save_to_file(str(Input), "Audio/audio.wav")
-            engine.runAndWait()
-        
+    def GetAudio(self, AudioLink, Output, DecodeType):
+        if DecodeType == 1:
+            print("Decoding audio from BASE64...")
+            with open(Output, "wb") as fh:
+                fh.write(base64.decodebytes(AudioLink))
+        elif DecodeType == 0:
+            print("Downloading audio...")
+            r = requests.get(AudioLink)
+            with open(Output, 'wb') as f:
+                f.write(r.content)
+            f.close()
+
+    def Audio(self, BroadcastText, lang, ConfigData):
         try:
-            try:
-                for BroadcastAudio in self.InfoEN['info']['resource']:
-                    if BroadcastAudio['resourceDesc'] == 'Broadcast Audio':
-                        AudioLink = BroadcastAudio['uri']
-                        AudioType = BroadcastAudio['mimeType']
-            except:
-                if self.InfoEN['info']['resource']['resourceDesc'] == 'Broadcast Audio': print("Yes BroadcastAudio")
-                AudioLink = self.InfoEN['info']['resource']['uri']
-                AudioType = self.InfoEN['info']['resource']['mimeType']
-            try:
-                if AudioType == "audio/mpeg": self.GetAudio(AudioLink, "PreAudio.mp3"); os.system("ffmpeg -i PreAudio.mp3 PreAudio.wav"); os.remove("PreAudio.mp3")
-                elif AudioType == "audio/x-ms-wma": self.GetAudio(AudioLink, "PreAudio.wma"); os.system("ffmpeg -i PreAudio.wma PreAudio.wav"); os.remove("PreAudio.wma")
-                elif AudioType == "audio/wave": self.GetAudio(AudioLink, "PreAudio.wav")
-                elif AudioType == "audio/wav": self.GetAudio(AudioLink, "PreAudio.wav")
-                os.system(f"ffmpeg -y -i PreAudio.wav -filter:a volume=2.5 Audio/audio.wav"); os.remove("PreAudio.wav")
-            except:
-                GenTTS(BroadcastText)
+            BroadcastAudioResource = re.search(r'<resourceDesc>Broadcast Audio</resourceDesc>\s*(.*?)\s*</resource>', self.InfoX, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(0)
+            if "<derefUri>" in BroadcastAudioResource:
+                AudioLink = bytes(re.search(r'<derefUri>\s*(.*?)\s*</derefUri>', BroadcastAudioResource, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1), 'utf-8')
+                AudioType = re.search(r'<mimeType>\s*(.*?)\s*</mimeType>', BroadcastAudioResource, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)
+                Decode = 1
+            else:
+                AudioLink = re.search(r'<uri>\s*(.*?)\s*</uri>', BroadcastAudioResource, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)
+                AudioType = re.search(r'<mimeType>\s*(.*?)\s*</mimeType>', BroadcastAudioResource, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)
+                Decode = 0
+            if AudioType == "audio/mpeg": self.GetAudio(AudioLink,"PreAudio.mp3",Decode); os.system("ffmpeg -i PreAudio.mp3 PreAudio.wav"); os.remove("PreAudio.mp3")
+            elif AudioType == "audio/x-ms-wma": self.GetAudio(AudioLink,"PreAudio.wma",Decode); os.system("ffmpeg -i PreAudio.wma PreAudio.wav"); os.remove("PreAudio.wma")
+            elif AudioType == "audio/wave": self.GetAudio(AudioLink,"PreAudio.wav",Decode)
+            elif AudioType == "audio/wav": self.GetAudio(AudioLink,"PreAudio.wav",Decode)
+            os.system(f"ffmpeg -y -i PreAudio.wav -filter:a volume=2.5 Audio/audio.wav"); os.remove("PreAudio.wav")
         except:
             print("Generating TTS audio...")
-            GenTTS(BroadcastText)
-            
+            engine = pyttsx3.init()
+            if ConfigData["UseDefaultVoices"] is False:
+                if lang == "fr": ActiveVoice = ConfigData["VoiceFR"]
+                else: ActiveVoice = ConfigData["VoiceEN"]
+                voices = engine.getProperty('voices')
+                ActiveVoice = next((voice for voice in voices if voice.name == ActiveVoice), None)
+                if ActiveVoice: engine.setProperty('voice', ActiveVoice.id)
+            engine.save_to_file(str(BroadcastText), f"Audio/audio.wav")
+            engine.runAndWait()
+        
+    def AudioSAME(self, GeneratedHeader):
         print("Generating SAME header...")
         SAMEheader = EASGen.genEAS(header=GeneratedHeader, attentionTone=False, endOfMessage=False)
         SAMEeom = EASGen.genEAS(header="NNNN", attentionTone=False, endOfMessage=False)
-        EASGen.export_wav("Audio/same.wav", SAMEheader)
-        EASGen.export_wav("Audio/eom.wav", SAMEeom)
+        EASGen.export_wav("./Audio/same.wav", SAMEheader)
+        EASGen.export_wav("./Audio/eom.wav", SAMEeom)
 
 class Playout:
     def __init__(self, InputConfig):
@@ -475,7 +466,12 @@ class Playout:
             sampling_rate, audio_data = wav.read(InputFile)
             sd.play(audio_data, samplerate=sampling_rate)
             sd.wait()
-        else: os.system(f"ffplay -hide_banner -loglevel warning -nodisp -autoexit {InputFile}")
+        else:
+            pygame.mixer.init()
+            pygame.mixer.music.load(InputFile)
+            pygame.mixer.music.play()
+            while pygame.mixer.music.get_busy(): pygame.time.Clock().tick(10)
+            pygame.mixer.music.unload()
 
     def AlertSAME(self):
         print("Playing out the alert with SAME...")
@@ -486,18 +482,18 @@ class Playout:
         self.play("./Audio/eom.wav")
         if os.path.exists("./Audio/post.wav"): self.play("./Audio/post.wav")
 
-    def AlertSTANDARD(self):
+    def AlertIntro(self):
         print("Playing out the alert in the standard boring manner...")
         if os.path.exists("./Audio/pre.wav"): self.play("./Audio/pre.wav")
         self.play("./Audio/attn.wav")
+        
+    def AlertAudio(self):
         self.play("./Audio/audio.wav")
+
+    def AlertOutro(self):
         if os.path.exists("./Audio/post.wav"): self.play("./Audio/post.wav")
 
-    def Alert(self):
-        if self.InputConfig['PlayoutNoSAME'] is True: self.AlertSTANDARD()
-        else: self.AlertSAME()
-
-def SendDiscord(InputHeader, InputText, InputConfig):
+def SendDiscord(InputHeader, InputText, InputConfig, lang):
     if InputConfig['enable_discord_webhook'] is True:
         from discord_webhook import DiscordWebhook, DiscordEmbed
         Wcolor = InputConfig['webhook_color']
@@ -505,9 +501,13 @@ def SendDiscord(InputHeader, InputText, InputConfig):
         Wauthorurl = InputConfig['webhook_author_URL']
         Wiconurl = InputConfig['webhook_author_iconURL']
         Wurl = InputConfig['webhook_URL']
+
+        if lang == "fr": eTitle = "ALERTE D'URGENCE"
+        else: eTitle = "EMEGRENCY ALERT"
+
         print("Sending to discord webhook...")
         webhook = DiscordWebhook(url=Wurl, rate_limit_retry=True, content=InputHeader)
-        embed = DiscordEmbed(title="EMEGRENCY ALERT // ALERTE D'URGENCE", description=InputText, color=Wcolor,)
+        embed = DiscordEmbed(title=eTitle, description=InputText, color=Wcolor,)
         embed.set_author(name=Wauthorname, url=Wauthorurl, icon_url=Wiconurl)
         embed.set_footer(text="QuantumENDEC")
         webhook.add_embed(embed)
@@ -540,9 +540,11 @@ def setup():
 def Relay():
     while True:
         Clear()
-        ResultFileName = Check.watchNotify("XMLqueue", "XMLhistory")
+        print(f"Last refreshed: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        ResultFileName = Check.watchNotify("./XMLqueue", "./XMLhistory")
         print(f"Captured: {ResultFileName}")
         shutil.move(f"./XMLqueue/{ResultFileName}", f"./relay.xml")
+
         file = open("relay.xml", "r", encoding='utf-8')
         RelayXML = file.read()
         file.close()
@@ -554,41 +556,71 @@ def Relay():
         else:
             print("\n\n...NEW ALERT DETECTED...")
             shutil.copy(f"./relay.xml", str(f"./XMLhistory/{ResultFileName}"))
-            Sent = re.search(r'<sent>\s*(.*?)\s*</sent>', RelayXML, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)
-            Status = re.search(r'<status>\s*(.*?)\s*</status>', RelayXML, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)
-            MsgType = re.search(r'<msgType>\s*(.*?)\s*</msgType>', RelayXML, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)
-            RelayXML = re.search(r'<language>en-CA</language>\s*(.*?)\s*</info>', RelayXML, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(0)
-            InfoEN = xmltodict.parse(f"<info>{RelayXML}")
-            Severity = InfoEN['info']['severity']
-            Urgency = InfoEN['info']['urgency']
-            for parameter in InfoEN['info']['parameter']:
-                if parameter['valueName'] == 'layer:SOREM:1.0:Broadcast_Immediately': BroadcastImmediately = parameter['value']
             with open("config.json", "r") as JCfile: config = JCfile.read()
             ConfigData = json.loads(config)
             JCfile.close()
             Callsign = ConfigData['SAME_callsign']
             print(f"Hello {Callsign}")
-            if Check.Config(InfoEN, ConfigData, Sent, Status, MsgType, Severity, Urgency, BroadcastImmediately) is False: print("No relay: Config filters reject.")
-            else:
-                print("Generating text products...")
-                Gen = Generate(InfoEN, Sent, MsgType, Callsign)
-                GeneratedHeader = Gen.SAMEheader()
-                if Check.MatchCLC(ConfigData, GeneratedHeader) is True:
-                    if Check.DuplicateSAME(GeneratedHeader) is True: print("No relay: duplicate SAME header detected.")
+            Sent = re.search(r'<sent>\s*(.*?)\s*</sent>', RelayXML, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)
+            Status = re.search(r'<status>\s*(.*?)\s*</status>', RelayXML, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)
+            MessageType = re.search(r'<msgType>\s*(.*?)\s*</msgType>', RelayXML, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)
+            PlayAlert = Playout(ConfigData)
+
+            if ConfigData[f'PlayoutNoSAME'] is True:
+                try: BroadcastImmediately = re.findall(r'<valueName>layer:SOREM:1.0:Broadcast_Immediately</valueName>\s*<value>\s*(.*?)\s*</value>', RelayXML, re.MULTILINE | re.IGNORECASE | re.DOTALL)
+                except: BroadcastImmediately = ['No']
+                Urgency = re.findall(r'<urgency>\s*(.*?)\s*</urgency>', RelayXML, re.MULTILINE | re.IGNORECASE | re.DOTALL)
+                Severity = re.findall(r'<severity>\s*(.*?)\s*</severity>', RelayXML, re.MULTILINE | re.IGNORECASE | re.DOTALL)
+                Final = False
+                for a, b, c in zip_longest(Severity, Urgency, BroadcastImmediately, fillvalue=None):
+                    if Check.Config(RelayXML, ConfigData, Status, MessageType, a, b, c) is True: Final = True
+                if Final is False: print("No relay: None of its messages matched with config."); continue
+                PlayAlert.AlertIntro()
+
+            RelayXML = re.findall(r'<info>\s*(.*?)\s*</info>', RelayXML, re.MULTILINE | re.IGNORECASE | re.DOTALL)
+            InfoProc = 0
+
+            for InfoEN in RelayXML:
+                InfoProc = InfoProc + 1
+                print(f"\n...Processing <info>: {InfoProc}...\n")
+                InfoEN = f"<info>{InfoEN}</info>"
+                if re.search(r'<language>\s*(.*?)\s*</language>', InfoEN, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1) == "fr-CA": lang = "fr"
+                else: lang = "en"
+                if ConfigData[f'relay_{lang}'] is False: print("not relaying:", lang); continue
+                Urgency = re.search(r'<urgency>\s*(.*?)\s*</urgency>', InfoEN, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)
+                Severity = re.search(r'<severity>\s*(.*?)\s*</severity>', InfoEN, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)
+                try: BroadcastImmediately = re.search(r'<valueName>layer:SOREM:1.0:Broadcast_Immediately</valueName>\s*<value>\s*(.*?)\s*</value>', InfoEN, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)
+                except: BroadcastImmediately = "No"
+
+                if Check.Config(InfoEN, ConfigData, Status, MessageType, Severity, Urgency, BroadcastImmediately) is False: print("No relay: Config filters reject.")
+                else:
+                    print("Generating text products...")
+                    Gen = Generate(InfoEN, Sent, MessageType, Callsign)
+                    GeneratedHeader = Gen.SAMEheader()
+                    BroadcastText = Gen.BroadcastText(lang)
+                    
+                    if ConfigData[f'PlayoutNoSAME'] is False:
+                        if Check.MatchCLC(ConfigData, GeneratedHeader) is False: print(f"No relay: CLC in generated header ({GeneratedHeader}) did not match config CLC ({ConfigData['AllowedLocations_CLC']})"); continue
+                        if Check.DuplicateSAME(GeneratedHeader) is True: print("No relay: duplicate SAME header detected from a previous relay."); continue
+
+                    print("Generating audio products...")
+                    Gen.Audio(BroadcastText, lang, ConfigData)
+                    if ConfigData[f'PlayoutNoSAME'] is False:
+                        print(f"\n...NEW ALERT TO RELAY...\nSAME: {GeneratedHeader}, \nBroadcast Text: {BroadcastText}\nSending alert...")
+                        Gen.AudioSAME(GeneratedHeader)
+                        SendDiscord(GeneratedHeader, BroadcastText, ConfigData, lang)
+                        PlayAlert.AlertSAME()
                     else:
-                        BroadcastText = Gen.BroadcastText(GeneratedHeader)
-                        print("Generating audio products...")
-                        Gen.Audio(BroadcastText, GeneratedHeader)
-                        print(f"\n...NEW ALERT TO RELAY...\nSAME:, {GeneratedHeader}, \nBroadcast Text:, {BroadcastText}\n")
-                        print("Sending alert...")
-                        SendDiscord(GeneratedHeader, BroadcastText, ConfigData)
-                        Playout(ConfigData).Alert()
-                else: print(f"No relay: CLC in generated header ({GeneratedHeader}) did not match config CLC ({ConfigData['AllowedLocations_CLC']})")
+                        print(f"\n...NEW ALERT TO RELAY...\nSAME Header is disabled. \nBroadcast Text: {BroadcastText}\nSending alert...")
+                        if lang == "fr": SendDiscord("ALERTE D'URGENCE", BroadcastText, ConfigData, lang)
+                        else: SendDiscord("EMEGRENCY ALERT", BroadcastText, ConfigData, lang)
+                        PlayAlert.AlertAudio()
+
+            if ConfigData[f'PlayoutNoSAME'] is True: PlayAlert.AlertOutro()
 
 def Cap():
     while True:
-        while Capture().start() is True: pass
-        else: print("Capture error, I don't know why"); time.sleep(15)
+        if Capture("./XMLqueue").start() is False: print("[Capture]: Something really really brokey..."); time.sleep(60)
 
 if __name__ == "__main__": 
     parser = argparse.ArgumentParser(description='QuantumENDEC')
