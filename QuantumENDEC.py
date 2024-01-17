@@ -15,7 +15,7 @@ try:
     from EASGen import EASGen
     from EAS2Text import EAS2Text
     from itertools import zip_longest
-except: print("IMPORT FAIL: One or more modules has failed to inport please run QuantumENDEC with the --setup (-s) flag and install dependencies"); exit()
+except Exception as e: print(f"IMPORT FAIL: {e}.\nOne or more modules has failed to inport please run QuantumENDEC setup file (SetupQE.py)"); exit()
 try: os.system("ffmpeg -version")
 except: print("Uh oh, FFMPEG dosen't apper to be installed on your system, you will need to install it so it can be ran on a command line. Some functions of QuantumENDEC depend on FFMPEG"); exit()
 

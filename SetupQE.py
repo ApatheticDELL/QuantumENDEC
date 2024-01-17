@@ -86,7 +86,6 @@ requirments = [
     'scipy',
     'requests',
     'argparse',
-    'xmltodict',
     'pydub',
     'pygame'
 ]
@@ -105,6 +104,7 @@ while True:
         for i in requirments:
             try: os.system(f"pip3 install {i}"); print(f"I've installed {i}")
             except: print(f"[!!!] I've tried installing this pip package: {i}\nBut it failed, you may need pip3 installed, try just again, or do it manually")
+            print("\nIf you're using linux, you may need to install libportaudio2 and possibly espeak so QuantumENDEC can work.\nYou will also need FFMPEG.")
         break
     elif p == "2":
         Clear()
