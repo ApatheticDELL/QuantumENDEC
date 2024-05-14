@@ -1,5 +1,5 @@
 ApatheticDELL presents...
-# QuantumENDEC (v4.3.1)
+# QuantumENDEC (v4.4.0)
 
 ### Credits
 Developed by...
@@ -40,6 +40,19 @@ You need to set a config file before doing anything.
 There is a config.json file that is used to configure the software.
 You can create one by running: ```python SetupQE.py``` and selecting "Do configuration setup."
 You'll find discord webhook settings, along with filters for alert statuses, severity, and urgency.
+You will also be asked if you want to filter alerts via CAP-CP Geocodes and S.A.M.E CLC (Canada's FIPS), you can filter by provinice and/or region.
+
+To filter by province...
+SAME CLC: 04 for Ontario. (Don't put 040000 unless you want to exclude its sub-regions) 
+CAP-CP Geocode: 35 for Ontario.
+
+To filter by region...
+SAME CLC: 0466 for Halton - Peel, Ontario. (Don't put 046600 unless you want to exclude its sub-regions)
+CAP-CP Geocode: 3521 for Peel Region, Ontario
+
+And then you can still use the full code to be very spicific in both CAP-CP Geocodes and SAME CLC. You'll still need to know the codes... here are some resources for finding location codes.
+(For SAME CLC (Canada's FIPS)): https://en.wikipedia.org/wiki/Forecast_region
+(For CAP-CP Geocodes): https://www.publicsafety.gc.ca/cnt/rsrcs/pblctns/capcp-lctn-rfrncs/index4-en.aspx (Scroll down and you'll find a link to the Excel file containing all the location codes for CAP-CP)
 
 After you're done configuring, start QuantumENDEC by just running...
 ```python QuantumENDEC.py```

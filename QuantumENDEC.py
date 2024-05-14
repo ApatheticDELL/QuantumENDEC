@@ -19,7 +19,7 @@ except Exception as e: print(f"IMPORT FAIL: {e}.\nOne or more modules has failed
 try: os.system("ffmpeg -version")
 except: print("Uh oh, FFMPEG dosen't apper to be installed on your system, you will need to install it so it can be ran on a command line. Some functions of QuantumENDEC depend on FFMPEG"); exit()
 
-QEversion = "4.3.1"
+QEversion = "4.4.0"
 
 def Clear(): os.system('cls' if os.name == 'nt' else 'clear')
 
@@ -74,16 +74,20 @@ class Check:
             if len(ConfigData['AllowedLocations_Geocodes']) == 0: pass
             else:
                 GeocodeList = re.findall(r'<geocode>\s*<valueName>profile:CAP-CP:Location:0.3</valueName>\s*<value>\s*(.*?)\s*</value>', InfoX, re.MULTILINE | re.IGNORECASE | re.DOTALL)
-                GeoMatch = False
                 for i in GeocodeList:
-                    if i in ConfigData['AllowedLocations_Geocodes']: GeoMatch = True
-                if GeoMatch is False: return False
+                    if i[:2] in ConfigData['AllowedLocations_Geocodes']: return True
+                    if i[:3] in ConfigData['AllowedLocations_Geocodes']: return True
+                    if i[:4] in ConfigData['AllowedLocations_Geocodes']: return True
+                    if i in ConfigData['AllowedLocations_Geocodes']: return True
+                return False
         return Final
         
     def MatchCLC(ConfigData, SAMEheader):
         if len(ConfigData['AllowedLocations_CLC']) == 0: return True
         else:
             for i in EAS2Text(SAMEheader).FIPS:
+                if i[:2] in ConfigData['AllowedLocations_CLC']: return True
+                if i[:4] in ConfigData['AllowedLocations_CLC']: return True
                 if i in ConfigData['AllowedLocations_CLC']: return True
             return False
 
@@ -506,6 +510,7 @@ def SendDiscord(InputHeader, InputText, InputConfig, lang):
         else: eTitle = "EMEGRENCY ALERT"
 
         print("Sending to discord webhook...")
+        if len(InputText) > 2045: InputText = f"{InputText[:2045]}..."
         webhook = DiscordWebhook(url=Wurl, rate_limit_retry=True, content=InputHeader)
         embed = DiscordEmbed(title=eTitle, description=InputText, color=Wcolor,)
         embed.set_author(name=Wauthorname, url=Wauthorurl, icon_url=Wiconurl)
