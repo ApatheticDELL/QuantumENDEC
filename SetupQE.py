@@ -1,63 +1,7 @@
 #This is the setup script for QuantumENDEC
-import json, os
 
+import json, os, time, keyboard
 def Clear(): os.system('cls' if os.name == 'nt' else 'clear')
-
-def CreateConfig(SameCallsign="QUANTUM8",
-                 UseSpcAudio=False, SpcAudio="",
-                 PlayNoSAME=False, RelayEN=True, RelayFR=False,
-                 UseDefaultVoice=True, SelectVoiceEN="", SelectVoiceFR="",
-                 discWeb=False, dwCol="ffffff", dwAutNam="QUANTUMENDEC", dwAuURL="", dwAuIcoURL="", dwWebURL="", 
-                 statTest=True, statActual=True,
-                 mestypAlert=True, mestypUpdate=True, mestypCancel=True, mestypTest=True,
-                 sevrExtreme=True, sevrSevere=True, sevrModerate=True, sevrMinor=True, sevrUnknown=True,
-                 urgImmediate=True, urgExpected=True, urgFuture=True, urgPast=True,
-                 GeoCods=[], CLC=[]):
-    NewConfig = {
-        "SAME_callsign": SameCallsign,
-    
-        "UseSpecifiedAudioDevice": UseSpcAudio,
-        "SpecifiedAudioDevice": SpcAudio,
-
-        "PlayoutNoSAME": PlayNoSAME,
-        "relay_en": RelayEN,
-        "relay_fr": RelayFR,
-
-        "UseDefaultVoices": UseDefaultVoice,
-        "VoiceEN": SelectVoiceEN,
-        "VoiceFR": SelectVoiceFR,
-
-        "enable_discord_webhook": discWeb,
-        "webhook_color": dwCol,
-        "webhook_author_name": dwAutNam,
-        "webhook_author_URL": dwAuURL,
-        "webhook_author_iconURL": dwAuIcoURL,
-        "webhook_URL": dwWebURL,
-        
-        "statusTest": statTest,
-        "statusActual": statActual,
-        
-        "messagetypeAlert": mestypAlert,
-        "messagetypeUpdate": mestypUpdate,
-        "messagetypeCancel": mestypCancel,
-        "messagetypeTest": mestypTest,
-
-        "severityExtreme": sevrExtreme,
-        "severitySevere": sevrSevere,
-        "severityModerate": sevrModerate,
-        "severityMinor": sevrMinor,
-        "severityUnknown": sevrUnknown,
-
-        "urgencyImmediate": urgImmediate,
-        "urgencyExpected": urgExpected,
-        "urgencyFuture": urgFuture,
-        "urgencyPast": urgPast,
-
-        "AllowedLocations_Geocodes": GeoCods,
-        "AllowedLocations_CLC": CLC,
-    }
-    with open("config.json", 'w') as json_file:
-        json.dump(NewConfig, json_file, indent=2)
 
 def SelectTTS(InputPre):
     import pyttsx3
@@ -69,6 +13,17 @@ def SelectTTS(InputPre):
     if 0 <= selected_index < len(voices): selected_voice = voices[selected_index]; return selected_voice
     else: return None
 
+def YesNoQuestion(InputQuestion):
+    err = ""
+    while True:
+        Clear()
+        print(InputQuestion)
+        print(err)
+        q = input(">")
+        if q == "y" or q == "Y" or q == "yes" or q == "Yes" or q == "YES": return True
+        elif q == "n" or q == "N" or q == "no" or q == "No" or q == "NO": return False
+        else: err = "Please try again"
+
 def YesNo():
     while True:
         q = input(">")
@@ -76,195 +31,237 @@ def YesNo():
         elif q == "n" or q == "N" or q == "no" or q == "No" or q == "NO": return False
         else: print("Please try again")
 
-requirments = [
-    'EASGen',
-    'EAS2Text',
-    'discord_webhook',
-    'pyttsx3',
-    'sounddevice',
-    'numpy',
-    'scipy',
-    'requests',
-    'argparse',
-    'pydub',
-    'pygame'
-]
+Clear()
+print("--- QUANTUMENDEC CONFIGURATION SETUP ---")
+time.sleep(1)
 
-err = ""
+UseSpecifiedAudioDevice = YesNoQuestion("--- QUANTUMENDEC CONFIGURATION SETUP ---\n\nDo you want to output alerts using a specified audio device? (y/n)\n(By default (no/false) it uses FFMPEG, which usually outputs to the default device\n! This might not work on Linux. !")
+if UseSpecifiedAudioDevice is True:
+    try: import sounddevice as sd
+    except: print("IMPORT FAIL: One or more modules has failed to inport."); exit()
+    def print_available_devices():
+        print("Available audio devices:")
+        devices = sd.query_devices()
+        for i, device in enumerate(devices):
+            print(f"{i}: {device['name']} (Host API: {sd.query_hostapis()[device['hostapi']]['name']})")
+    def select_audio_device(device_index):
+        devices = sd.query_devices()
+        if 0 <= device_index < len(devices):
+            selected_device = devices[device_index]
+            selected_hostapi_name = sd.query_hostapis()[selected_device['hostapi']]['name']
+            sd.default.device = selected_device['name']
+            return f"{selected_device['name']}, {selected_hostapi_name}"
+        else: return False
+    err = ""
+    while True:
+        Clear()
+        print("\nYou will need to select an audio device.")
+        print_available_devices()
+        print("\nSelect output device (select number of it)")
+        print(err)
+        SpecifiedAudioDevice = select_audio_device(int(input(">")))
+        if SpecifiedAudioDevice is False: err = "Invalid device selection: please try again."
+        else: break
+else: SpecifiedAudioDevice = ""
 
-while True:
+relay_en = YesNoQuestion("--- QUANTUMENDEC CONFIGURATION SETUP ---\n\nYou can relay alerts in both English and French, or one or the other.\nDo you want to relay alerts in English? (y/n)")
+relay_fr = YesNoQuestion("--- QUANTUMENDEC CONFIGURATION SETUP ---\n\nYou can relay alerts in both English and French, or one or the other.\nDo you want to relay alerts in French? (y/n)")
+
+if YesNoQuestion("--- QUANTUMENDEC CONFIGURATION SETUP ---\n\nDo you want to set up voices? (y/n)") is True:
+    UseDefaultVoices = False
+    SelectVoice = None; err = ""
+    while SelectVoice is None:
+        Clear()
+        try:
+            SelectVoice = SelectTTS(f"\n{err}Select English voice (number)")
+            if SelectVoice is None: err = "Invalid input, try again!\n"
+            else: VoiceEN = SelectVoice.name
+        except: err = "Input error, try again!\n"
+
+    SelectVoice = None; err = ""
+    while SelectVoice is None:
+        Clear()
+        try:
+            SelectVoice = SelectTTS(f"\n{err}Select French voice (number)")
+            if SelectVoice is None: err = "Invalid input, try again!\n"
+            else: VoiceFR = SelectVoice.name
+        except: err = "Input error, try again!\n"
+    UseDefaultVoices = False
+else:
+    UseDefaultVoices = True
+    VoiceEN = ""
+    VoiceFR = ""
+
+enable_discord_webhook = YesNoQuestion("--- QUANTUMENDEC CONFIGURATION SETUP ---\n\nWould you like to setup a discord webhook? (y/n)")
+if enable_discord_webhook is True:
+    print("Set up your discord webhook...")
+    print("\nInput webhook color. (in hex)")
+    webhook_color = input(">")
+    print("\nInput webhook author name.")
+    webhook_author_name = input(">")
+    print("\nInput author URL. (could be to a website)")
+    webhook_author_URL = input(">")
+    print("\nInput author icon URL.")
+    webhook_author_iconURL = input(">")
+    print("\nInput webhook URL.")
+    webhook_URL = input(">")
+else:
+    webhook_color = ""
+    webhook_author_name = ""
+    webhook_author_URL = ""
+    webhook_author_iconURL = ""
+    webhook_URL = ""
+
+if YesNoQuestion("--- QUANTUMENDEC CONFIGURATION SETUP ---\n\nDo you want alerts to play out with S.A.M.E? (y/n)") is True:
+    PlayoutNoSAME = False
+    err = ""
+    while True:
+        Clear()
+        print("--- QUANTUMENDEC CONFIGURATION SETUP ---\n\n")
+        print("Input your (S.A.M.E) callsign.")
+        print(err)
+        SAME_callsign = input(">")
+        if len(SAME_callsign) > 8 or len(SAME_callsign) < 8 or "-" in SAME_callsign: err = "Your callsign contains an error, please try again."
+        else: break
+
+    if YesNoQuestion("--- QUANTUMENDEC CONFIGURATION SETUP ---\n\nDo you want to filter locations via EC's CLC (Canada's FIPS)? (y/n)") is True:
+        print("Please input the CLC you want to relay for. (Seprate by comma, no spaces)")
+        print("These are FIPS/CLC, used in the SAME headers.")
+        AllowedLocations_CLC = input(">")
+        AllowedLocations_CLC = AllowedLocations_CLC.split(',')
+    else: AllowedLocations_CLC = []
+else:
+    PlayoutNoSAME = True
+    SAME_callsign = "SAMELESS"
+    AllowedLocations_CLC = []
+
+if YesNoQuestion("--- QUANTUMENDEC CONFIGURATION SETUP ---\n\nDo you want to filter locations via CAP-CP Geocodes? (y/n)") is True:
+    print("Please input the CAP-CP location Geocodes you want to relay for. (Seprate by comma, no spaces)")
+    print("! These are not FIPS or CLC, they are CAP-CP Geocodes, you may need to look them up.")
+    AllowedLocations_Geocodes = input(">")
+    AllowedLocations_Geocodes = AllowedLocations_Geocodes.split(',')
+else: AllowedLocations_Geocodes = []
+
+options = {
+    "A": True,
+    "B": True,
+    
+    "C": True,
+    "D": True,
+    "E": True,
+    "F": True,
+
+    "0": True,
+    "1": True,
+    "2": True,
+    "3": True,
+    "4": True,
+
+    "5": True,
+    "6": True,
+    "7": True,
+    "8": True,
+    "9": True,
+}
+
+def Clear(): os.system('cls' if os.name == 'nt' else 'clear')
+
+def print_menu():
     Clear()
-    print("Hello and welcome to QuantumENDEC\nPlease select a setup option...")
-    print("1 - Install dependencies\n2 - Do configuration setup")
-    print(err)
-    p = input(">")
-    if p == "1":
-        Clear()
-        print("Installing dependencies...")
-        for i in requirments:
-            try: os.system(f"pip3 install {i}"); print(f"I've installed {i}")
-            except: print(f"[!!!] I've tried installing this pip package: {i}\nBut it failed, you may need pip3 installed, try just again, or do it manually")
-            print("\nIf you're using linux, you may need to install libportaudio2 and possibly espeak so QuantumENDEC can work.\nYou will also need FFMPEG.")
-        break
-    elif p == "2":
-        Clear()
-        print("Configuration setup...\nLet's setup your endec, press enter when ready.")
-        input(">")
-        err = ""
-        while True:
-            Clear()
-            print("Input your callsign.")
-            print(err)
-            ConSet1 = input(">")
-            if len(ConSet1) > 8 or len(ConSet1) < 8 or "-" in ConSet1: err = "Your callsign contains an error, please try again."
-            else: break
-        Clear()
-        print("Do you want to output alerts using a specified audio device? (y/n)")
-        print("(By default (no/false) it uses FFMPEG, which usually outputs to the default device)")
-        print("! This might not work on Linux. !")
-        ConSet2 = YesNo()
-        if ConSet2 is True:
-            try: import sounddevice as sd
-            except: print("IMPORT FAIL: One or more modules has failed to inport. Run this file again, but install dependencies this time..."); exit()    
-            def print_available_devices():
-                print("Available audio devices:")
-                devices = sd.query_devices()
-                for i, device in enumerate(devices):
-                    print(f"{i}: {device['name']} (Host API: {sd.query_hostapis()[device['hostapi']]['name']})")
-            def select_audio_device(device_index):
-                devices = sd.query_devices()
-                if 0 <= device_index < len(devices):
-                    selected_device = devices[device_index]
-                    selected_hostapi_name = sd.query_hostapis()[selected_device['hostapi']]['name']
-                    sd.default.device = selected_device['name']
-                    return f"{selected_device['name']}, {selected_hostapi_name}"
-                else: return False
-            err = ""
-            while True:
-                Clear()
-                print("\nYou will need to select an audio device.")
-                print_available_devices()
-                print("\nSelect output device (select number of it)")
-                print(err)
-                ConSet3 = select_audio_device(int(input(">")))
-                if ConSet3 is False: err = "Invalid device selection: please try again."
-                else: break
-        else: ConSet3 = ""
-        err = ""
-        while True:
-            Clear()
-            print("How should alerts play out?")
-            print("1 - With SAME\n2 - Without SAME (only attention tone and audio)")
-            print(err)
-            ConSet4 = input(">")
-            if ConSet4 == "1": ConSet4 = False; break
-            elif ConSet4 == "2": ConSet4 = True; break
-            else: err = "Input error, try again."
-        Clear()
-        print("You can relay alerts in both English and French, or one or the other.")
-        print("Do you want to relay alerts in English?")
-        ConEN = YesNo()
-        print("Do you want to relay alerts in French?")
-        ConFR = YesNo()
-        Clear()
-        
-        print("Do you want to set up voices? (y/n)")
+    print("--- QUANTUMENDEC CONFIGURATION SETUP ---\n\nToggle True/False on the following alert relay filters.")
+    print("A: Status Test:", options['A'])
+    print("B: Status Actual:", options['B'])
+    print("")
+    print("C: Message type Alert:", options['C'])
+    print("D: Message type Update:", options['D'])
+    print("E: Message type Cancel:", options['E'])
+    print("F: Message type Test:", options['F'])
+    print("")
+    print("0: Severity Extreme:", options['0'])
+    print("1: Severity Severe:", options['1'])
+    print("2: Severity Moderate:", options['2'])
+    print("3: Severity Minor:", options['3'])
+    print("4: Severity Unknown:", options['4'])
+    print("")
+    print("5: Urgency Immediate:", options['5'])
+    print("6: Urgency Expected:", options['6'])
+    print("7: Urgency Future:", options['7'])
+    print("8: Urgency Past:", options['8'])
+    print("9: Urgency Unknown:", options['9'])
+    print("")
+    print("\nPress the listed keyboard button to toggle True/False to the corresponding option. Press Enter to confirm.")
 
-        if YesNo() is True:
-            SelectVoice = None; err = ""
-            while SelectVoice is None:
-                Clear()
-                try:
-                    SelectVoice = SelectTTS(f"\n{err}Select English voice (number)")
-                    if SelectVoice is None: err = "Invalid input, try again!\n"
-                    else: SelectVoiceEN = SelectVoice.name
-                except: err = "Input error, try again!\n"
+def toggle_option(key):
+    if key.name.upper() in options:
+        options[key.name.upper()] = not options[key.name.upper()]
+        print_menu()
 
-            SelectVoice = None; err = ""
-            while SelectVoice is None:
-                Clear()
-                try:
-                    SelectVoice = SelectTTS(f"\n{err}Select French voice (number)")
-                    if SelectVoice is None: err = "Invalid input, try again!\n"
-                    else: SelectVoiceFR = SelectVoice.name
-                except: err = "Input error, try again!\n"
-            UseDefaultVoice = False
-        else:
-            UseDefaultVoice = True
-            SelectVoiceEN = ""
-            SelectVoiceFR = ""
-        
-        Clear()
-        print("Would you like to setup a discord webhook? (y/n)")
-        ConSet5 = YesNo()
-        if ConSet5 is True:
-            print("Set up your discord webhook...")
-            print("\nInput webhook color. (in hex)")
-            ConSet6 = input(">")
-            print("\nInput webhook author name.")
-            ConSet7 = input(">")
-            print("\nInput author URL. (could be to a website)")
-            ConSet8 = input(">")
-            print("\nInput author icon URL.")
-            ConSet9 = input(">")
-            print("\nInput webhook URL.")
-            ConSet10 = input(">")
-        else:
-            ConSet6 = ""
-            ConSet7 = ""
-            ConSet8 = ""
-            ConSet9 = ""
-            ConSet10 = ""
-        Clear()
-        print("Alert config setup.\n")
-        print("Allow status: Test? (y/n)")
-        ConSet11 = YesNo()
-        print("Allow status: Actual? (y/n)")
-        ConSet12 = YesNo()
-        print("Allow message type: Alert? (y/n)")
-        ConSet13 = YesNo()
-        print("Allow message type: Update? (y/n)")
-        ConSet14 = YesNo()
-        print("Allow message type: Cancel? (y/n)")
-        ConSet15 = YesNo()
-        print("Allow message type: Test? (y/n)")
-        ConSet16 = YesNo()
-        print("Allow severity: Extreme? (y/n)")
-        ConSet17 = YesNo()
-        print("Allow severity: Severe? (y/n)")
-        ConSet18 = YesNo()
-        print("Allow severity: Moderate? (y/n)")
-        ConSet19 = YesNo()
-        print("Allow severity: Minor? (y/n)")
-        ConSet20 = YesNo()
-        print("Allow severity: Unknown? (y/n)")
-        ConSet21 = YesNo()
-        print("Allow urgency: Immediate? (y/n)")
-        ConSet22 = YesNo()
-        print("Allow urgency: Expected? (y/n)")
-        ConSet23 = YesNo()
-        print("Allow urgency: Future? (y/n)")
-        ConSet24 = YesNo()
-        print("Allow urgency: Past? (y/n)")
-        ConSet25 = YesNo()
-        Clear()
-        print("Do you want to filter locations via CAP-CP Geocodes? (y/n)")
-        if YesNo() is True:
-            print("Please input the CAP-CP location Geocodes you want to relay for. (Seprate by comma, no spaces)")
-            print("! These are not FIPS or CLC, they are CAP-CP Geocodes, you may need to look them up.")
-            ConSet26 = input(">")
-            ConSet26 = ConSet26.split(',')
-        else: ConSet26 = []
-        print("Do you want to filter locations via EC's CLC (Canada's FIPS)? (y/n)")
-        if YesNo() is True:
-            print("Please input the CLC you want to relay for. (Seprate by comma, no spaces)")
-            print("These are FIPS/CLC, used in the SAME headers.")
-            ConSet27 = input(">")
-            ConSet27 = ConSet27.split(',')
-        else: ConSet27 = []
-        CreateConfig(ConSet1,ConSet2,ConSet3,ConSet4,ConEN,ConFR,UseDefaultVoice,SelectVoiceEN,SelectVoiceFR,ConSet5,ConSet6,ConSet7,ConSet8,ConSet9,ConSet10,ConSet11,ConSet12,ConSet13,ConSet14,ConSet15,
-                        ConSet16,ConSet17,ConSet18,ConSet19,ConSet20,ConSet21,ConSet22,ConSet23,ConSet24,ConSet25,ConSet26,ConSet27)
-        print("Config file created!")
-        break
-    else: err = "Sorry, please try that again..."
-exit()
+print_menu()
+keyboard.on_press_key("a", toggle_option)
+keyboard.on_press_key("b", toggle_option)
+keyboard.on_press_key("c", toggle_option)
+keyboard.on_press_key("d", toggle_option)
+keyboard.on_press_key("e", toggle_option)
+keyboard.on_press_key("f", toggle_option)
+keyboard.on_press_key("0", toggle_option)
+keyboard.on_press_key("1", toggle_option)
+keyboard.on_press_key("2", toggle_option)
+keyboard.on_press_key("3", toggle_option)
+keyboard.on_press_key("4", toggle_option)
+keyboard.on_press_key("5", toggle_option)
+keyboard.on_press_key("6", toggle_option)
+keyboard.on_press_key("7", toggle_option)
+keyboard.on_press_key("8", toggle_option)
+keyboard.on_press_key("9", toggle_option)
+keyboard.wait('enter')
+keyboard.unhook_all()
+
+NewConfig = {
+    "SAME_callsign": SAME_callsign,
+
+    "UseSpecifiedAudioDevice": UseSpecifiedAudioDevice,
+    "SpecifiedAudioDevice": SpecifiedAudioDevice,
+
+    "PlayoutNoSAME": PlayoutNoSAME,
+    "relay_en": relay_en,
+    "relay_fr": relay_fr,
+
+    "UseDefaultVoices": UseDefaultVoices,
+    "VoiceEN": VoiceEN,
+    "VoiceFR": VoiceFR,
+
+    "enable_discord_webhook": enable_discord_webhook,
+    "webhook_color": webhook_color,
+    "webhook_author_name": webhook_author_name,
+    "webhook_author_URL": webhook_author_URL,
+    "webhook_author_iconURL": webhook_author_iconURL,
+    "webhook_URL": webhook_URL,
+    
+    "statusTest": options["A"],
+    "statusActual": options["B"],
+    
+    "messagetypeAlert": options["C"],
+    "messagetypeUpdate": options["D"],
+    "messagetypeCancel": options["E"],
+    "messagetypeTest": options["F"],
+
+    "severityExtreme": options["0"],
+    "severitySevere": options["1"],
+    "severityModerate": options["2"],
+    "severityMinor": options["3"],
+    "severityUnknown": options["4"],
+
+    "urgencyImmediate": options["5"],
+    "urgencyExpected": options["6"],
+    "urgencyFuture": options["7"],
+    "urgencyPast": options["8"],
+    "urgencyUnknown": options["9"],
+
+    "AllowedLocations_Geocodes": AllowedLocations_Geocodes,
+    "AllowedLocations_CLC": AllowedLocations_CLC,
+}
+try:
+    with open("config.json", 'w') as json_file: json.dump(NewConfig, json_file, indent=2)
+    print("--- QUANTUMENDEC CONFIGURATION SETUP ---\n\nConfig file saved!")
+except: print("--- QUANTUMENDEC CONFIGURATION SETUP ---\n\nError saving config file.")
+time.sleep(1)

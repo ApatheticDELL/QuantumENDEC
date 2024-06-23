@@ -15,11 +15,11 @@ try:
     from EASGen import EASGen
     from EAS2Text import EAS2Text
     from itertools import zip_longest
-except Exception as e: print(f"IMPORT FAIL: {e}.\nOne or more modules has failed to inport please run QuantumENDEC setup file (SetupQE.py)"); exit()
+except Exception as e: print(f"IMPORT FAIL: {e}.\nOne or more modules has failed to inport, install the requirments!"); exit()
 try: os.system("ffmpeg -version")
-except: print("Uh oh, FFMPEG dosen't apper to be installed on your system, you will need to install it so it can be ran on a command line. Some functions of QuantumENDEC depend on FFMPEG"); exit()
+except: print("FFMPEG dosen't apper to be installed on your system, you will need to install it so it can be ran on a command line. Some functions of QuantumENDEC depend on FFMPEG"); exit()
 
-QEversion = "4.4.0"
+QEversion = "4.4.1"
 
 def Clear(): os.system('cls' if os.name == 'nt' else 'clear')
 
@@ -48,7 +48,8 @@ class Capture:
                         data_received = ""
             except socket.timeout: print(f"[Capture]: Connection timed out for {host}"); return False
             except Exception as e: print(f"[Capture]: Something broke when connecting to {host}: {e}"); return False
-    
+            except: print("[Capture]: General exception occured!"); time.sleep(20); return False
+
     def start(self):
         NAAD = self.receive(self.NAAD1, 8080, 1024, "</alert>")
         if NAAD is False: NAAD = self.receive(self.NAAD2, 8080, 1024, "</alert>")
@@ -87,6 +88,7 @@ class Check:
         else:
             for i in EAS2Text(SAMEheader).FIPS:
                 if i[:2] in ConfigData['AllowedLocations_CLC']: return True
+                if i[:3] in ConfigData['AllowedLocations_CLC']: return True
                 if i[:4] in ConfigData['AllowedLocations_CLC']: return True
                 if i in ConfigData['AllowedLocations_CLC']: return True
             return False
@@ -127,9 +129,10 @@ class Check:
                 except:
                     try: xml = urlopen(req2).read()
                     except: pass
-                f = open(Output, "wb")
-                f.write(xml)
-                f.close()
+                try:
+                    with open(Output, "wb") as f: f.write(xml)
+                except: print("Heartbeat, download aborted: a general exception occured, it could be that the URLs are temporarily unavailable.")
+
 
     def watchNotify(ListenFolder, HistoryFolder):
         def GetFolderQueue(): return os.listdir(f"{ListenFolder}")

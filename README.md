@@ -1,5 +1,5 @@
 ApatheticDELL presents...
-# QuantumENDEC (v4.4.0)
+# QuantumENDEC (v4.4.1)
 
 ### Credits
 Developed by...
@@ -22,15 +22,10 @@ QuantumENDEC is a Canadian CAP Emergency Alerting Software. Its primary goal is 
 Installing the QuantumENDEC is quite easy.
 You will first require the following...
 - FFMPEG
-- Python3 (install pip3 too)
+- Python3
 ...to be installed on your System
 
-Then you can run:
-```python SetupQE.py```
-Then select the "Install dependencies" option to install the required Python modules.  
-
-If that doesn't work, you may need to install them manually.
-Required modules: EASGen, EAS2Text, discord_webhook, pyttsx3, sounddevice, numpy, scipy, requests, argparse, xmltodict, pydub, pygame.
+And then, you need the following required Python modules: EASGen, EAS2Text, discord_webhook, pyttsx3, sounddevice, numpy, scipy, requests, argparse, xmltodict, pydub, pygame.
 
 ### Setup
 Before doing anything, you need to have some knowledge of the Canadian public alerting system... more precisely, Pelmorex and its CAP-CP XML files.
@@ -38,7 +33,7 @@ You can read about it on this PDF from Pelmorex: https://alerts.pelmorex.com/wp-
 
 You need to set a config file before doing anything.
 There is a config.json file that is used to configure the software.
-You can create one by running: ```python SetupQE.py``` and selecting "Do configuration setup."
+You can create one by running: ```python SetupQE.py```
 You'll find discord webhook settings, along with filters for alert statuses, severity, and urgency.
 You will also be asked if you want to filter alerts via CAP-CP Geocodes and S.A.M.E CLC (Canada's FIPS), you can filter by provinice and/or region.
 
