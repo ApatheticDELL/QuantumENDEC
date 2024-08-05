@@ -37,6 +37,8 @@ Before doing anything, you need to have some knowledge of the Canadian public al
 You can read about it on this PDF from Pelmorex: https://alerts.pelmorex.com/wp-content/uploads/2021/06/NAADS-LMD-User-Guide-R10.0.pdf
 
 Just run ```python QuantumENDEC.py``` to start QuantumENDEC and the web interface server.
+The python command may be different depending on your python installation... (it could be py, or python3)
+
 QuantumENDEC will already be running.
 The web interface server by default will be running on port 8050, to access, simply open a web browser and go to http://localhost:8050 or http://{ip_of_device}:8050
 You can change this in the configuration section of the web interface server, or in the config.json file.
