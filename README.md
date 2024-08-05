@@ -1,5 +1,5 @@
 ApatheticDELL presents...
-# QuantumENDEC (v5 Public Beta)
+# QuantumENDEC (v5 Public Beta 2)
 
 ### Credits
 Developed by...

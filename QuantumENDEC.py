@@ -180,7 +180,7 @@ class Check:
         while True:
             ExitTicket = False
             for file in GetFolderQueue():
-                with open(f"{ListenFolder}/{file}", "r") as f: RelayXML = f.read()
+                with open(f"{ListenFolder}/{file}", "r", encoding='UTF-8') as f: RelayXML = f.read()
                 AlertListXML = re.findall(r'<alert\s*(.*?)\s*</alert>', RelayXML, re.MULTILINE | re.IGNORECASE | re.DOTALL)
 
                 if len(AlertListXML) > 1:

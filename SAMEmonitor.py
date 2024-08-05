@@ -321,7 +321,6 @@ class IPmonitor:
             platform = setup(self.monitorName)
             last = None
             ffmpeg_process = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE)
-            platform = "win"
             if platform == "win": source_process = subprocess.Popen(['multimon-ng-WIN32/multimon-ng.exe', '-a', 'EAS', '-q', '-t', 'raw', '-'], stdin=ffmpeg_process.stdout, stdout=subprocess.PIPE)
             else: source_process = subprocess.Popen(['multimon-ng', '-a', 'EAS', '-q', '-t', 'raw', '-'], stdin=ffmpeg_process.stdout, stdout=subprocess.PIPE)
             UpdateStatus(self.monitorName, f"Ready For Alerts, listening to {self.streamURL}")
@@ -364,13 +363,13 @@ class IPmonitor:
             except: pass
             UpdateStatus(self.monitorName, f"Failure")
             print(f"[{self.monitorName}] Monitor failure.")
-            time.sleep(20)
 
     def start(self):
         while True:
             if self.is_stream_online() is False:
                 print(f"[{self.monitorName}] Stream URL {self.streamURL} is offline or unreachable.")
                 UpdateStatus(self.monitorName, f"Stream URL {self.streamURL} is offline or unreachable.")
+                time.sleep(30)
             else:
                 try:
                     decodeThread = threading.Thread(target=self.decodeStream)
@@ -387,7 +386,7 @@ class IPmonitor:
                 except:
                     print(f"[{self.monitorName}] Monitor failure.")
                     UpdateStatus(self.monitorName, f"Failure.")
-            time.sleep(30)
+                    time.sleep(30)
 
 def IPmonitor_run(name, url):
     i = IPmonitor(name, url)
