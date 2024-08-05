@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>QuantumENDEC Web Interface</title>
+        <link type="text/css" rel="stylesheet" href="css/style.css"/>
+    </head>
+    <body>
+        <h1><img src="images/logo.png" alt="QuantumENDEC logo" width="10%" height="10%"> QuantumENDEC Web Interface</h1>
+        <nav>
+            <ul>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="status.html">Status</a></li>
+                <li><a class="selected">Configuration</a></li>
+                <li><a href="sendAlert.html">Send Alert</a></li>
+                <li><a href="alertLog.html">Alert Log</a></li>
+                <li><a href="changePass.html">Change Access Password</a></li>
+            </ul>
+        </nav>
+
+        <h2>Configuration</h2>
+        <p>Configure QuantumENDEC on this page. Some settings require a restart of QuantumENDEC to take effect.</p>
+        <br>
+        <form id="config-form">
+            <h3>Webserver configuration</h3>
+            <label for="WebserverPort">Port: </label><input type="text" id="WebserverPort" name="WebserverPort"><br>
+            <label for="WebserverHost">Host: </label><input type="text" id="WebserverHost" name="WebserverHost"><br>
+            <p>These changes will take effect the next time QuantumENDEC starts. (Or restart QuantumENDEC for these changes to take effect)</p>
+            <br><br>
+            
+            <h3>SAME configuration</h3>
+            <label for="SAME_callsign">SAME Callsign: </label><input type="text" id="SAME_callsign" name="SAME_callsign"><br>
+            <p>Your SAME callsign must be 8 characters, no more, no less. There also cannot be any dashes (-). If you put an invalid SAME callsign, code will use a default SAME callsign.</p>
+            <br><br>
+            
+            <h3>Audio configuration</h3>
+            <input type="checkbox" id="UseSpecified_AudioOutput" name="UseSpecified_AudioOutput"> Use Specified Audio Output Device<br>
+            <p>The field below will not have any effect if the box is not selected.</p>
+            
+            <label for="SpecifiedAudioDeviceSELECT">Specified Audio Device: </label>
+            <select id="SpecifiedAudioDeviceSELECT" onchange="updateTextBox('SpecifiedAudioDeviceSELECT', 'Specified_AudioOutput')"></select><br>
+            <label for="Specified_AudioOutput">Selected value:</label><input type="text" id="Specified_AudioOutput" name="Specified_AudioOutput" readonly>
+            <br><br>
+            
+            <h4>Passthrough switching</h4>
+            <input type="checkbox" id="EnablePassThru" name="EnablePassThru"> Activate passthrough switching<br>
+            <input type="checkbox" id="UseSpecified_Passthrough_AudioInput" name="UseSpecified_Passthrough_AudioInput"> Use Specified Audio Input Device<br>
+            <br>
+            <label for="Passthrough_AudioInputSELECT">Specified Audio Input: </label>
+            <select id="Passthrough_AudioInputSELECT" onchange="updateTextBox('Passthrough_AudioInputSELECT', 'Passthrough_AudioInput')"></select><br>
+            <label for="Passthrough_AudioInput">Selected value:</label><input type="text" id="Passthrough_AudioInput" name="Passthrough_AudioInput" readonly>
+            <br>
+            <p><strong>Watch out!</strong> If you are using Passthrough switching, you can only have both specified audio input and output selected and active, or have both use the default audio device selected by the OS. <strong>You can't have one default and the other specified.</strong></p>
+            <br><br>
+
+            <h3>Attention tone flavour</h3>
+            <label for="AttentionToneSELECT">Attention tone flavour: </label>
+            <select id="AttentionToneSELECT" onchange="updateTextBox('AttentionToneSELECT', 'AttentionTone')">
+                <option value="AttnCAN.wav">Canada (Alert Ready)</option>
+                <option value="AttnEBS.wav">United States (EBS)</option>
+                <option value="Attn1050.wav">1050hz</option>
+                <option value="AttnEgg.wav">Egg Timer</option>
+            </select><br>
+            <label for="AttentionTone">Selected value:</label><input type="text" id="AttentionTone" name="AttentionTone" readonly>
+            <br><br>
+            <input type="checkbox" id="Attn_BasedOnCountry" name="Attn_BasedOnCountry"> Use attention tones based on alert's country (only works with CAP)</input>
+            <br>
+            <p>If it can't detect what attention tone to use, it will revert to the one selected in Attention tone flavour.</p>
+            <br><br>
+
+            <h4>Force 120 seconds of broadcast audio</h4>
+            <input type="checkbox" id="Force120" name="Force120"> Force 120 seconds of broadcast audio<br>
+            <p>For broadcast audio that happens to be over the 120 second limit, you can enable this option to cut the audio down to 120 seconds.</p>
+            <br><br>
+            
+            <h3>Playout configuration</h3>
+            <input type="checkbox" id="PlayoutNoSAME" name="PlayoutNoSAME"> Transmit alerts without S.A.M.E<br>
+            <input type="checkbox" id="relay_en" name="relay_en"> Relay in English<br>
+            <input type="checkbox" id="relay_fr" name="relay_fr"> Relay in French<br>
+            <br><br>
+            
+            <h3>TTS voice configuration</h3>
+            <input type="checkbox" id="UseDefaultVoices" name="UseDefaultVoices"> Use Default Voices<br>
+            <p>The fields below will not have any effect if the box is selected.</p>
+
+            <label for="VoiceENselect">English voice: </label><select id="VoiceENselect" onchange="updateTextBox('VoiceENselect', 'VoiceEN')"></select><br>
+            <label for="VoiceEN">Selected value:</label><input type="text" id="VoiceEN" name="VoiceEN" readonly>
+            <br><br>
+            <label for="VoiceFRselect">French voice: </label><select id="VoiceFRselect" onchange="updateTextBox('VoiceFRselect', 'VoiceFR')"></select><br>
+            <label for="VoiceFR">Selected value:</label><input type="text" id="VoiceFR" name="VoiceFR" readonly>
+            <br><br>
+            
+            <h3>Discord webhook configuration</h3>
+            <input type="checkbox" id="enable_discord_webhook" name="enable_discord_webhook"> Enable Discord Webhook<br>
+            <p>The fields below will not have any effect if the box is not selected.</p>
+            <label for="webhook_color_picker">Webhook Color: </label><input type="color" id="webhook_color_picker" onchange="updateColorValue()"><br>
+            <label for="webhook_color">Selected value: </label><input type="text" id="webhook_color" name="webhook_color" readonly><br><br>
+            <label for="webhook_author_name">Webhook Author Name: </label><input type="text" id="webhook_author_name" name="webhook_author_name"><br>
+            <label for="webhook_author_URL">Webhook Author URL: </label><input type="text" id="webhook_author_URL" name="webhook_author_URL"><br>
+            <label for="webhook_author_iconURL">Webhook Author Icon URL: </label><input type="text" id="webhook_author_iconURL" name="webhook_author_iconURL"><br>
+            <label for="webhook_URL">Webhook URL: </label><input type="text" id="webhook_URL" name="webhook_URL"><br>
+            <br><input type="checkbox" id="webhook_sendAudio" name="webhook_sendAudio"> Send broadcast audio<br>
+            <br><br>
+
+            <h3>Alert logging to text file</h3>
+            <p>QuantumENDEC will log alerts to a text file called 'alertlog.txt', this allows you to view the log on the Alert Log tab on this web interface.</p>
+            <input type="checkbox" id="enable_LogToTxt" name="enable_LogToTxt"> Log alerts to text file<br>
+            <br><br>
+
+            <h3>CAP Filter: Status</h3>
+            <input type="checkbox" id="statusTest" name="statusTest"> Test<br>
+            <input type="checkbox" id="statusActual" name="statusActual"> Actual<br>
+            <br><br>
+            
+            <h3>CAP Filter: Message Type</h3>
+            <input type="checkbox" id="messagetypeAlert" name="messagetypeAlert"> Alert<br>
+            <input type="checkbox" id="messagetypeUpdate" name="messagetypeUpdate"> Update<br>
+            <input type="checkbox" id="messagetypeCancel" name="messagetypeCancel"> Cancel<br>
+            <input type="checkbox" id="messagetypeTest" name="messagetypeTest"> Test<br>
+            <br><br>
+
+            <h3>CAP Filter: Severity</h3>
+            <input type="checkbox" id="severityExtreme" name="severityExtreme"> Extreme<br>
+            <input type="checkbox" id="severitySevere" name="severitySevere"> Severe<br>
+            <input type="checkbox" id="severityModerate" name="severityModerate"> Moderate<br>
+            <input type="checkbox" id="severityMinor" name="severityMinor"> Minor<br>
+            <input type="checkbox" id="severityUnknown" name="severityUnknown"> Unknown<br>
+            <br><br>
+
+            <h3>CAP Filter: Urgency</h3>
+            <input type="checkbox" id="urgencyImmediate" name="urgencyImmediate"> Immediate<br>
+            <input type="checkbox" id="urgencyExpected" name="urgencyExpected"> Expected<br>
+            <input type="checkbox" id="urgencyFuture" name="urgencyFuture"> Future<br>
+            <input type="checkbox" id="urgencyPast" name="urgencyPast"> Past<br>
+            <input type="checkbox" id="urgencyUnknown" name="urgencyUnknown"> Unknown<br>
+            <br><br>
+
+            <h3>Location code filters for CAP</h3>
+            <p>No spaces, seprate the codes by a comma (,).</p>
+            <label for="AllowedLocations_Geocodes">Allowed CAP-CP Geocodes: </label><input type="text" id="AllowedLocations_Geocodes" name="AllowedLocations_Geocodes"><p>(Won't work on American CAP.)</p>
+            <br>
+            <label for="AllowedLocations_CLC">Allowed SAME location codes (CLC/FIPS): </label><input type="text" id="AllowedLocations_CLC" name="AllowedLocations_CLC"><br>
+            <br><br>
+
+            <h3>SAME event code filters for CAP</h3>
+            <p>If SAME relay is disabled, these settings will be ignored. No spaces, seprate the codes by a comma (,).</p>
+            <label for="CAP_SAMEevent_Whitelist">Allowed SAME event codes: </label><input type="text" id="CAP_SAMEevent_Whitelist" name="CAP_SAMEevent_Whitelist">
+            <br>
+            <label for="CAP_SAMEevent_Blocklist">Blocked SAME event codes: </label><input type="text" id="CAP_SAMEevent_Blocklist" name="CAP_SAMEevent_Blocklist">
+            <br><br>
+            
+            <h3>TCP Streams</h3>
+            <p>Set up TCP streams for alert reception, normally you'd want to keep the NAADs TCP addresses. If you have an alternate source or a satellite receiver, you'd want to change this. You'd want to use TCP stream address that sends out XML, it's explained in the Pelmorex LMD Guide linked in the readme file. When setting the stream address, ensure that you input a [host]:[port] format, or things will break.</p>
+            <input type="checkbox" id="TCP" name="TCP"> Enable TCP connection<br>
+            <label for="TCP1">Stream 1 (NAADs 1) </label><input type="text" id="TCP1" name="TCP1"><br>
+            <label for="TCP2">Stream 2 (NAADs 2) </label><input type="text" id="TCP2" name="TCP2"><br>
+            <br><br>
+
+            <h3>HTTP CAP Capture</h3>
+            <p>Set up HTTP CAP capture for CAP streams via HTTP. Use this to receive IPAWS CAP. </p>
+            <input type="checkbox" id="HTTP_CAP" name="HTTP_CAP"> Enable HTTP CAP Capture<br>
+            <label for="HTTP_CAP_ADDR">HTTP CAP URL: </label><input type="text" id="HTTP_CAP_ADDR" name="HTTP_CAP_ADDR"><br>
+            <br><br>
+
+            <h3>NWS CAP Capture</h3>
+            <p>NWS CAP has a different way of getting alerts, you can set that up here. QuantumENDEC is programmed to grab from the api.weather.gov <strong>ATOM</strong> feed. You should research the NWS CAP ATOM API to narrow down to your area.</p>
+            <input type="checkbox" id="Enable_NWSCAP" name="Enable_NWSCAP"> Enable NWS CAP Capture<br>
+            <label for="NWSCAP_AtomLink">NWS CAP URL: </label><input type="text" id="NWSCAP_AtomLink" name="NWSCAP_AtomLink"><br>
+            <br><br>
+
+            <h3>SAME Monitor Settings</h3>
+            <p>QuantumENDEC can now monitor SAME alerts from a physical audio source or from an IP audio stream.</p>
+            <p>Set up the SAME monitor filters, no spaces, seprate the values (FIPS, Event codes, Originator codes) by a comma (,).</p>
+            <input type="checkbox" id="SAMEmonitor" name="SAMEmonitor"> Enable overall SAME monitor<br>
+            <label for="SAMEmonitor-ORIGINATOR-filter">Allowed originators (ORG) </label><input type="text" id="SAMEmonitor-ORIGINATOR-filter" name="SAMEmonitor-ORIGINATOR-filter"><br>
+            <label for="SAMEmonitor-EVENT-filter">Allowed events (EVE) </label><input type="text" id="SAMEmonitor-EVENT-filter" name="SAMEmonitor-EVENT-filter"><br>
+            <label for="SAMEmonitor-FIPS-filter">Allowed CLC/FIPS </label><input type="text" id="SAMEmonitor-FIPS-filter" name="SAMEmonitor-FIPS-filter"><br>
+            <br><br>
+            <h4>SAME Audio Device Monitor</h4>
+            <p>The SAME audio device monitor will only listen to the default audio input device set by the operating system.</p>
+            <input type="checkbox" id="SAME-AudioDevice-Monitor" name="SAME-AudioDevice-Monitor"> Enable SAME audio device monitor</input>
+            <br><br>
+            <h4>SAME IP Monitors</h4>
+            <label for="SAME-AudioStream-Monitor1">IP stream 1 </label><input type="text" id="SAME-AudioStream-Monitor1" name="SAME-AudioStream-Monitor1"><br>
+            <label for="SAME-AudioStream-Monitor2">IP stream 2 </label><input type="text" id="SAME-AudioStream-Monitor2" name="SAME-AudioStream-Monitor2"><br>
+            <label for="SAME-AudioStream-Monitor3">IP stream 3 </label><input type="text" id="SAME-AudioStream-Monitor3" name="SAME-AudioStream-Monitor3"><br>
+            <label for="SAME-AudioStream-Monitor4">IP stream 4 </label><input type="text" id="SAME-AudioStream-Monitor4" name="SAME-AudioStream-Monitor4"><br>
+            <br><br>
+            <button class="button" type="button" onclick="saveConfig()">Save</button>
+            <button class="button" id="downloadButton">Download config file</button>
+            <button class="button"><a href="uploadConfig.html">Load config file</a></button>
+            <br><br>
+        </form>
+        <p id="version">QuantumENDEC ?</p><p>Copyright ApatheticDELL 2024</p><script>function fetchText() {fetch('/version.txt') .then(response => response.text()) .then(data => {document.getElementById('version').innerText = data;}) .catch(error => {console.error('Error fetching text:', error);});} document.addEventListener('DOMContentLoaded', fetchText);</script>
+
+        <script>
+
+            function updateTextBox(dropdownId, textboxId) {
+                // Get the selected value from the dropdown
+                var selectedValue = document.getElementById(dropdownId).value;
+                // Update the corresponding textbox with the selected value
+                document.getElementById(textboxId).value = selectedValue;
+            }
+
+            function updateColorValue() {
+                var colorPicker = document.getElementById('webhook_color_picker');
+                var hexValueBox = document.getElementById('webhook_color');
+                var colorValue = colorPicker.value;
+            
+                // Remove the '#' from the color value
+                var hexValue = colorValue.substring(1);
+            
+                hexValueBox.value = hexValue;
+            }
+            
+            // Initialize the textbox with the default color value
+            window.onload = function() {
+                updateColorValue();
+            };
+
+            document.addEventListener('DOMContentLoaded', function() {
+                // Load the audio devices
+                fetch('/audio_devices')
+                    .then(response => response.json())
+                    .then(devices => {
+                        const select = document.getElementById('SpecifiedAudioDeviceSELECT');
+                        devices.forEach(device => {
+                            const option = document.createElement('option');
+                            option.value = device;
+                            option.textContent = device;
+                            select.appendChild(option);
+                        });
+                    });
+
+                fetch('/audio_inputs')
+                    .then(response => response.json())
+                    .then(devices => {
+                        // List of dropdown IDs
+                        const dropdownIds = ['Passthrough_AudioInputSELECT'];
+                        
+                        // Function to populate dropdowns
+                        function populateDropdown(dropdownId, devices) {
+                            const select = document.getElementById(dropdownId);
+                            select.innerHTML = ''; // Clear existing options
+                            devices.forEach(device => {
+                                const option = document.createElement('option');
+                                option.value = device;
+                                option.textContent = device;
+                                select.appendChild(option);
+                            });
+                        }
+                        
+                        // Populate each dropdown
+                        dropdownIds.forEach(dropdownId => {
+                            populateDropdown(dropdownId, devices);
+                        });
+                    })
+                    .catch(error => {
+                        console.error('Error fetching audio devices:', error);
+                    });
+                                
+                fetch('/tts_voices')
+                    .then(response => response.json())
+                    .then(devices => {
+                        const select = document.getElementById('VoiceENselect');
+                        devices.forEach(device => {
+                            const option = document.createElement('option');
+                            option.value = device;
+                            option.textContent = device;
+                            select.appendChild(option);
+                        });
+                    });
+
+                fetch('/tts_voices')
+                    .then(response => response.json())
+                    .then(devices => {
+                        const select = document.getElementById('VoiceFRselect');
+                        devices.forEach(device => {
+                            const option = document.createElement('option');
+                            option.value = device;
+                            option.textContent = device;
+                            select.appendChild(option);
+                        });
+                    });
+
+                // Load the current config
+                fetch('/config_data')
+                    .then(response => response.json())
+                    .then(config => {
+                        for (const [key, value] of Object.entries(config)) {
+                            const element = document.getElementById(key);
+                            if (element) {
+                                if (element.type === 'checkbox') {
+                                    element.checked = value;
+                                } else if (element.type === 'color') {
+                                    element.value = value;
+                                } else if (element.tagName === 'SELECT') {
+                                    // do nothing
+                                } else {
+                                    // Handle text input and comma-separated lists
+                                    if (Array.isArray(value)) {
+                                        element.value = value.join(',');
+                                    } else {
+                                        element.value = value;
+                                    }
+                                }
+                            }
+                        }
+                    });
+            });
+
+            function saveConfig() {
+                const form = document.getElementById('config-form');
+                const elements = form.elements;
+                const config = {};
+
+                for (let i = 0; i < elements.length; i++) {
+                    const element = elements[i];
+                    if (element.name) {
+                        if (element.type === 'checkbox') {
+                            config[element.name] = element.checked;
+                        } else if (element.type === 'color') {
+                            config[element.name] = element.value.slice(1);
+                        } else if (element.tagName === 'SELECT') {
+                            // Do nothing
+                        } else {
+                            if (element.name === 'AllowedLocations_Geocodes' || element.name === 'AllowedLocations_CLC' || element.name === 'SAMEmonitor-ORIGINATOR-filter' || element.name === 'SAMEmonitor-EVENT-filter' || element.name === 'SAMEmonitor-FIPS-filter' || element.name === 'CAP_SAMEevent_Whitelist' || element.name === 'CAP_SAMEevent_Blocklist') {
+                                // Convert comma-separated string to JSON array
+                                config[element.name] = element.value.split(',').map(item => item.trim()).filter(Boolean);
+                            } else {
+                                config[element.name] = element.value;
+                            }
+                        }
+                    }
+                }
+
+                fetch('/save_config', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(config)
+                })
+                .then(response => response.text())
+                .then(result => {
+                    alert(result); // Success message
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Failed to save configuration.');
+                });
+            }
+
+            document.getElementById('downloadButton').addEventListener('click', () => {
+                const link = document.createElement('a');
+                link.href = '/config.json'; // Replace with the correct path to your config.json
+                link.download = 'config.json';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            });
+
+        </script>
+    </body>
+</html>

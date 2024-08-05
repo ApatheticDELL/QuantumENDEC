@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QE Scroll CGEN</title>
+    <link rel="stylesheet" type="text/css" href="css/scrollStyle.css" />
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+    <script src="//cdn.jsdelivr.net/npm/jquery.marquee@1.6.0/jquery.marquee.min.js" type="text/javascript"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const scrollText = document.getElementById("scroll-text");
+            const scrollContainer = document.getElementById("scroll-container");
+            let scrollCount = 0;
+            let currentText = "";
+
+            function updateScrollText() {
+                fetch("/alert.txt")
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok ' + response.statusText);
+                    }
+                    return response.text();
+                })
+                .then(data => {
+                    const newText = data.trim();
+                    if (newText !== currentText) {
+                        currentText = newText;
+                        if (newText) {
+                            startScrolling(newText);
+                        } else {
+                            scrollContainer.style.display = "none";
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('There has been a problem with your fetch operation:', error);
+                });
+            }
+
+            function startScrolling(text) {
+                scrollContainer.style.display = "block";
+                scrollCount = 0;
+                scrollText.innerHTML = text;
+                $(scrollText)
+                .unbind('finished')
+                .bind('finished', function() {
+                    if (scrollCount < 2) {
+                        scrollCount++;
+                    } else {
+                        scrollContainer.style.display = "none";
+                        $(this).marquee('pause');
+                    }
+                })
+                .marquee({
+                    speed: 300,
+                    loop: 3,
+                    delayBeforeStart: 0
+                });
+            }
+
+            // Initial text fetch and scroll
+            updateScrollText();
+
+            // Check for text updates every second
+            setInterval(updateScrollText, 1000);
+        });
+    </script>
+</head>
+<body>
+    <div class="scroll-container" id="scroll-container"><h2 class="scroll-text" id="scroll-text"></h2></div>
+</body>
+</html>

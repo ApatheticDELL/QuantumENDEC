@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>QuantumENDEC Web Interface</title>
+        <link type="text/css" rel="stylesheet" href="css/style.css"/>
+    </head>
+    <body>
+        <h1><img src="images/logo.png" alt="QuantumENDEC logo" width="10%" height="10%"> QuantumENDEC Web Interface</h1>
+        <nav>
+            <ul>
+                <li><a class="selected">Home</a></li>
+                <li><a href="status.html">Status</a></li>
+                <li><a href="config.html">Configuration</a></li>
+                <li><a href="sendAlert.html">Send Alert</a></li>
+                <li><a href="alertLog.html">Alert Log</a></li>
+                <li><a href="changePass.html">Change Access Password</a></li>
+            </ul>
+        </nav>
+
+        <h2>Home</h2>
+        <p>Watch out! QuantumENDEC version 5 is still in beta! Things could break at any moment! <strong>Please give feedback to @apatheticdell on discord if anything breaks/acts up!</strong></p>
+        <br><br>
+        <h3>QuantumENDEC Quick Actions</h3>
+        <button class="button"><a href="scroll.html">View Scroll CGEN</a></button>
+        <br><br>
+        <form id="logoutForm" action="/logout" method="post"><button class="button" type="submit">Logout</button></form>
+        <br><br>
+        <button class="button"><a href="managePrePost.html">Manage alert lead in/out</a></button>
+
+        <h2>Active Alerts</h2>
+        <div class="activeAlerts-container"><ul class="activeAlerts-list" id="alertsList"></ul></div>
+        <br><br>
+        
+        <p id="version">QuantumENDEC ?</p><p>Copyright ApatheticDELL 2024</p><script>function fetchText() {fetch('/version.txt') .then(response => response.text()) .then(data => {document.getElementById('version').innerText = data;}) .catch(error => {console.error('Error fetching text:', error);});} document.addEventListener('DOMContentLoaded', fetchText);</script>
+    
+        <script>
+            /*
+            async function fetchAlerts() {
+                try {
+                    const response = await fetch('/activeAlerts');
+                    const data = await response.json();
+                    const alertsList = document.getElementById('alertsList');
+                    
+                    data.forEach(alert => {
+                        const listItem = document.createElement('li');
+                        listItem.textContent = alert;
+                        listItem.className = 'activeAlert-item';
+                        alertsList.appendChild(listItem);
+                    });
+                } catch (error) {
+                    console.error('Error fetching alerts:', error);
+                }
+            } */
+            
+            
+            async function fetchAlerts() {
+                try {
+                    const response = await fetch('/activeAlerts');
+                    const data = await response.json();
+                    const alertsList = document.getElementById('alertsList');
+                    data.forEach(alert => {
+                        const listItem = document.createElement('li');
+                        
+                        // Replace newlines with <br> tags
+                        const formattedAlert = alert.replace(/\n/g, '<br>');
+
+                        // Set the HTML content of the list item
+                        listItem.innerHTML = formattedAlert;
+                        
+                        listItem.className = 'activeAlert-item';
+                        alertsList.appendChild(listItem);
+                    });
+                } catch (error) {
+                    console.error('Error fetching alerts:', error);
+                }
+            }
+            
+                    
+            fetchAlerts();
+        </script>
+    </body>
+</html>

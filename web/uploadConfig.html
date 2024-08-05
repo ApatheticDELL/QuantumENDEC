@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>QuantumENDEC Web Interface</title>
+        <link type="text/css" rel="stylesheet" href="css/style.css"/>
+    </head>
+    <body>
+        <h1><img src="images/logo.png" alt="QuantumENDEC logo" width="10%" height="10%"> QuantumENDEC Web Interface</h1>
+        <nav>
+            <ul>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="status.html">Status</a></li>
+                <li><a class="selected">Configuration</a></li>
+                <li><a href="sendAlert.html">Send Alert</a></li>
+                <li><a href="alertLog.html">Alert Log</a></li>
+                <li><a href="changePass.html">Change Access Password</a></li>
+            </ul>
+        </nav>
+    
+    <h1>Upload configuration file</h1>
+    <form id="uploadForm" enctype="multipart/form-data">
+        <input type="file" id="fileInput" accept=".json" />
+        <button class="button" type="submit">Upload JSON</button>
+    </form>
+
+    <br><br>
+    <button class="button"><a href="config.html">Go back</a></button>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', async (event) => {
+            event.preventDefault(); // Prevent default form submission
+
+            const fileInput = document.getElementById('fileInput');
+            if (fileInput.files.length === 0) {
+                alert('Please select a file to upload.');
+                return;
+            }
+
+            const file = fileInput.files[0];
+            if (file.type !== 'application/json') {
+                alert('Only JSON files are accepted.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch('/upload_config', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    alert('File uploaded successfully!')
+                    window.location.href = '/config.html'; // Redirect on success
+                } else {
+                    alert('File upload failed.');
+                }
+            } catch (error) {
+                console.error('Error uploading file:', error);
+                alert('An error occurred while uploading the file.');
+            }
+        });
+    </script>
+</body>
+</html>

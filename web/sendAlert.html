@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>QuantumENDEC Web Interface</title>
+    <link type="text/css" rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+    <h1><img src="images/logo.png" alt="QuantumENDEC logo" width="10%" height="10%"> QuantumENDEC Web Interface</h1>
+    <nav>
+        <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="status.html">Status</a></li>
+            <li><a href="config.html">Configuration</a></li>
+            <li><a class="selected">Send Alert</a></li>
+            <li><a href="alertLog.html">Alert Log</a></li>
+            <li><a href="changePass.html">Change Access Password</a></li>
+        </ul>
+    </nav>
+
+    <h2>Send Alert</h2>
+    <p>Send an alert from this page. If you're not using S.A.M.E, you don't need to select Originator, Event, or CLC/FIPS code, they will be ignored if S.A.M.E is disabled in QuantumENDEC.</p>
+    <br>
+    <form id="sendForm">
+        <label for="ORG">Originator code: </label>
+        <select name="ORG" id="ORG">
+            <option value="EAS">EAS - EAS Participant (or Broadcast station or cable system)</option>
+            <option value="CIV">CIV - Civil authorities</option>
+            <option value="WXR">WXR - National Weather Service (or Environment Canada.)</option>
+            <option value="PEP">PEP - National Public Warning System</option>
+        </select>
+        
+        <br><br>
+        <label for="EVE">Event code: </label><input type="text" id="EVE" name="EVE"><br>
+        <br><br>
+        
+        <label for="FIPS">CLC/FIPS: </label><input type="text" id="FIPS" name="FIPS"><br>
+        <p>No spaces, use CLC/FIPS, separate the codes by a dash (-). If you don't, things will break.</p>
+        <br><br>
+
+        <label for="broadcastText">Broadcast text: </label><br>
+        <textarea id="broadcastText" name="broadcastText" rows="4" cols="100">Broadcast text can be edited here.</textarea>
+        <br><br>
+
+        <button class="button" type="button" onclick="sendAlert()">Send alert</button>
+        <br><br>
+    </form>
+    <p id="version">QuantumENDEC ?</p><p>Copyright ApatheticDELL 2024</p><script>function fetchText() {fetch('/version.txt') .then(response => response.text()) .then(data => {document.getElementById('version').innerText = data;}) .catch(error => {console.error('Error fetching text:', error);});} document.addEventListener('DOMContentLoaded', fetchText);</script>
+
+    <script>
+        function sendAlert() {
+            const data = {
+                ORG: document.getElementById('ORG').value,
+                EVE: document.getElementById('EVE').value,
+                broadcastText: document.getElementById('broadcastText').value,
+                FIPS: document.getElementById('FIPS').value
+            };
+
+            fetch('/send_alert', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.text())
+            .then(data => alert(data))
+            .catch(error => console.error('Error:', error));
+        }
+    </script>
+</body>
+</html>

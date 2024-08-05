@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuantumENDEC Web Interface</title>
+    <link type="text/css" rel="stylesheet" href="css/style.css"/>
+    <style>
+        .status-box {
+            width: 100%;
+            height: 100px;
+            margin: 5px;
+            background-color: limegreen;
+            color: black;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            border: 1px solid black;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <h1><img src="images/logo.png" alt="QuantumENDEC logo" width="10%" height="10%"> QuantumENDEC Web Interface</h1>
+    <nav>
+        <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a class="selected">Status</a></li>
+            <li><a href="config.html">Configuration</a></li>
+            <li><a href="sendAlert.html">Send Alert</a></li>
+            <li><a href="alertLog.html">Alert Log</a></li>
+            <li><a href="changePass.html">Change Access Password</a></li>
+        </ul>
+    </nav>
+    
+    <h2>Status</h2>
+    <p>Here you can view the status of each service thats running in QuantumENDEC.</p>
+
+    <h3>Relay</h3>
+    <div id="Relay_status" class="status-box">Loading...</div>
+    <h3>TCP CAP Capture</h3>
+    <div id="Capture_status" class="status-box">Loading...</div>
+    <h3>HTTP CAP Capture</h3>
+    <div id="HTTPCAPcapture_status" class="status-box">Loading...</div>
+    <h3>NWS CAP Capture</h3>
+    <div id="NWSCAPcapture_status" class="status-box">Loading...</div>
+    <h3>Audio Monitor</h3>
+    <div id="AudioMonitor_status" class="status-box">Loading...</div>
+    <h3>IP Audio Stream Monitors</h3>
+    <div id="IpMonitor1_status" class="status-box">Loading...</div>
+    <div id="IpMonitor2_status" class="status-box">Loading...</div>
+    <div id="IpMonitor3_status" class="status-box">Loading...</div>
+    <div id="IpMonitor4_status" class="status-box">Loading...</div>
+
+    <script>
+        const urls = [
+            '/stats/Relay_status.txt',
+            '/stats/Capture_status.txt',
+            '/stats/HTTPCAPcapture_status.txt',
+            '/stats/NWSCAPcapture_status.txt',
+            '/stats/AudioMonitor_status.txt',
+            '/stats/IpMonitor1_status.txt',
+            '/stats/IpMonitor2_status.txt',
+            '/stats/IpMonitor3_status.txt',
+            '/stats/IpMonitor4_status.txt'
+        ];
+
+        const updateStatus = async () => {
+            for (let i = 0; i < urls.length; i++) {
+                try {
+                    const response = await fetch(urls[i]);
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    const text = await response.text();
+                    document.getElementById(urls[i].split('/').pop().split('_')[0] + '_status').textContent = text;
+                } catch (error) {
+                    document.getElementById(urls[i].split('/').pop().split('_')[0] + '_status').textContent = 'Error fetching data';
+                    console.error('Error fetching data from', urls[i], ':', error);
+                }
+            }
+        };
+
+        updateStatus(); // Initial call
+        setInterval(updateStatus, 3000); // Update every 5 seconds
+    </script>
+</body>
+</html>

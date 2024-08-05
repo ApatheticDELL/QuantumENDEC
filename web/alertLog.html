@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuantumENDEC Web Interface</title>
+    <link type="text/css" rel="stylesheet" href="css/style.css"/>
+    <style>
+        .log-box {
+            border: 2px solid green;
+            color: green;
+            background-color: black;
+            padding: 10px;
+            margin: 0px;
+            font-family: sans-serif;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1><img src="images/logo.png" alt="QuantumENDEC logo" width="10%" height="10%"> QuantumENDEC Web Interface</h1>
+    <nav>
+        <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="status.html">Status</a></li>
+            <li><a href="config.html">Configuration</a></li>
+            <li><a href="sendAlert.html">Send Alert</a></li>
+            <li><a class="selected">Alert Log</a></li>
+            <li><a href="changePass.html">Change Access Password</a></li>
+        </ul>
+    </nav>
+
+    <h2>Alert Log</h2>
+    <p>You can disable alert logging to the text file in Configuration.</p>
+    <br>
+    <form id="clearLog" action="/clearAlertLogTxt" method="post"><button class="button" type="submit">Clear Log</button></form>
+    <br><br>
+    <div id="log-container" class="log-box"></div>
+
+    <script>
+        fetch('/alertlog.txt')
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('log-container').textContent = data;
+            })
+            .catch(error => {
+                console.error('Error fetching alert log:', error);
+                document.getElementById('log-container').textContent = 'Failed to load alert log.';
+            });
+    </script>
+</body>
+</html>

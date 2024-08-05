@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Change Password</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script>
+        function changePassword() {
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (newPassword !== confirmPassword) {
+                alert("New passwords do not match!");
+                return;
+            }
+
+            fetch('/change_password', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ currentPassword, newPassword })
+            })
+            .then(response => response.text())
+            .then(data => alert(data))
+            .catch(error => console.error('Error:', error));
+        }
+    </script>
+</head>
+<body>
+    
+    <h1><img src="images/logo.png" alt="QuantumENDEC logo" width="10%" height="10%"> QuantumENDEC Web Interface</h1>
+    <nav>
+        <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="status.html">Status</a></li>
+            <li><a href="config.html">Configuration</a></li>
+            <li><a href="sendAlert.html">Send Alert</a></li>
+            <li><a href="alertLog.html">Alert Log</a></li>
+            <li><a class="selected">Change Access Password</a></li>
+        </ul>
+    </nav>
+
+    <h2>Change web interface password</h1>
+    <form onsubmit="event.preventDefault(); changePassword();">
+        <label for="currentPassword">Current Password:</label>
+        <input type="password" id="currentPassword" required><br><br>
+        
+        <label for="newPassword">New Password:</label>
+        <input type="password" id="newPassword" required><br><br>
+        
+        <label for="confirmPassword">Confirm New Password:</label>
+        <input type="password" id="confirmPassword" required><br><br>
+        
+        <button class="button" type="submit">Change Password</button>
+    </form>
+    <br><br>
+    <p id="version">QuantumENDEC ?</p><p>Copyright ApatheticDELL 2024</p><script>function fetchText() {fetch('/version.txt') .then(response => response.text()) .then(data => {document.getElementById('version').innerText = data;}) .catch(error => {console.error('Error fetching text:', error);});} document.addEventListener('DOMContentLoaded', fetchText);</script>
+</body>
+</html>

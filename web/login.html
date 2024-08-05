@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+</head>
+<style>
+    body {
+    font-family: sans-serif;
+    color:white;
+    background-color: #161616;
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 1024px;
+    min-width: 256px;
+    padding-top: 8px;
+    padding-bottom: 24px;
+    padding-left: 24px;
+    padding-right: 24px;
+    }
+
+    .button {
+        display: inline-block;
+        padding: 10px 10px;
+        font-size: 15px;
+        cursor: pointer;
+        text-align: center;
+        text-decoration: none;
+        outline: none;
+        color: #fff;
+        background-color: #b93434;
+        border: none;
+        border-radius: 15px;
+    }
+    
+    .button:hover {background-color: #922727}
+
+    .button:active {background-color: #db5d5d;}
+
+    .button a:link, a:visited {
+        text-decoration: none;
+        color: white;}
+</style>
+<body>
+    <h1>Login</h1>
+    <h2>Log in to QuantumENDEC</h2>
+    <br><br>
+    <form id="loginForm" onsubmit="handleFormSubmit(event)">
+        <label for="password">Password: </label>
+        <input type="password" id="password" name="password" required>
+        <br><br>
+        <button class="button" type="submit">Login</button>
+    </form>
+    <br>
+    <p id="errorMessage" style="color: #f75858;"></p>
+    
+    <script>
+        function handleFormSubmit(event) {
+            event.preventDefault(); // Prevent form from submitting the default way
+            submitLogin();
+        }
+
+        function submitLogin() {
+            const password = document.getElementById('password').value;
+            fetch('/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password: password })
+            })
+            .then(response => {
+                if (response.status === 200) {
+                    window.location.href = '/index.html';  // Redirect to the home page
+                } else if (response.status === 403) {
+                    document.getElementById('errorMessage').innerText = 'Incorrect password. Please try again.';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+        // Add an event listener for the Enter key in the form
+        document.getElementById('loginForm').addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault(); // Prevent form from submitting the default way
+                submitLogin();
+            }
+        });
+    </script>
+</body>
+</html>

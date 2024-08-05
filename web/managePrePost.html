@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>QuantumENDEC Web Interface</title>
+        <link type="text/css" rel="stylesheet" href="css/style.css"/>
+    </head>
+    <body>
+        <h1><img src="images/logo.png" alt="QuantumENDEC logo" width="10%" height="10%"> QuantumENDEC Web Interface</h1>
+        <nav>
+            <ul>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="status.html">Status</a></li>
+                <li><a href="config.html">Configuration</a></li>
+                <li><a href="sendAlert.html">Send Alert</a></li>
+                <li><a href="alertLog.html">Alert Log</a></li>
+                <li><a href="changePass.html">Change Access Password</a></li>
+            </ul>
+        </nav>
+    
+    <h1>Manage alert lead in and lead out</h1>
+    <p>Lead ins and lead outs are audio clips that play before (lead in) and/or after (lead out) an alert. Lead ins are also called pre-rolls. Upload and manage lead in/lead out wav files here. Ensure your lead ins/outs are breif.</p>
+    <br><br>
+
+    <form id="uploadLeadin" enctype="multipart/form-data">
+        <input type="file" id="leadinInput" accept=".wav" />
+        <button class="button" type="submit">Upload Lead In</button>
+    </form>
+    <br><br>
+    <form id="uploadLeadout" enctype="multipart/form-data">
+        <input type="file" id="leadoutInput" accept=".wav" />
+        <button class="button" type="submit">Upload Lead Out</button>
+    </form>
+
+    <br><br>
+    <button class="button"><a href="index.html">Go back</a></button>
+
+    <br><br>
+    <h2>Download lead in/out</h2>
+    <button class="button" id="downloadLeadin">Download current Lead In</button>
+    <button class="button" id="downloadLeadout">Download current Lead Out</button>
+    <br><br><br>
+    <h2>Remove lead in/out</h2>
+    <p>Watch out, you can remove alert lead in/out audio here.</p>
+    <br>
+    <button class="button" id="removeLeadinButton">Remove Lead-in Audio</button>
+    <button class="button" id="removeLeadoutButton">Remove Lead-out Audio</button>
+    <br><br>
+    <script>
+        document.getElementById('uploadLeadin').addEventListener('submit', async (event) => {
+            event.preventDefault(); // Prevent default form submission
+
+            const fileInput = document.getElementById('leadinInput');
+            if (fileInput.files.length === 0) {
+                alert('Please select a file to upload.');
+                return;
+            }
+
+            const file = fileInput.files[0];
+            if (file.type !== 'audio/wav') {
+                alert('Only wav files are accepted.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch('/upload_leadin', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    alert('File uploaded successfully!')
+                    window.location.href = '/managePrePost.html';
+                } else {
+                    alert('File upload failed.');
+                }
+            } catch (error) {
+                console.error('Error uploading file:', error);
+                alert('An error occurred while uploading the file.');
+            }
+        });
+
+        document.getElementById('uploadLeadout').addEventListener('submit', async (event) => {
+            event.preventDefault(); // Prevent default form submission
+
+            const fileInput = document.getElementById('leadoutInput');
+            if (fileInput.files.length === 0) {
+                alert('Please select a file to upload.');
+                return;
+            }
+
+            const file = fileInput.files[0];
+            if (file.type !== 'audio/wav') {
+                alert('Only wav files are accepted.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch('/upload_leadout', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    alert('File uploaded successfully!')
+                    window.location.href = '/managePrePost.html';
+                } else {
+                    alert('File upload failed.');
+                }
+            } catch (error) {
+                console.error('Error uploading file:', error);
+                alert('An error occurred while uploading the file.');
+            }
+        });
+
+        document.getElementById('downloadLeadin').addEventListener('click', () => {
+            const link = document.createElement('a');
+            link.href = '/Audio/pre.wav';
+            link.download = 'pre.wav';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+
+        document.getElementById('downloadLeadout').addEventListener('click', () => {
+            const link = document.createElement('a');
+            link.href = '/Audio/post.wav';
+            link.download = 'post.wav';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+
+        document.getElementById('removeLeadinButton').addEventListener('click', async () => {
+            try {
+                const response = await fetch('/remove_Leadin', {
+                    method: 'POST'
+                });
+                const result = await response.json();
+                alert(result.success || result.error);
+            } catch (error) {
+                console.error('Error removing lead-in audio:', error);
+                alert('An error occurred while removing lead-in audio.');
+            }
+        });
+
+        document.getElementById('removeLeadoutButton').addEventListener('click', async () => {
+            try {
+                const response = await fetch('/remove_Leadout', {
+                    method: 'POST'
+                });
+                const result = await response.json();
+                alert(result.success || result.error);
+            } catch (error) {
+                console.error('Error removing lead-out audio:', error);
+                alert('An error occurred while removing lead-out audio.');
+            }
+        });
+    </script>
+</body>
+</html>
