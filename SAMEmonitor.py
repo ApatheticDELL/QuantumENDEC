@@ -10,8 +10,6 @@ import numpy
 assert numpy
 from logger import Log
 
-import shutil
-
 def UpdateStatus(service, content):
     try:
         statFolder = "stats"
