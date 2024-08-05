@@ -80,11 +80,11 @@ You can add pre.wav and/or post.wav in the Audio folder. (Or do it in the web in
 Everything should work on its own!
 
 ### Some Extra Additional Information
-This software ENDEC will NOT work with American CAP alerts, since it's designed for the CAP Canadian Profile. Also, the way it grabs alerts is different from FEMA CAP, in Canada, there is one centralized internet TCP feed that ENDECs across Canada connect to. The system is designed by Pelmorex.
+~~This software ENDEC will NOT work with American CAP alerts, since it's designed for the CAP Canadian Profile. Also, the way it grabs alerts is different from FEMA CAP, in Canada, there is one centralized internet TCP feed that ENDECs across Canada connect to. The system is designed by Pelmorex.~~ ... About that...
 
 If you see anything about matches or match files, it just means that the software already processed the thing/file in question.
 
-Emergency information does come from official resources, though one shouldn't fully rely on QuantumENDEC itself for emergency information as errors could still occur
+Emergency information does come from official resources (by default, unless changed), though one shouldn't fully rely on QuantumENDEC itself for emergency information as errors could still occur
 
 Finally, even though this was coded from (mostly) the ground up, I'd still like to credit Libmarleu's BashENDEC (which no longer exists on their page) for starting the QuantumENDEC journey in 2021...
 
