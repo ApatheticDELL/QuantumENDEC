@@ -460,7 +460,7 @@ def send_alert():
 
 @app.before_request
 def require_login():
-    if request.path not in ['/login', '/login.html', '/scroll.html', '/alert.txt', '/css/scrollStyle.css']:
+    if request.path not in ['/login', '/login.html', '/scroll.html', '/alertText', '/css/scrollStyle.css']:
         if not is_authenticated():
             return redirect(url_for('login'))
 
@@ -544,6 +544,11 @@ def removeLeadout():
         return jsonify({'success': 'Lead out audio removed'})
     except:
         return jsonify({'error': 'Failed to remove Lead out audio'})
+
+@app.route('/alertText')
+def GetAlertText():
+    with open("alert.txt", "r") as f: alertText = f.read()
+    return alertText
 
 @app.route('/')
 def home():
