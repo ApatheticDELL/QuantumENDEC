@@ -18,7 +18,8 @@
     </nav>
 
     <h2>Send Alert</h2>
-    <p>Send an alert from this page. If you're not using S.A.M.E, you don't need to select Originator, Event, or CLC/FIPS code, they will be ignored if S.A.M.E is disabled in QuantumENDEC.</p>
+    <p>Originate an alert from this page. If you're not using S.A.M.E, you don't need to select Originator, Event, or CLC/FIPS code; they will be ignored if S.A.M.E is disabled in QuantumENDEC.</p>
+    <p>This function internally injects a CAP alert within QuantumENDEC for relay, this does NOT send an actual alert out to connected CAP sources. (Broadcasters/Cable operators in the United States use this type of feature for RWT/RMTs)</p>
     <br>
     <form id="sendForm">
         <label for="ORG">Originator code: </label>

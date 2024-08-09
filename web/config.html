@@ -139,6 +139,7 @@
             <label for="AllowedLocations_Geocodes">Allowed CAP-CP Geocodes: </label><input type="text" id="AllowedLocations_Geocodes" name="AllowedLocations_Geocodes"><p>(Won't work on American CAP.)</p>
             <br>
             <label for="AllowedLocations_CLC">Allowed SAME location codes (CLC/FIPS): </label><input type="text" id="AllowedLocations_CLC" name="AllowedLocations_CLC"><br>
+            <p>You can wildcard partial counties. Example(s): *04,*04123</p>
             <br><br>
 
             <h3>SAME event code filters for CAP</h3>
@@ -173,7 +174,9 @@
             <input type="checkbox" id="SAMEmonitor" name="SAMEmonitor"> Enable overall SAME monitor<br>
             <label for="SAMEmonitor-ORIGINATOR-filter">Allowed originators (ORG) </label><input type="text" id="SAMEmonitor-ORIGINATOR-filter" name="SAMEmonitor-ORIGINATOR-filter"><br>
             <label for="SAMEmonitor-EVENT-filter">Allowed events (EVE) </label><input type="text" id="SAMEmonitor-EVENT-filter" name="SAMEmonitor-EVENT-filter"><br>
-            <label for="SAMEmonitor-FIPS-filter">Allowed CLC/FIPS </label><input type="text" id="SAMEmonitor-FIPS-filter" name="SAMEmonitor-FIPS-filter"><br>
+            <br>
+            <label for="SAMEmonitor-FIPS-filter">Allowed CLC/FIPS </label><input type="text" id="SAMEmonitor-FIPS-filter" name="SAMEmonitor-FIPS-filter">
+            <p>You can wildcard partial counties. Example(s): *04,*04123</p>
             <br><br>
             <h4>SAME Audio Device Monitor</h4>
             <p>The SAME audio device monitor will only listen to the default audio input device set by the operating system.</p>
