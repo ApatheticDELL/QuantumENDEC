@@ -20,8 +20,11 @@ def createXML(SAME, audioInput, XMLfolder, monitorName):
     try:
         XMLfolder = XMLfolder.replace("/","")
         sent = datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%S-00:00')
-        ident = f"{sent.replace("-","").replace(":","")}{''.join(random.choices(string.ascii_uppercase + string.digits, k=10))}"
-        output = f"{XMLfolder}/{monitorName}-{sent.replace("-","_").replace(":","_")}I{ident}.xml"
+        sent_rp = sent.replace("-","").replace(":","")
+        ident_code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=10))
+        ident = f"{sent_rp}{ident_code}"
+        output = f"{XMLfolder}/{monitorName}-{sent_rp}I{ident}.xml"
+        
         current_time = datetime.strptime(sent, "%Y-%m-%dT%H:%M:%S-00:00")
         try:
             oof = EAS2Text(SAME)
