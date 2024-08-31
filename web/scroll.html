@@ -13,34 +13,39 @@
             const scrollContainer = document.getElementById("scroll-container");
             let scrollCount = 0;
             let currentText = "";
+            let currentColor = "";
 
             function updateScrollText() {
-                /* fetch("/alert.txt") */
                 fetch("/alertText")
                 .then(response => {
                     if (!response.ok) {
                         throw new Error('Network response was not ok ' + response.statusText);
                     }
-                    return response.text();
+                    return response.json();
                 })
                 .then(data => {
-                    const newText = data.trim();
-                    if (newText !== currentText) {
+                    const newText = data.text.trim();
+                    const newColor = `#${data.color.trim()}`;
+                    
+                    if (newText !== currentText || newColor !== currentColor) {
                         currentText = newText;
+                        currentColor = newColor;
+
                         if (newText) {
-                            startScrolling(newText);
+                            startScrolling(newText, newColor);
                         } else {
                             scrollContainer.style.display = "none";
                         }
                     }
                 })
                 .catch(error => {
-                    console.error('There has been a problem with your fetch operation:', error);
+                    console.error('There has been a problem with your fetch operation (or there is no file to scroll):', error);
                 });
             }
 
-            function startScrolling(text) {
+            function startScrolling(text, color) {
                 scrollContainer.style.display = "block";
+                scrollContainer.style.backgroundColor = color;
                 scrollCount = 0;
                 scrollText.innerHTML = text;
                 $(scrollText)

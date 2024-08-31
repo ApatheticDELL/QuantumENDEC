@@ -6,8 +6,7 @@ class Log:
     def __init__(self, ConfigData):
         self.ConfigData = ConfigData
 
-    def SendDiscord(self, Title, Description, ZCZC, type=""):
-        Wcolor = self.ConfigData['webhook_color']
+    def SendDiscord(self, Title, Description, ZCZC, type="", HookColor=None):
         Wauthorname = self.ConfigData['webhook_author_name']
         Wauthorurl = self.ConfigData['webhook_author_URL']
         Wiconurl = self.ConfigData['webhook_author_iconURL']
@@ -25,6 +24,9 @@ class Log:
                     with open("Audio/tmp/DiskAudio.mp3", "rb") as f: webhook.add_file(file=f.read(), filename="audio.mp3")
                 except: pass
 
+        if HookColor is None or HookColor == "": Wcolor = "ffffff"
+        else: Wcolor = HookColor
+        
         embed = DiscordEmbed(title=Title, description=Description, color=Wcolor,)
         if ZCZC == "": pass
         else: 
@@ -46,10 +48,10 @@ class Log:
         except:
             with open("alertlog.txt", "w") as f: f.write(log)
 
-    def SendLog(self, Title, Description, ZCZC, type=""):
+    def SendLog(self, Title, Description, ZCZC, type="", HookColor=None):
         if self.ConfigData['enable_discord_webhook'] is True:
             print("Sending Discord webhook...")
-            try: self.SendDiscord(Title, Description, ZCZC, type)
+            try: self.SendDiscord(Title, Description, ZCZC, type, HookColor)
             except: print("Discord, failed to log.")
 
         if self.ConfigData['enable_LogToTxt'] is True:

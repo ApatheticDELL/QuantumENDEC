@@ -43,6 +43,129 @@ def UpdateStatus(service, content):
         with open(f"{statFolder}/{service}_status.txt", "w") as f: f.write(content)
     except: pass
 
+def GenenerateTTS_UsingAPI(TTSservice=None, VoiceSelection=None, Region=None, APIkey=None, OutputFolder=None, InputTEXT=None, Test=False):
+    try:
+        if Test is True:
+            if OutputFolder is None or OutputFolder == "": TTSoutput = "TestTTS"
+            else: TTSoutput = f"{OutputFolder}/TestTTS"
+        else:
+            if OutputFolder is None or OutputFolder == "": TTSoutput = "GeneratedTTS"
+            else: TTSoutput = f"{OutputFolder}/GeneratedTTS"
+
+        if "11labs" in TTSservice:
+            API_URL = "https://api.elevenlabs.io/v1/text-to-speech"
+            headers = {
+                "xi-api-key": APIkey,
+                "Content-Type": "application/json"
+            }
+            payload = {
+                "text": InputTEXT,
+                "voice_settings": {
+                    "stability": 0.5,
+                    "similarity_boost": 0.5
+                }
+            }
+            response = requests.post(f"{API_URL}/{VoiceSelection}", json=payload, headers=headers)
+            if response.status_code == 200:
+                with open(f"{TTSoutput}.mp3", "wb") as file:
+                    file.write(response.content)
+                print(f"MP3 file generated successfully: {TTSoutput}.mp3")
+            else:
+                raise Exception(f"Error: {response.status_code} - {response.text}")
+
+        elif "IBMwatson" in TTSservice:
+            pass
+
+        elif "AmazonPolly" in TTSservice:
+            pass
+
+        else:
+            raise Exception("Invalid TTS service selection!")
+        
+        return 0
+    except Exception as e:
+        return f"Failure: {e}"
+
+def GetAlertLevelColor(ConfigData, ZCZC=None):
+    colEvtlist = {
+        "AVA": 1,
+        "CFA": 1,
+        "FFA": 1,
+        "FLA": 1,
+        "HUA": 1,
+        "HWA": 1,
+        "SSA": 1,
+        "SVA": 1,
+        "TOA": 1,
+        "TRA": 1,
+        "TSA": 1,
+        "WSA": 1,
+        "DBA": 1,
+        "EVA": 1,
+        "WFA": 1,
+        "AVW": 0,
+        "BLU": 0,
+        "BZW": 0,
+        "CDW": 0,
+        "CEM": 0,
+        "CFW": 0,
+        "DSW": 0,
+        "EAN": 0,
+        "EQW": 0,
+        "EVI": 0,
+        "EWW": 0,
+        "FFW": 0,
+        "FLW": 0,
+        "FRW": 0,
+        "FSW": 0,
+        "FZW": 0,
+        "HMW": 0,
+        "HUW": 0,
+        "HWW": 0,
+        "LEW": 0,
+        "NUW": 0,
+        "RHW": 0,
+        "SMW": 0,
+        "SPW": 0,
+        "SQW": 0,
+        "SSW": 0,
+        "SVR": 0,
+        "TOR": 0,
+        "TRW": 0,
+        "TSW": 0,
+        "VOW": 0,
+        "WSW": 0,
+        "BHW": 0,
+        "BWW": 0,
+        "CHW": 0,
+        "CWW": 0,
+        "DBW": 0,
+        "DEW": 0,
+        "FCW": 0,
+        "IBW": 0,
+        "IFW": 0,
+        "LSW": 0,
+        "WFW": 0,
+        "MEP": 0
+    }
+
+    if ZCZC is not None:
+        try:
+            ZCZC = ZCZC.split("-")
+            evnt = ZCZC[2]
+
+            if evnt in colEvtlist:
+                if colEvtlist[evnt] == 0: embed_color = ConfigData["CGENcolor_warning"]
+                elif colEvtlist[evnt] == 1: embed_color = ConfigData["CGENcolor_watch"]
+            else:
+                embed_color = ConfigData["CGENcolor_advisory"]
+        except:
+            embed_color = ConfigData["CGENcolor_warning"]
+    else:
+        embed_color = ConfigData["CGENcolor_warning"]
+
+    return embed_color
+
 class Capture:
     def __init__(self, OutputFolder, TCP1, TCP2):
         # domain, port = url.split(':')
@@ -528,23 +651,25 @@ class Generate:
         if result.returncode == 0: print(f"[RELAY/GENERATE]: {inputAudio} --> {outputAudio} ... Conversion successful!")
         else: print(f"[RELAY/GENERATE]: {inputAudio} --> {outputAudio} ... Conversion failed: {result.stderr}")
 
-        result = subprocess.run(["ffmpeg", "-y", "-i", "PreAudio.wav", "-filter:a", "volume=2.5", "Audio/audio.wav"], capture_output=True, text=True)
+        result = subprocess.run(["ffmpeg", "-y", "-i", outputAudio, "-filter:a", "volume=2.5", "Audio/audio.wav"], capture_output=True, text=True)
         if result.returncode == 0: print(f"[RELAY/GENERATE]: Filter loudening success.")
         else: print(f"[RELAY/GENERATE]: Filter loudening failure: {result.stderr}")
 
-        try: os.remove(inputAudio); os.remove("PreAudio.wav")
+        try: os.remove(inputAudio); os.remove(outputAudio)
         except: pass
 
     def TrimAudio(self, input_file, output_file, max_duration_ms=120000):
         # For broadcast audio
-        audio = AudioSegment.from_file(input_file)
-        duration_ms = len(audio)
-        if duration_ms > max_duration_ms:
-            trimmed_audio = audio[:max_duration_ms]
-            trimmed_audio.export(output_file, format="wav")
-            print(f"Broadcast Audio trimmed to {max_duration_ms / 1000} seconds.")
-            shutil.move(output_file, input_file)
-        else: pass
+        try:
+            audio = AudioSegment.from_file(input_file)
+            duration_ms = len(audio)
+            if duration_ms > max_duration_ms:
+                trimmed_audio = audio[:max_duration_ms]
+                trimmed_audio.export(output_file, format="wav")
+                print(f"Broadcast Audio trimmed to {max_duration_ms / 1000} seconds.")
+                shutil.move(output_file, input_file)
+            else: pass
+        except: print("Failed to trim broadcast audio!")
 
     def Audio(self, BroadcastText, lang, ConfigData):
         try:
@@ -573,15 +698,37 @@ class Generate:
             print("Generating TTS audio...")
             try: pythoncom.CoInitialize()
             except: pass
-            engine = pyttsx3.init()
-            if ConfigData["UseDefaultVoices"] is False:
-                if lang == "fr": ActiveVoice = ConfigData["VoiceFR"]
-                else: ActiveVoice = ConfigData["VoiceEN"]
-                voices = engine.getProperty('voices')
-                ActiveVoice = next((voice for voice in voices if voice.name == ActiveVoice), None)
-                if ActiveVoice: engine.setProperty('voice', ActiveVoice.id)
-            engine.save_to_file(str(BroadcastText), f"Audio/audio.wav")
-            engine.runAndWait()
+            
+            try: os.remove("Audio/audio.wav")
+            except: pass
+
+            try:
+                if ConfigData["TTS_Service"] == "pyttsx3":
+                    engine = pyttsx3.init()
+                    if ConfigData["UseDefaultVoices"] is False:
+                        if lang == "fr": ActiveVoice = ConfigData["VoiceFR"]
+                        else: ActiveVoice = ConfigData["VoiceEN"]
+                        voices = engine.getProperty('voices')
+                        ActiveVoice = next((voice for voice in voices if voice.name == ActiveVoice), None)
+                        if ActiveVoice: engine.setProperty('voice', ActiveVoice.id)
+                    engine.save_to_file(str(BroadcastText), f"Audio/audio.wav")
+                    engine.runAndWait()
+                elif ConfigData["TTS_Service"] == "flite":
+                    BroadcastText = BroadcastText.replace("\n", " ")
+                    if ConfigData["UseDefaultVoices"] is False:
+                        if lang == "fr": ActiveVoice = ConfigData["FliteVoice_FR"]
+                        else: ActiveVoice = ConfigData["FliteVoice_EN"]
+                        subprocess.run(["flite", "-t", BroadcastText, "-voice", ActiveVoice, "-o", f"Audio/audio.wav"], capture_output=True, text=True)
+                    else: subprocess.run(["flite", "-t", BroadcastText, "-o", f"Audio/audio.wav"], capture_output=True, text=True)
+                else:
+                    BroadcastText = BroadcastText.replace("\n", " ")
+                    if lang == "fr": ActiveVoice = ConfigData["APIvoice_FR"]
+                    else: ActiveVoice = ConfigData["APIvoice_EN"]
+                    GenenerateTTS_UsingAPI(ConfigData["TTS_Service"], ActiveVoice, ConfigData["APIvoice_Region"], ConfigData["APIvoice_Key"], "Audio/tmp", BroadcastText)
+                    self.ConvAudioFormat("Audio/tmp/GeneratedTTS.mp3", "Audio/PreAudio.wav")
+            except:
+                print("TTS generation failure!")
+
         if ConfigData['Force120'] is True: self.TrimAudio("./Audio/audio.wav", "./Audio/tmp/trimmedAudio.wav")
         
     def AudioSAME(self, GeneratedHeader):
@@ -824,11 +971,18 @@ def Relay():
                     if Decoded is False: print("No relay: No filter match.")
                     else:
                         if Check.DuplicateSAME(Decoded[0]) is True: print("No relay: duplicate SAME header detected from a previous relay."); continue
+                        alertColor = GetAlertLevelColor(ConfigData, Decoded[0])
                         try:
-                            with open("./alert.txt", "w") as f: f.write(Decoded[1])
+                            CGEN_Dict = {
+                                "color": alertColor,
+                                "text": Decoded[1]
+                            }
+                            #with open("./alert.txt", "w") as f: f.write(Decoded[1])
+                            with open("AlertText.json", 'w') as json_file: json.dump(CGEN_Dict, json_file, indent=2)
+
                         except: pass
                         logge = Log(ConfigData)
-                        logge.SendLog("Emergency Alert Transmission", Decoded[1], Decoded[0], "TX")
+                        logge.SendLog("Emergency Alert Transmission", Decoded[1], Decoded[0], "TX", alertColor)
                         PlayAlert = Playout(ConfigData, False)
 
                         try: 
@@ -906,18 +1060,28 @@ def Relay():
                             if Check.MatchCLC(ConfigData, GeneratedHeader) is False: print(f"No relay: CLC in generated header ({GeneratedHeader}) did not match config CLC ({ConfigData['AllowedLocations_CLC']})"); continue
                             if Check.DuplicateSAME(GeneratedHeader) is True: print("No relay: duplicate SAME header detected from a previous relay."); continue
                             if Check.CheckEventCodeSAME(ConfigData, GeneratedHeader) is False: print("No relay: Config data, SAME event code blocked for CAP."); continue
+                            alertColor = GetAlertLevelColor(ConfigData, GeneratedHeader)
+                        else:
+                            alertColor = GetAlertLevelColor(ConfigData)
                         
                         print("Generating audio products...")
                         logge = Log(ConfigData)
                         Gen.Audio(BroadcastText, lang, ConfigData)
+
                         try:
-                            with open("./alert.txt", "w") as f: f.write(BroadcastText)
+                            CGEN_Dict = {
+                                "color": alertColor,
+                                "text": BroadcastText
+                            }
+                            #with open("./alert.txt", "w") as f: f.write(Decoded[1])
+                            with open("AlertText.json", 'w') as json_file: json.dump(CGEN_Dict, json_file, indent=2)
                         except: pass
+
                         if ConfigData[f'PlayoutNoSAME'] is False:
                             print(f"\n...NEW ALERT TO RELAY...\nSAME: {GeneratedHeader}, \nBroadcast Text: {BroadcastText}\nSending alert...")
                             Gen.AudioSAME(GeneratedHeader)
-                            if lang == "fr": logge.SendLog("ALERTE D'URGENCE", BroadcastText, GeneratedHeader, "TX")
-                            else: logge.SendLog("EMERGENCY ALERT", BroadcastText, GeneratedHeader, "TX")
+                            if lang == "fr": logge.SendLog("ALERTE D'URGENCE", BroadcastText, GeneratedHeader, "TX", alertColor)
+                            else: logge.SendLog("EMERGENCY ALERT", BroadcastText, GeneratedHeader, "TX", alertColor)
                       
                             try: 
                                 stopPassthrough.set()
@@ -925,11 +1089,15 @@ def Relay():
                                 print("Passthrough stopped.")
                             except: pass
 
+                            # CWXV special
+                            #from EAStoCurrent import UpdateCurrent_WithEAS
+                            #UpdateCurrent_WithEAS(InfoEN)
+
                             PlayAlert.AlertSAME()
                         else:
                             print(f"\n...NEW ALERT TO RELAY...\nSAME Header is disabled. \nBroadcast Text: {BroadcastText}\nSending alert...")
-                            if lang == "fr": logge.SendLog("ALERTE D'URGENCE", BroadcastText, "", "TX")
-                            else: logge.SendLog("EMERGENCY ALERT", BroadcastText, "", "TX")
+                            if lang == "fr": logge.SendLog("ALERTE D'URGENCE", BroadcastText, "", "TX", alertColor)
+                            else: logge.SendLog("EMERGENCY ALERT", BroadcastText, "", "TX", alertColor)
                             PlayAlert.AlertAudio()
 
                 if ConfigData[f'PlayoutNoSAME'] is True: PlayAlert.AlertOutro()
@@ -1035,6 +1203,9 @@ def createDefaultConfig():
         "WebserverPort": "8050",
         "WebserverHost": "0.0.0.0",
         "SAME_callsign": "QUANTUM0",
+        "CGENcolor_warning": "ff2a2a",
+        "CGENcolor_watch": "ffcc00",
+        "CGENcolor_advisory": "00aa00",
         "UseSpecified_AudioOutput": False,
         "Specified_AudioOutput": "",
         "EnablePassThru": False,
@@ -1047,10 +1218,16 @@ def createDefaultConfig():
         "relay_en": True,
         "relay_fr": False,
         "UseDefaultVoices": True,
+        "TTS_Service": "pyttsx3",
         "VoiceEN": "",
         "VoiceFR": "",
+        "FliteVoice_EN": "",
+        "FliteVoice_FR": "",
+        "APIvoice_Key": "",
+        "APIvoice_Region": "",
+        "APIvoice_EN": "",
+        "APIvoice_FR": "",
         "enable_discord_webhook": False,
-        "webhook_color": "000000",
         "webhook_author_name": "",
         "webhook_author_URL": "",
         "webhook_author_iconURL": "",
@@ -1109,7 +1286,11 @@ def setup():
             except: pass
     except: pass
     try:
-        with open(f"alert.txt", "w") as f: f.write("")
+        nothingThing = {
+            "nothing":True
+            }
+        with open("AlertText.json", 'w') as json_file: json.dump(nothingThing, json_file, indent=2)
+        #with open(f"alert.txt", "w") as f: f.write("")
     except: pass
     if os.path.isfile("alertlog.txt") is True: pass
     else:

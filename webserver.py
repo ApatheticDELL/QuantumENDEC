@@ -394,8 +394,16 @@ def removeLeadout():
 
 @app.route('/alertText')
 def GetAlertText():
-    with open("alert.txt", "r") as f: alertText = f.read()
-    return alertText
+    #with open("alert.txt", "r") as f: alertText = f.read()
+    #return alertText
+    try:
+        with open("AlertText.json", "r") as f: alertText = json.load(f)
+        return jsonify(alertText)
+    except:
+        nothingThing = {
+            "nothing":True
+            }
+        return jsonify(nothingThing)
 
 @app.route('/')
 def home():

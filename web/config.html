@@ -31,6 +31,20 @@
             <label for="SAME_callsign">SAME Callsign: </label><input type="text" id="SAME_callsign" name="SAME_callsign"><br>
             <p>Your SAME callsign must be 8 characters, no more, no less. There also cannot be any dashes (-). If you put an invalid SAME callsign, code will use a default SAME callsign.</p>
             <br><br>
+
+            <h3>Alert Level Color</h3>
+            <p>In this section, you can set up colors for different alert levels. This will affect the scroll bar and discord webhook. Dynamic alert level color will only work with S.A.M.E... if not relaying with S.A.M.E, the warning color will be used.</p>
+
+            <label for="CGENcolor_warning_picker">Warning Color: </label><input type="color" id="CGENcolor_warning_picker" onchange="updateColorValue('CGENcolor_warning_picker', 'CGENcolor_warning')"><br>
+            <label for="CGENcolor_warning">Selected value: </label><input type="text" id="CGENcolor_warning" name="CGENcolor_warning" readonly><br><br>
+
+            <label for="CGENcolor_watch_picker">Watch Color: </label><input type="color" id="CGENcolor_watch_picker" onchange="updateColorValue('CGENcolor_watch_picker', 'CGENcolor_watch')"><br>
+            <label for="CGENcolor_watch">Selected value: </label><input type="text" id="CGENcolor_watch" name="CGENcolor_watch" readonly><br><br>
+
+            <label for="CGENcolor_advisory_picker">Advisory Color: </label><input type="color" id="CGENcolor_advisory_picker" onchange="updateColorValue('CGENcolor_advisory_picker', 'CGENcolor_advisory')"><br>
+            <label for="CGENcolor_advisory">Selected value: </label><input type="text" id="CGENcolor_advisory" name="CGENcolor_advisory" readonly><br><br>
+
+            <br><br>
             
             <h3>Audio configuration</h3>
             <input type="checkbox" id="UseSpecified_AudioOutput" name="UseSpecified_AudioOutput"> Use Specified Audio Output Device<br>
@@ -79,9 +93,23 @@
             <br><br>
             
             <h3>TTS voice configuration</h3>
-            <input type="checkbox" id="UseDefaultVoices" name="UseDefaultVoices"> Use Default Voices<br>
-            <p>The fields below will not have any effect if the box is selected.</p>
+            
+            <input type="checkbox" id="UseDefaultVoices" name="UseDefaultVoices"> Use Default Voices (for pyttsx3 or flite only)<br>
 
+            <h4>TTS Service Selection</h4>
+            <label for="TTSserviceSELECT">TTS Service: </label>
+            <select id="TTSserviceSELECT" onchange="updateTextBox('TTSserviceSELECT', 'TTS_Service')">
+                <option value="pyttsx3">PYTTSX3 (Default)</option>
+                <option value="flite">Flite</option>
+                <option value="11labs">API - Elevenlabs</option>
+                <!-- <option value="IBMwatson">API - IBM Watson</option>
+                <option value="AmazonPolly">API - Amazon Polly</option> -->
+            </select><br>
+            <label for="TTS_Service">Selected value:</label><input type="text" id="TTS_Service" name="TTS_Service" readonly>
+            <br><br>
+
+            <h4>PYTTSX3 Settings</h4>
+            <p>The fields below will not have any effect when using default voices.</p>
             <label for="VoiceENselect">English voice: </label><select id="VoiceENselect" onchange="updateTextBox('VoiceENselect', 'VoiceEN')"></select><br>
             <label for="VoiceEN">Selected value:</label><input type="text" id="VoiceEN" name="VoiceEN" readonly>
             <br><br>
@@ -89,11 +117,24 @@
             <label for="VoiceFR">Selected value:</label><input type="text" id="VoiceFR" name="VoiceFR" readonly>
             <br><br>
             
+            <h4>FLITE Settings</h4>
+            <p>Note: Flite must be installed on your system in order for it to work!</p>
+            <p>The fields below will not have any effect when using default voices.</p>
+            <label for="FliteVoice_EN">English Voice: (-voice)</label><input type="text" id="FliteVoice_EN" name="FliteVoice_EN"><br>
+            <label for="FliteVoice_FR">French Voice: (-voice)</label><input type="text" id="FliteVoice_FR" name="FliteVoice_FR"><br>
+            <br><br>
+
+            <h4>TTS API Settings</h4>
+            <p>Will be used when a API TTS service is selected under the TTS service dropdown.</p><br>
+            <label for="APIvoice_Key">API key: </label><input type="text" id="APIvoice_Key" name="APIvoice_Key"><br>
+            <label for="APIvoice_Region">API region: </label><input type="text" id="APIvoice_Region" name="APIvoice_Region"><br>
+            <label for="APIvoice_EN">English Voice: </label><input type="text" id="APIvoice_EN" name="APIvoice_EN"><br>
+            <label for="APIvoice_FR">French Voice: </label><input type="text" id="APIvoice_FR" name="APIvoice_FR"><br>
+            <br><br>
+
             <h3>Discord webhook configuration</h3>
             <input type="checkbox" id="enable_discord_webhook" name="enable_discord_webhook"> Enable Discord Webhook<br>
             <p>The fields below will not have any effect if the box is not selected.</p>
-            <label for="webhook_color_picker">Webhook Color: </label><input type="color" id="webhook_color_picker" onchange="updateColorValue()"><br>
-            <label for="webhook_color">Selected value: </label><input type="text" id="webhook_color" name="webhook_color" readonly><br><br>
             <label for="webhook_author_name">Webhook Author Name: </label><input type="text" id="webhook_author_name" name="webhook_author_name"><br>
             <label for="webhook_author_URL">Webhook Author URL: </label><input type="text" id="webhook_author_URL" name="webhook_author_URL"><br>
             <label for="webhook_author_iconURL">Webhook Author Icon URL: </label><input type="text" id="webhook_author_iconURL" name="webhook_author_iconURL"><br>
@@ -204,9 +245,9 @@
                 document.getElementById(textboxId).value = selectedValue;
             }
 
-            function updateColorValue() {
-                var colorPicker = document.getElementById('webhook_color_picker');
-                var hexValueBox = document.getElementById('webhook_color');
+            function updateColorValue(picker, boxxer) {
+                var colorPicker = document.getElementById(picker);
+                var hexValueBox = document.getElementById(boxxer);
                 var colorValue = colorPicker.value;
             
                 // Remove the '#' from the color value
