@@ -43,6 +43,52 @@ def UpdateStatus(service, content):
         with open(f"{statFolder}/{service}_status.txt", "w") as f: f.write(content)
     except: pass
 
+def Plugins_Run(mode=None, ZCZC=None, BROADCASTTEXT=None, XML=None):
+    # execute plugin with: GeneratedHeader, BroadcastText, InfoXML
+    pluginFolder = "plugins"
+    ZCZC = str(ZCZC).replace("\n","")
+    BROADCASTTEXT = str(BROADCASTTEXT).replace("\n"," ")
+    XML = str(XML).replace("\n"," ")
+
+    if not os.path.exists(pluginFolder): pass
+    else:
+        pluginList = os.listdir(pluginFolder)
+
+        if mode == "beforeRelay":
+            for plug in pluginList:
+                if ".py" in plug:
+                    print("Running plugin: ", plug)
+                    plug = plug.replace(".py", "")
+                    plug = f"{pluginFolder}.{plug}"
+                    try:
+                        exec(f"import {plug}")
+                        exec(f"{plug}.ExecutePlugin_BeforeRelay('{ZCZC}', '{BROADCASTTEXT}', '{XML}')")
+                    except Exception as e: print(f"{plug} has failed to run.", e)
+
+        elif mode == "afterRelay":
+            for plug in pluginList:
+                if ".py" in plug:
+                    print("Running plugin: ", plug)
+                    plug = plug.replace(".py", "")
+                    plug = f"{pluginFolder}.{plug}"
+                    try:
+                        exec(f"import {plug}")
+                        exec(f"{plug}.ExecutePlugin_AfterRelay('{ZCZC}', '{BROADCASTTEXT}', '{XML}')")
+                    except Exception as e: print(f"{plug} has failed to run.", e)
+        
+        elif mode == "startup":
+            for plug in pluginList:
+                if ".py" in plug:
+                    print("Running plugin: ", plug)
+                    plug = plug.replace(".py", "")
+                    plug = f"{pluginFolder}.{plug}"
+                    try:
+                        exec(f"import {plug}")
+                        exec(f"{plug}.ExecutePlugin_OnStart()")
+                    except Exception as e: print(f"{plug} has failed to run.", e)
+        
+        else: pass
+
 def GenenerateTTS_UsingAPI(TTSservice=None, VoiceSelection=None, Region=None, APIkey=None, OutputFolder=None, InputTEXT=None, Test=False):
     try:
         if Test is True:
@@ -167,18 +213,18 @@ def GetAlertLevelColor(ConfigData, ZCZC=None):
     return embed_color
 
 class Capture:
-    def __init__(self, OutputFolder, TCP1, TCP2):
+    def __init__(self, OutputFolder, TCP, name):
         # domain, port = url.split(':')
-        self.NAAD1, self.PORT1 = TCP1.split(':')
-        self.NAAD2, self.PORT2 = TCP2.split(':')
+        self.NAAD, self.PORT = TCP.split(':')
         self.OutputFolder = OutputFolder
+        self.nom = name
 
     def receive(self, host, port, buffer, delimiter):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             try:
                 s.connect((host, int(port)))
                 s.settimeout(100)
-                UpdateStatus("Capture", f"Connected to {host}")
+                UpdateStatus(self.nom, f"Connected to {host}")
                 print(f"[TCP Capture]: Connected to {host}")
                 data_received = ""
                 try:
@@ -194,17 +240,14 @@ class Capture:
                             data_received = ""
                 except socket.timeout: print(f"[TCP Capture]: Connection timed out for {host}"); return False
             except Exception as e: print(f"[TCP Capture]: Something broke when connecting to {host}: {e}"); return False
-            except: print("[TCP Capture]: General exception occurred!"); time.sleep(20); return False
+            except: print("[TCP Capture]: General exception occurred!"); return False
 
     def start(self):
-        NAAD = self.receive(self.NAAD1, self.PORT1, 1024, "</alert>")
-        if NAAD is False:
-            UpdateStatus("Capture", f"TCP connection to {self.NAAD1} failure")
-            NAAD = self.receive(self.NAAD2, self.PORT2, 1024, "</alert>")
-        if NAAD is False:
-            UpdateStatus("Capture", f"TCP connection to {self.NAAD2} failure")
-            print("[TCP Capture]: Double brokey!")
-        return False
+        while True:
+            NAAD = self.receive(self.NAAD, self.PORT, 1024, "</alert>")
+            if NAAD is False:
+                UpdateStatus(self.nom, f"TCP connection to {self.NAAD} failure")
+                time.sleep(30)
 
 class Check:
     def __init__(self):
@@ -305,11 +348,11 @@ class Check:
                 except: print("Heartbeat, download aborted: a general exception occurred, it could be that the URLs are temporarily unavailable.")
 
     def watchNotify(ListenFolder, HistoryFolder):
-        def GetFolderQueue(): return os.listdir(f"{ListenFolder}")
         print(f"Waiting for an alert...")
         while True:
             ExitTicket = False
-            for file in GetFolderQueue():
+            QueueList = os.listdir(f"{ListenFolder}")
+            for file in QueueList:
                 with open(f"{ListenFolder}/{file}", "r", encoding='UTF-8') as f: RelayXML = f.read()
                 AlertListXML = re.findall(r'<alert\s*(.*?)\s*</alert>', RelayXML, re.MULTILINE | re.IGNORECASE | re.DOTALL)
 
@@ -541,7 +584,9 @@ class Generate:
             try: ORG = self.CapCatToSameOrg[re.search(r'<category>\s*(.*?)\s*</category>', self.InfoX, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)]
             except: ORG = "CIV"
         
-        try: EVE = re.search(r'<eventCode>\s*<valueName>SAME</valueName>\s*<value>\s*(.*?)\s*</value>', self.InfoX, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)
+        try:
+            EVE = re.search(r'<eventCode>\s*<valueName>SAME</valueName>\s*<value>\s*(.*?)\s*</value>', self.InfoX, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)
+            if EVE is None or EVE == "": EVE = "CEM"
         except:
             try:
                 EVE = re.search(r'<eventCode>\s*<valueName>profile:CAP-CP:Event:0.4</valueName>\s*<value>\s*(.*?)\s*</value>', self.InfoX, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)
@@ -588,7 +633,7 @@ class Generate:
         return False
         
     def BroadcastText(self, lang):
-        try: BroadcastText = re.search(r'<valueName>layer:SOREM:1.0:Broadcast_Text</valueName>\s*<value>\s*(.*?)\s*</value>', self.InfoX, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1).replace('\n','').replace('  ',' ')
+        try: BroadcastText = re.search(r'<valueName>layer:SOREM:1.0:Broadcast_Text</valueName>\s*<value>\s*(.*?)\s*</value>', self.InfoX, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1).replace('\n',' ').replace('  ',' ')
         except:
             if lang == "fr": issue = "émis"; update = "mis à jour"; cancel = "annulé"
             else: issue = "issued"; update = "updated"; cancel = "cancelled"
@@ -645,18 +690,14 @@ class Generate:
             with open(Output, 'wb') as f: f.write(r.content)
 
     def ConvAudioFormat(self, inputAudio, outputAudio):
-        try: os.remove(outputAudio)
-        except: pass
-        result = subprocess.run(["ffmpeg", "-i", inputAudio, outputAudio], capture_output=True, text=True)
+        result = subprocess.run(["ffmpeg", "-y", "-i", inputAudio, outputAudio], capture_output=True, text=True)
         if result.returncode == 0: print(f"[RELAY/GENERATE]: {inputAudio} --> {outputAudio} ... Conversion successful!")
         else: print(f"[RELAY/GENERATE]: {inputAudio} --> {outputAudio} ... Conversion failed: {result.stderr}")
 
-        result = subprocess.run(["ffmpeg", "-y", "-i", outputAudio, "-filter:a", "volume=2.5", "Audio/audio.wav"], capture_output=True, text=True)
+    def LoudenAudio(self, inputAudio, outputAudio):
+        result = subprocess.run(["ffmpeg", "-y", "-i", inputAudio, "-filter:a", "volume=2.5", outputAudio], capture_output=True, text=True)
         if result.returncode == 0: print(f"[RELAY/GENERATE]: Filter loudening success.")
         else: print(f"[RELAY/GENERATE]: Filter loudening failure: {result.stderr}")
-
-        try: os.remove(inputAudio); os.remove(outputAudio)
-        except: pass
 
     def TrimAudio(self, input_file, output_file, max_duration_ms=120000):
         # For broadcast audio
@@ -689,11 +730,30 @@ class Generate:
                     AudioLink = re.search(r'<uri>\s*(.*?)\s*</uri>', BroadcastAudioResource, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)
                     AudioType = re.search(r'<mimeType>\s*(.*?)\s*</mimeType>', BroadcastAudioResource, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)
                     Decode = 0
-                if AudioType == "audio/mpeg": self.GetAudio(AudioLink,"PreAudio.mp3",Decode); self.ConvAudioFormat("PreAudio.mp3", "PreAudio.wav")
-                elif AudioType == "audio/x-ms-wma": self.GetAudio(AudioLink,"PreAudio.wma",Decode); self.ConvAudioFormat("PreAudio.wma", "PreAudio.wav")
-                elif AudioType == "audio/wave": self.GetAudio(AudioLink,"PreAudio.wav",Decode)
-                elif AudioType == "audio/wav": self.GetAudio(AudioLink,"PreAudio.wav",Decode)
-                elif AudioType == "audio/x-ipaws-audio-mp3": self.GetAudio(AudioLink,"PreAudio.mp3",Decode); self.ConvAudioFormat("PreAudio.mp3", "PreAudio.wav")
+                
+                if AudioType == "audio/mpeg":
+                    self.GetAudio(AudioLink,"Audio/tmp/PreAudio.mp3",Decode)
+                    self.ConvAudioFormat("Audio/tmp/PreAudio.mp3", "Audio/tmp/PreAudio.wav")
+                    os.remove("Audio/tmp/PreAudio.mp3")
+
+                elif AudioType == "audio/x-ms-wma":
+                    self.GetAudio(AudioLink,"Audio/tmp/PreAudio.wma",Decode)
+                    self.ConvAudioFormat("Audio/tmp/PreAudio.wma", "Audio/tmp/PreAudio.wav")
+                    os.remove("Audio/tmp/PreAudio.wma")
+
+                elif AudioType == "audio/wave":
+                    self.GetAudio(AudioLink,"Audio/tmp/PreAudio.wav",Decode)
+
+                elif AudioType == "audio/wav":
+                    self.GetAudio(AudioLink,"Audio/tmp/PreAudio.wav",Decode)
+
+                elif AudioType == "audio/x-ipaws-audio-mp3":
+                    self.GetAudio(AudioLink,"Audio/tmp/PreAudio.mp3",Decode)
+                    self.ConvAudioFormat("Audio/tmp/PreAudio.mp3", "Audio/tmp/PreAudio.wav")
+                    os.remove("Audio/tmp/PreAudio.mp3")
+                
+                self.LoudenAudio("Audio/tmp/PreAudio.wav", "Audio/audio.wav")
+                os.remove("Audio/tmp/PreAudio.wav")
         except:
             print("Generating TTS audio...")
             try: pythoncom.CoInitialize()
@@ -757,48 +817,31 @@ class Playout:
             sampling_rate, audio_data = wavfile.read(InputFile)
             sd.play(audio_data, samplerate=sampling_rate)
             sd.wait()
+        
+    def AlertIntro(self):
+        UpdateStatus("Relay", f"Transmitting alert.")    
+        if os.path.exists("./Audio/pre.wav"):
+            try: self.play("./Audio/pre.wav")
+            except: pass
+    
+    def AlertSAME(self):
+        try: self.play("./Audio/same.wav")
+        except: pass
 
-    def PlayAttentionTone(self):
+    def AlertAttn(self):
         try:
             if "CANADA" in str(self.CODE): self.play(f"./Audio/AttnCAN.wav")
             elif "USA" in str(self.CODE): self.play(f"./Audio/AttnEBS.wav")
             else: self.play(f"./Audio/{self.InputConfig['AttentionTone']}")
         except: print("Attention tone error! (Check attention tone audio file)")
 
-    def AlertSAME(self):
-        UpdateStatus("Relay", f"Transmitting alert, with S.A.M.E")
-        print("Playing out the alert with SAME...")
-        
-        if os.path.exists("./Audio/pre.wav"):
-            try: self.play("./Audio/pre.wav")
-            except: pass
-        
-        self.play("./Audio/same.wav")
-        
-        self.PlayAttentionTone()
-        
-        try: self.play("./Audio/audio.wav")
-        except: print("Error playing alert audio.")
-
-        self.play("./Audio/eom.wav")
-
-        if os.path.exists("./Audio/post.wav"):
-            try: self.play("./Audio/post.wav")
-            except: pass
-
-    def AlertIntro(self):
-        UpdateStatus("Relay", f"Transmitting alert.")
-        print("Playing out the alert (without SAME)...")
-        
-        if os.path.exists("./Audio/pre.wav"):
-            try: self.play("./Audio/pre.wav")
-            except: pass
-        
-        self.PlayAttentionTone()
-        
     def AlertAudio(self):
         try: self.play("./Audio/audio.wav")
         except: print("Error playing alert audio.")
+
+    def AlertEOM(self):
+        try: self.play("./Audio/eom.wav")
+        except: pass
 
     def AlertOutro(self):
         if os.path.exists("./Audio/post.wav"):
@@ -972,15 +1015,17 @@ def Relay():
                     else:
                         if Check.DuplicateSAME(Decoded[0]) is True: print("No relay: duplicate SAME header detected from a previous relay."); continue
                         alertColor = GetAlertLevelColor(ConfigData, Decoded[0])
+                        Plugins_Run("beforeRelay", Decoded[0], Decoded[1], None)
                         try:
                             CGEN_Dict = {
                                 "color": alertColor,
+                                "headline": "EMERGENCY ALERT SYSTEM",
                                 "text": Decoded[1]
                             }
                             #with open("./alert.txt", "w") as f: f.write(Decoded[1])
                             with open("AlertText.json", 'w') as json_file: json.dump(CGEN_Dict, json_file, indent=2)
-
                         except: pass
+
                         logge = Log(ConfigData)
                         logge.SendLog("Emergency Alert Transmission", Decoded[1], Decoded[0], "TX", alertColor)
                         PlayAlert = Playout(ConfigData, False)
@@ -993,9 +1038,29 @@ def Relay():
 
                         if ConfigData[f'PlayoutNoSAME'] is True:
                             PlayAlert.AlertIntro()
+                            PlayAlert.AlertAttn()
                             PlayAlert.AlertAudio()
                             PlayAlert.AlertOutro()
-                        else: PlayAlert.AlertSAME()
+                        else:
+                            PlayAlert.AlertIntro()
+                            PlayAlert.AlertSAME()
+                            PlayAlert.AlertAttn()
+                            PlayAlert.AlertAudio()
+                            PlayAlert.AlertEOM()
+                            PlayAlert.AlertOutro()
+
+                        Plugins_Run("afterRelay", Decoded[0], Decoded[1], None)
+
+                        try:
+                            if ConfigData["CGEN_ClearAfterAlert"] is True:
+                                CGEN_Dict = {
+                                    "color": "000000",
+                                    "headline": "Emergency Alert Details",
+                                    "text": ""
+                                }
+                                #with open("./alert.txt", "w") as f: f.write(Decoded[1])
+                                with open("AlertText.json", 'w') as json_file: json.dump(CGEN_Dict, json_file, indent=2)
+                        except: pass
             else:
                 UpdateStatus("Relay", f"Alert detected.")
                 print("\n\n...NEW ALERT DETECTED...")
@@ -1010,26 +1075,11 @@ def Relay():
                 else: CODE = False
                 PlayAlert = Playout(ConfigData, CODE)
 
-                if ConfigData[f'PlayoutNoSAME'] is True:
-                    try: BroadcastImmediately = re.findall(r'<valueName>layer:SOREM:1.0:Broadcast_Immediately</valueName>\s*<value>\s*(.*?)\s*</value>', RelayXML, re.MULTILINE | re.IGNORECASE | re.DOTALL)
-                    except: BroadcastImmediately = ['No']
-                    Urgency = re.findall(r'<urgency>\s*(.*?)\s*</urgency>', RelayXML, re.MULTILINE | re.IGNORECASE | re.DOTALL)
-                    Severity = re.findall(r'<severity>\s*(.*?)\s*</severity>', RelayXML, re.MULTILINE | re.IGNORECASE | re.DOTALL)
-                    Final = False
-                    for a, b, c in zip_longest(Severity, Urgency, BroadcastImmediately, fillvalue=None):
-                        if Check.Config(RelayXML, ConfigData, Status, MessageType, a, b, c) is True: Final = True
-                    if Final is False: print("No relay: None of its messages matched with config."); continue
-                       
-                    try: 
-                        stopPassthrough.set()
-                        PassthroughThread.join()
-                        print("Pass-through stopped.")
-                    except: pass
-
-                    PlayAlert.AlertIntro()
-
                 RelayXML = re.findall(r'<info>\s*(.*?)\s*</info>', RelayXML, re.MULTILINE | re.IGNORECASE | re.DOTALL)
                 InfoProc = 0
+
+                AlertIntro_HasBeenPlayed = False
+                Alert_Playout = False
 
                 for InfoEN in RelayXML:
                     InfoProc = InfoProc + 1
@@ -1037,13 +1087,25 @@ def Relay():
                     InfoEN = f"<info>{InfoEN}</info>"
 
                     try:
-                        if "fr" in re.search(r'<language>\s*(.*?)\s*</language>', InfoEN, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1): lang = "fr"
+                        if "en" in re.search(r'<language>\s*(.*?)\s*</language>', InfoEN, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1): lang = "en"
+                        elif "fr" in re.search(r'<language>\s*(.*?)\s*</language>', InfoEN, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1): lang = "fr"
                         elif "es" in re.search(r'<language>\s*(.*?)\s*</language>', InfoEN, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1): lang = "es"
-                        else: lang = "en"
-                    except: lang = "en"
+                        else:
+                            print("Language not supported.")
+                            continue
+                        if ConfigData[f'relay_{lang}'] is False: print("Not relaying:", lang); continue
+                    except:
+                        print("Language check failed.")
+                        continue
+
                     try:
-                        if ConfigData[f'relay_{lang}'] is False: print("not relaying:", lang); continue
-                    except: print("not relaying:", lang); continue
+                        current_time = datetime.now(timezone.utc)
+                        Expires = re.search(r'<expires>\s*(.*?)\s*</expires>', InfoEN, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)
+                        Expires = datetime.fromisoformat(datetime.fromisoformat(Expires).astimezone(timezone.utc).isoformat())
+                        if current_time > Expires:
+                            print("Alert expired, will not relay.")
+                            continue
+                    except: pass
 
                     Urgency = re.search(r'<urgency>\s*(.*?)\s*</urgency>', InfoEN, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)
                     Severity = re.search(r'<severity>\s*(.*?)\s*</severity>', InfoEN, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)
@@ -1055,11 +1117,13 @@ def Relay():
                         print("Generating text products...")
                         Gen = Generate(InfoEN, Sent, MessageType, Callsign)
                         GeneratedHeader = Gen.SAMEheader()
+                        print("generated header:", GeneratedHeader)
                         BroadcastText = Gen.BroadcastText(lang)
                         if ConfigData[f'PlayoutNoSAME'] is False:
                             if Check.MatchCLC(ConfigData, GeneratedHeader) is False: print(f"No relay: CLC in generated header ({GeneratedHeader}) did not match config CLC ({ConfigData['AllowedLocations_CLC']})"); continue
-                            if Check.DuplicateSAME(GeneratedHeader) is True: print("No relay: duplicate SAME header detected from a previous relay."); continue
                             if Check.CheckEventCodeSAME(ConfigData, GeneratedHeader) is False: print("No relay: Config data, SAME event code blocked for CAP."); continue
+                            if AlertIntro_HasBeenPlayed is True:
+                                if Check.DuplicateSAME(GeneratedHeader) is True: print("No relay: duplicate SAME header detected from a previous relay."); continue
                             alertColor = GetAlertLevelColor(ConfigData, GeneratedHeader)
                         else:
                             alertColor = GetAlertLevelColor(ConfigData)
@@ -1067,14 +1131,25 @@ def Relay():
                         print("Generating audio products...")
                         logge = Log(ConfigData)
                         Gen.Audio(BroadcastText, lang, ConfigData)
+                        Alert_Playout = True
+                        Plugins_Run("beforeRelay", GeneratedHeader, BroadcastText, InfoEN)
 
                         try:
+                            if lang == "fr": CGEN_headline = "ALERTE D'URGENCE"
+                            else: CGEN_headline = "EMERGENCY ALERT"
                             CGEN_Dict = {
                                 "color": alertColor,
+                                "headline": CGEN_headline,
                                 "text": BroadcastText
                             }
                             #with open("./alert.txt", "w") as f: f.write(Decoded[1])
                             with open("AlertText.json", 'w') as json_file: json.dump(CGEN_Dict, json_file, indent=2)
+                        except: pass
+
+                        try: 
+                            stopPassthrough.set()
+                            PassthroughThread.join()
+                            print("Passthrough stopped.")
                         except: pass
 
                         if ConfigData[f'PlayoutNoSAME'] is False:
@@ -1082,25 +1157,40 @@ def Relay():
                             Gen.AudioSAME(GeneratedHeader)
                             if lang == "fr": logge.SendLog("ALERTE D'URGENCE", BroadcastText, GeneratedHeader, "TX", alertColor)
                             else: logge.SendLog("EMERGENCY ALERT", BroadcastText, GeneratedHeader, "TX", alertColor)
-                      
-                            try: 
-                                stopPassthrough.set()
-                                PassthroughThread.join()
-                                print("Passthrough stopped.")
-                            except: pass
-
-                            # CWXV special
-                            #from EAStoCurrent import UpdateCurrent_WithEAS
-                            #UpdateCurrent_WithEAS(InfoEN)
-
+                            PlayAlert.AlertIntro()                
                             PlayAlert.AlertSAME()
+                            PlayAlert.AlertAttn()
+                            PlayAlert.AlertAudio()
+                            PlayAlert.AlertEOM()
+                            PlayAlert.AlertOutro()
+                            Plugins_Run("afterRelay", GeneratedHeader, BroadcastText, InfoEN)
                         else:
                             print(f"\n...NEW ALERT TO RELAY...\nSAME Header is disabled. \nBroadcast Text: {BroadcastText}\nSending alert...")
                             if lang == "fr": logge.SendLog("ALERTE D'URGENCE", BroadcastText, "", "TX", alertColor)
                             else: logge.SendLog("EMERGENCY ALERT", BroadcastText, "", "TX", alertColor)
+                            
+                            if AlertIntro_HasBeenPlayed is False:
+                                PlayAlert.AlertIntro()
+                                PlayAlert.AlertAttn()
+                                AlertIntro_HasBeenPlayed = True
+
                             PlayAlert.AlertAudio()
 
-                if ConfigData[f'PlayoutNoSAME'] is True: PlayAlert.AlertOutro()
+                if Alert_Playout is True:
+                    PlayAlert.AlertOutro()
+                    Plugins_Run("afterRelay", GeneratedHeader, BroadcastText, InfoEN)
+
+                    try:
+                        if ConfigData["CGEN_ClearAfterAlert"] is True:
+                            CGEN_Dict = {
+                                "color": "000000",
+                                "headline": "Emergency Alert Details",
+                                "text": ""
+                            }
+                            #with open("./alert.txt", "w") as f: f.write(Decoded[1])
+                            with open("AlertText.json", 'w') as json_file: json.dump(CGEN_Dict, json_file, indent=2)
+                    except: pass
+
         except Exception as e:
             UpdateStatus("Relay", f"Relay failure.")
             print("[WARNING] Exception in relay! ", e)
@@ -1109,20 +1199,6 @@ def Relay():
             UpdateStatus("Relay", f"Relay failure.")
             print("[WARNING] General exception in relay!")
             time.sleep(5)
-
-def TCP_CAP():
-    with open("config.json", "r") as JCfile: config = JCfile.read()
-    ConfigData = json.loads(config)
-    
-    while ConfigData['TCP'] is True:
-        UpdateStatus("Capture", "Starting TCP capture...")
-        if Capture("./XMLqueue", ConfigData['TCP1'], ConfigData['TCP2']).start() is False:
-            UpdateStatus("Capture", "TCP Capture Failure.")
-            print("[TCP Capture]: Something really really brokey...")
-            time.sleep(60)
-    
-    UpdateStatus("Capture", "TCP CAP Capture is disabled.")
-    print("[TCP Capture]: TCP CAP capture has been disabled!")
 
 def HTTP_CAP(outputFolder, CAP_URL):
     print(f"[HTTP Capture]: HTTP CAP Capture active! {CAP_URL}")
@@ -1206,6 +1282,7 @@ def createDefaultConfig():
         "CGENcolor_warning": "ff2a2a",
         "CGENcolor_watch": "ffcc00",
         "CGENcolor_advisory": "00aa00",
+        "CGEN_ClearAfterAlert": False,
         "UseSpecified_AudioOutput": False,
         "Specified_AudioOutput": "",
         "EnablePassThru": False,
@@ -1278,14 +1355,6 @@ def createDefaultConfig():
 
 def setup():
     try:
-        statFolder = "stats"
-        stats = os.listdir(statFolder)
-        for i in stats:
-            try:
-                with open(f"{statFolder}/{i}", "w") as f: f.write("N/A")
-            except: pass
-    except: pass
-    try:
         nothingThing = {
             "nothing":True
             }
@@ -1294,10 +1363,11 @@ def setup():
     except: pass
     if os.path.isfile("alertlog.txt") is True: pass
     else:
-        with open(f"alertlog.txt", "w") as f: f.write("")
+        with open(f"alertlog.txt", "w", encoding='utf-8') as f: f.write("")
     Clear()
     print(f"\nQuantumENDEC\nVersion: {QEversion}\n\nDeveloped by:\nDell ... ApatheticDELL\nAaron ... secludedfox.com :3\nBunnyTub ... bunnytub.com\n")
     with open("SameHistory.txt", "w") as f: f.write(f"ZXZX-STARTER-\n")
+    CheckFolder('stats', True)
     CheckFolder('XMLqueue', True)
     CheckFolder('XMLhistory', True)
     CheckFolder('Audio', False)
@@ -1327,7 +1397,23 @@ if __name__ == "__main__":
 
     if args.headless is False: WebThread = threading.Thread(target=StartWEB, daemon=True, args=(ConfigData['WebserverHost'], ConfigData['WebserverPort']))
     RelayThread = threading.Thread(target=Relay, daemon=True)
-    CaptureThread = threading.Thread(target=TCP_CAP, daemon=True)
+    
+    if ConfigData["TCP"] is True:
+        if ConfigData["TCP1"] == "": UpdateStatus("NAAD1", "TCP CAP Capture is disabled.")
+        else:
+            UpdateStatus("NAAD1", "Starting TCP capture...")
+            TCP1cap = Capture("./XMLqueue", ConfigData["TCP1"], "NAAD1")
+            TCP1capture_thread = threading.Thread(target=TCP1cap.start, daemon=True)
+
+        if ConfigData["TCP2"] == "": UpdateStatus("NAAD2", "TCP CAP Capture is disabled.")
+        else:
+            UpdateStatus("NAAD2", "Starting TCP capture...")
+            TCP2cap = Capture("./XMLqueue", ConfigData["TCP2"], "NAAD2")
+            TCP2capture_thread = threading.Thread(target=TCP2cap.start, daemon=True)
+    else:
+        UpdateStatus("NAAD1", "TCP CAP Capture is disabled.")
+        UpdateStatus("NAAD2", "TCP CAP Capture is disabled.")
+        print("[TCP Capture]: TCP CAP capture has been disabled!")
 
     if ConfigData["HTTP_CAP"] is True: HTTPcaptureThread = threading.Thread(target=HTTP_CAP, args=("XMLqueue", ConfigData["HTTP_CAP_ADDR"]))
     else:
@@ -1349,7 +1435,11 @@ if __name__ == "__main__":
     if args.headless is False: WebThread.start()
     print("Starting QuantumENDEC...")
     RelayThread.start()
-    CaptureThread.start()
+    
+    try: TCP1capture_thread.start()
+    except: pass
+    try: TCP2capture_thread.start()
+    except: pass
     
     try: HTTPcaptureThread.start()
     except: pass
@@ -1370,7 +1460,12 @@ if __name__ == "__main__":
 
     if args.headless is False: WebThread.join()
     RelayThread.join()
-    CaptureThread.join()
+    
+    try: TCP1capture_thread.join()
+    except: pass
+
+    try: TCP2capture_thread.join()
+    except: pass
 
     try: HTTPcaptureThread.join()
     except: pass

@@ -44,9 +44,9 @@ class Log:
         else: log = f"{Title}\n{Description}\n{ZCZC}"
         log = f"\n--- {dateNow} ---\n{log}\n"
         try:
-            with open("alertlog.txt", "a") as f: f.write(log)
+            with open("alertlog.txt", "a", encoding='utf-8') as f: f.write(log)
         except:
-            with open("alertlog.txt", "w") as f: f.write(log)
+            with open("alertlog.txt", "w", encoding='utf-8') as f: f.write(log)
 
     def SendLog(self, Title, Description, ZCZC, type="", HookColor=None):
         if self.ConfigData['enable_discord_webhook'] is True:

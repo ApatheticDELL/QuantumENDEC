@@ -8,12 +8,12 @@
     <h1><img src="images/logo.png" alt="QuantumENDEC logo" width="10%" height="10%"> QuantumENDEC Web Interface</h1>
     <nav>
         <ul>
-            <li><a href="index.html">Home</a></li>
-            <li><a href="status.html">Status</a></li>
-            <li><a href="config.html">Configuration</a></li>
+            <li><a href="/index.html">Home</a></li>
+            <li><a href="/status.html">Status</a></li>
+            <li><a href="/config.html">Configuration</a></li>
             <li><a class="selected">Send Alert</a></li>
-            <li><a href="alertLog.html">Alert Log</a></li>
-            <li><a href="changePass.html">Change Access Password</a></li>
+            <li><a href="/alertLog.html">Alert Log</a></li>
+            <li><a href="/changePass.html">Change Access Password</a></li>
         </ul>
     </nav>
 
@@ -22,6 +22,13 @@
     <p>This function internally injects a CAP alert within QuantumENDEC for relay, this does NOT send an actual alert out to connected CAP sources. (Broadcasters/Cable operators in the United States use this type of feature for RWT/RMTs)</p>
     <br>
     <form id="sendForm">
+        <h3>Primary Info block</h3>
+        <label for="LANGUAGE">Language: </label>
+        <select name="LANGUAGE" id="LANGUAGE">
+            <option value="en-US">English</option>
+            <option value="fr-US">French</option>
+        </select>
+        <br><br>
         <label for="ORG">Originator code: </label>
         <select name="ORG" id="ORG">
             <option value="EAS">EAS - EAS Participant (or Broadcast station or cable system)</option>
@@ -41,7 +48,35 @@
         <label for="broadcastText">Broadcast text: </label><br>
         <textarea id="broadcastText" name="broadcastText" rows="4" cols="100">Broadcast text can be edited here.</textarea>
         <br><br>
+        
+        <h3>Secondary Info block</h3>
+        <input type="checkbox" id="SecondaryInfo" name="SecondaryInfo"> Send with Secondary info block.<br><br>
+        <label for="LANGUAGE_second">Language: </label>
+        <select name="LANGUAGE_second" id="LANGUAGE_second">
+            <option value="en-US">English</option>
+            <option value="fr-US">French</option>
+        </select>
+        <br><br>
+        <label for="ORG_second">Originator code: </label>
+        <select name="ORG_second" id="ORG_second">
+            <option value="EAS">EAS - EAS Participant (or Broadcast station or cable system)</option>
+            <option value="CIV">CIV - Civil authorities</option>
+            <option value="WXR">WXR - National Weather Service (or Environment Canada.)</option>
+            <option value="PEP">PEP - National Public Warning System</option>
+        </select>
+        
+        <br><br>
+        <label for="EVE_second">Event code: </label><input type="text" id="EVE_second" name="EVE_second"><br>
+        <br><br>
+        
+        <label for="FIPS_second">CLC/FIPS: </label><input type="text" id="FIPS_second" name="FIPS_second"><br>
+        <p>No spaces, use CLC/FIPS, separate the codes by a dash (-). If you don't, things will break.</p>
+        <br><br>
 
+        <label for="broadcastText_second">Broadcast text: </label><br>
+        <textarea id="broadcastText_second" name="broadcastText_second" rows="4" cols="100">Broadcast text can be edited here.</textarea>
+        <br><br>
+        
         <button class="button" type="button" onclick="sendAlert()">Send alert</button>
         <br><br>
     </form>
@@ -53,7 +88,14 @@
                 ORG: document.getElementById('ORG').value,
                 EVE: document.getElementById('EVE').value,
                 broadcastText: document.getElementById('broadcastText').value,
-                FIPS: document.getElementById('FIPS').value
+                FIPS: document.getElementById('FIPS').value,
+                LANGUAGE: document.getElementById('LANGUAGE').value,
+                SecondaryInfo: document.getElementById('SecondaryInfo').checked,
+                ORG_second: document.getElementById('ORG_second').value,
+                EVE_second: document.getElementById('EVE_second').value,
+                broadcastText_second: document.getElementById('broadcastText_second').value,
+                FIPS_second: document.getElementById('FIPS_second').value,
+                LANGUAGE_second: document.getElementById('LANGUAGE_second').value
             };
 
             fetch('/send_alert', {

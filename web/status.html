@@ -25,12 +25,12 @@
     <h1><img src="images/logo.png" alt="QuantumENDEC logo" width="10%" height="10%"> QuantumENDEC Web Interface</h1>
     <nav>
         <ul>
-            <li><a href="index.html">Home</a></li>
+            <li><a href="/index.html">Home</a></li>
             <li><a class="selected">Status</a></li>
-            <li><a href="config.html">Configuration</a></li>
-            <li><a href="sendAlert.html">Send Alert</a></li>
-            <li><a href="alertLog.html">Alert Log</a></li>
-            <li><a href="changePass.html">Change Access Password</a></li>
+            <li><a href="/config.html">Configuration</a></li>
+            <li><a href="/sendAlert.html">Send Alert</a></li>
+            <li><a href="/alertLog.html">Alert Log</a></li>
+            <li><a href="/changePass.html">Change Access Password</a></li>
         </ul>
     </nav>
     
@@ -40,7 +40,8 @@
     <h3>Relay</h3>
     <div id="Relay_status" class="status-box">Loading...</div>
     <h3>TCP CAP Capture</h3>
-    <div id="Capture_status" class="status-box">Loading...</div>
+    <div id="NAAD1_status" class="status-box">Loading...</div>
+    <div id="NAAD2_status" class="status-box">Loading...</div>
     <h3>HTTP CAP Capture</h3>
     <div id="HTTPCAPcapture_status" class="status-box">Loading...</div>
     <h3>NWS CAP Capture</h3>
@@ -56,7 +57,8 @@
     <script>
         const urls = [
             '/stats/Relay_status.txt',
-            '/stats/Capture_status.txt',
+            '/stats/NAAD1_status.txt',
+            '/stats/NAAD2_status.txt',
             '/stats/HTTPCAPcapture_status.txt',
             '/stats/NWSCAPcapture_status.txt',
             '/stats/AudioMonitor_status.txt',
@@ -76,7 +78,7 @@
                     const text = await response.text();
                     document.getElementById(urls[i].split('/').pop().split('_')[0] + '_status').textContent = text;
                 } catch (error) {
-                    document.getElementById(urls[i].split('/').pop().split('_')[0] + '_status').textContent = 'Error fetching data';
+                    document.getElementById(urls[i].split('/').pop().split('_')[0] + '_status').textContent = 'N/A';
                     console.error('Error fetching data from', urls[i], ':', error);
                 }
             }

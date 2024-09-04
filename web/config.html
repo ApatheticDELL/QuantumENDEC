@@ -8,12 +8,12 @@
         <h1><img src="images/logo.png" alt="QuantumENDEC logo" width="10%" height="10%"> QuantumENDEC Web Interface</h1>
         <nav>
             <ul>
-                <li><a href="index.html">Home</a></li>
-                <li><a href="status.html">Status</a></li>
+                <li><a href="/index.html">Home</a></li>
+                <li><a href="/status.html">Status</a></li>
                 <li><a class="selected">Configuration</a></li>
-                <li><a href="sendAlert.html">Send Alert</a></li>
-                <li><a href="alertLog.html">Alert Log</a></li>
-                <li><a href="changePass.html">Change Access Password</a></li>
+                <li><a href="/sendAlert.html">Send Alert</a></li>
+                <li><a href="/alertLog.html">Alert Log</a></li>
+                <li><a href="/changePass.html">Change Access Password</a></li>
             </ul>
         </nav>
 
@@ -32,7 +32,8 @@
             <p>Your SAME callsign must be 8 characters, no more, no less. There also cannot be any dashes (-). If you put an invalid SAME callsign, code will use a default SAME callsign.</p>
             <br><br>
 
-            <h3>Alert Level Color</h3>
+            <h3>Alert Presentation</h3>
+            <h4>HTTP CGEN settings</h4>
             <p>In this section, you can set up colors for different alert levels. This will affect the scroll bar and discord webhook. Dynamic alert level color will only work with S.A.M.E... if not relaying with S.A.M.E, the warning color will be used.</p>
 
             <label for="CGENcolor_warning_picker">Warning Color: </label><input type="color" id="CGENcolor_warning_picker" onchange="updateColorValue('CGENcolor_warning_picker', 'CGENcolor_warning')"><br>
@@ -43,7 +44,53 @@
 
             <label for="CGENcolor_advisory_picker">Advisory Color: </label><input type="color" id="CGENcolor_advisory_picker" onchange="updateColorValue('CGENcolor_advisory_picker', 'CGENcolor_advisory')"><br>
             <label for="CGENcolor_advisory">Selected value: </label><input type="text" id="CGENcolor_advisory" name="CGENcolor_advisory" readonly><br><br>
+            
+            <input type="checkbox" id="CGEN_ClearAfterAlert" name="CGEN_ClearAfterAlert"> Clear CGEN after alert (This will get rid of the alert text after an alert has been transmitted on both fullscreen and scroll)<br>
+            <br><br>
 
+            <!--
+            <h4>Serial Port Settings</h4>
+            <p>Port 1</p>
+            <input type="checkbox" id="Serial1_Enable" name="Serial1_Enable"> Enable Serial Port<br>
+            <select id="Serial1_PORT_SELECT" onchange="updateTextBox('Serial1_PORT_SELECT', 'Serial1_PORT')"></select><br>
+            <label for="Serial1_PORT">Selected value:</label><input type="text" id="Serial1_PORT" name="Serial1_PORT" readonly><br>
+            <label for="Serial1_BAUD">Baud Rate: </label><input type="text" id="Serial1_BAUD" name="Serial1_BAUD"><br>
+            <label for="Serial1_CommandBefore">Command (Before Alert): </label><input type="text" id="Serial1_CommandBefore" name="Serial1_CommandBefore"><br>
+            <label for="Serial1_CommandAfter">Command (After Alert): </label><input type="text" id="Serial1_CommandAfter" name="Serial1_CommandAfter"><br>
+            <br>
+
+            <p>Port 2</p>
+            <input type="checkbox" id="Serial1_Enable" name="Serial1_Enable"> Enable Serial Port<br>
+            <select id="Serial2_PORT_SELECT" onchange="updateTextBox('Serial2_PORT_SELECT', 'Serial2_PORT')"></select><br>
+            <label for="Serial2_PORT">Selected value:</label><input type="text" id="Serial2_PORT" name="Serial2_PORT" readonly><br>
+            <label for="Serial2_BAUD">Baud Rate: </label><input type="text" id="Serial2_BAUD" name="Serial2_BAUD"><br>
+            <label for="Serial2_CommandBefore">Command (Before Alert): </label><input type="text" id="Serial2_CommandBefore" name="Serial2_CommandBefore"><br>
+            <label for="Serial2_CommandAfter">Command (After Alert): </label><input type="text" id="Serial2_CommandAfter" name="Serial2_CommandAfter"><br>
+            <br>
+
+            <p>Port 3</p>
+            <input type="checkbox" id="Serial1_Enable" name="Serial1_Enable"> Enable Serial Port<br>
+            <select id="Serial3_PORT_SELECT" onchange="updateTextBox('Serial3_PORT_SELECT', 'Serial3_PORT')"></select><br>
+            <label for="Serial3_PORT">Selected value:</label><input type="text" id="Serial3_PORT" name="Serial3_PORT" readonly><br>
+            <label for="Serial3_BAUD">Baud Rate: </label><input type="text" id="Serial3_BAUD" name="Serial3_BAUD"><br>
+            <label for="Serial3_CommandBefore">Command (Before Alert): </label><input type="text" id="Serial3_CommandBefore" name="Serial3_CommandBefore"><br>
+            <label for="Serial3_CommandAfter">Command (After Alert): </label><input type="text" id="Serial3_CommandAfter" name="Serial3_CommandAfter"><br>
+            <br><br>
+            -->
+
+            <h4>Discord webhook configuration</h4>
+            <input type="checkbox" id="enable_discord_webhook" name="enable_discord_webhook"> Enable Discord Webhook<br>
+            <p>The fields below will not have any effect if the box is not selected.</p>
+            <label for="webhook_author_name">Webhook Author Name: </label><input type="text" id="webhook_author_name" name="webhook_author_name"><br>
+            <label for="webhook_author_URL">Webhook Author URL: </label><input type="text" id="webhook_author_URL" name="webhook_author_URL"><br>
+            <label for="webhook_author_iconURL">Webhook Author Icon URL: </label><input type="text" id="webhook_author_iconURL" name="webhook_author_iconURL"><br>
+            <label for="webhook_URL">Webhook URL: </label><input type="text" id="webhook_URL" name="webhook_URL"><br>
+            <br><input type="checkbox" id="webhook_sendAudio" name="webhook_sendAudio"> Send broadcast audio<br>
+            <br><br>
+
+            <h4>Alert logging to text file</h4>
+            <p>QuantumENDEC will log alerts to a text file called 'alertlog.txt', this allows you to view the log on the Alert Log tab on this web interface.</p>
+            <input type="checkbox" id="enable_LogToTxt" name="enable_LogToTxt"> Log alerts to text file<br>
             <br><br>
             
             <h3>Audio configuration</h3>
@@ -53,7 +100,7 @@
             <label for="SpecifiedAudioDeviceSELECT">Specified Audio Device: </label>
             <select id="SpecifiedAudioDeviceSELECT" onchange="updateTextBox('SpecifiedAudioDeviceSELECT', 'Specified_AudioOutput')"></select><br>
             <label for="Specified_AudioOutput">Selected value:</label><input type="text" id="Specified_AudioOutput" name="Specified_AudioOutput" readonly>
-            <br><br>
+            <br>
             
             <h4>Passthrough switching</h4>
             <input type="checkbox" id="EnablePassThru" name="EnablePassThru"> Activate passthrough switching<br>
@@ -64,9 +111,9 @@
             <label for="Passthrough_AudioInput">Selected value:</label><input type="text" id="Passthrough_AudioInput" name="Passthrough_AudioInput" readonly>
             <br>
             <p><strong>Watch out!</strong> If you are using Passthrough switching, you can only have both specified audio input and output selected and active, or have both use the default audio device selected by the OS. <strong>You can't have one default and the other specified.</strong></p>
-            <br><br>
+            <br>
 
-            <h3>Attention tone flavour</h3>
+            <h4>Attention tone flavour</h4>
             <label for="AttentionToneSELECT">Attention tone flavour: </label>
             <select id="AttentionToneSELECT" onchange="updateTextBox('AttentionToneSELECT', 'AttentionTone')">
                 <option value="AttnCAN.wav">Canada (Alert Ready)</option>
@@ -79,21 +126,20 @@
             <input type="checkbox" id="Attn_BasedOnCountry" name="Attn_BasedOnCountry"> Use attention tones based on alert's country (only works with CAP)</input>
             <br>
             <p>If it can't detect what attention tone to use, it will revert to the one selected in Attention tone flavour.</p>
-            <br><br>
+            <br>
 
             <h4>Force 120 seconds of broadcast audio</h4>
             <input type="checkbox" id="Force120" name="Force120"> Force 120 seconds of broadcast audio<br>
             <p>For broadcast audio that happens to be over the 120 second limit, you can enable this option to cut the audio down to 120 seconds.</p>
-            <br><br>
+            <br>
             
-            <h3>Playout configuration</h3>
+            <h4>Playout configuration</h4>
             <input type="checkbox" id="PlayoutNoSAME" name="PlayoutNoSAME"> Transmit alerts without S.A.M.E<br>
             <input type="checkbox" id="relay_en" name="relay_en"> Relay in English<br>
             <input type="checkbox" id="relay_fr" name="relay_fr"> Relay in French<br>
             <br><br>
             
-            <h3>TTS voice configuration</h3>
-            
+            <h4>TTS voice configuration</h4>
             <input type="checkbox" id="UseDefaultVoices" name="UseDefaultVoices"> Use Default Voices (for pyttsx3 or flite only)<br>
 
             <h4>TTS Service Selection</h4>
@@ -106,23 +152,23 @@
                 <option value="AmazonPolly">API - Amazon Polly</option> -->
             </select><br>
             <label for="TTS_Service">Selected value:</label><input type="text" id="TTS_Service" name="TTS_Service" readonly>
-            <br><br>
+            <br>
 
             <h4>PYTTSX3 Settings</h4>
             <p>The fields below will not have any effect when using default voices.</p>
             <label for="VoiceENselect">English voice: </label><select id="VoiceENselect" onchange="updateTextBox('VoiceENselect', 'VoiceEN')"></select><br>
-            <label for="VoiceEN">Selected value:</label><input type="text" id="VoiceEN" name="VoiceEN" readonly>
-            <br><br>
+            <label for="VoiceEN">Selected value:</label><input type="text" id="VoiceEN" name="VoiceEN" readonly><br>
+            <br>
             <label for="VoiceFRselect">French voice: </label><select id="VoiceFRselect" onchange="updateTextBox('VoiceFRselect', 'VoiceFR')"></select><br>
-            <label for="VoiceFR">Selected value:</label><input type="text" id="VoiceFR" name="VoiceFR" readonly>
-            <br><br>
+            <label for="VoiceFR">Selected value:</label><input type="text" id="VoiceFR" name="VoiceFR" readonly><br>
+            <br>
             
             <h4>FLITE Settings</h4>
             <p>Note: Flite must be installed on your system in order for it to work!</p>
             <p>The fields below will not have any effect when using default voices.</p>
             <label for="FliteVoice_EN">English Voice: (-voice)</label><input type="text" id="FliteVoice_EN" name="FliteVoice_EN"><br>
             <label for="FliteVoice_FR">French Voice: (-voice)</label><input type="text" id="FliteVoice_FR" name="FliteVoice_FR"><br>
-            <br><br>
+            <br>
 
             <h4>TTS API Settings</h4>
             <p>Will be used when a API TTS service is selected under the TTS service dropdown.</p><br>
@@ -132,42 +178,29 @@
             <label for="APIvoice_FR">French Voice: </label><input type="text" id="APIvoice_FR" name="APIvoice_FR"><br>
             <br><br>
 
-            <h3>Discord webhook configuration</h3>
-            <input type="checkbox" id="enable_discord_webhook" name="enable_discord_webhook"> Enable Discord Webhook<br>
-            <p>The fields below will not have any effect if the box is not selected.</p>
-            <label for="webhook_author_name">Webhook Author Name: </label><input type="text" id="webhook_author_name" name="webhook_author_name"><br>
-            <label for="webhook_author_URL">Webhook Author URL: </label><input type="text" id="webhook_author_URL" name="webhook_author_URL"><br>
-            <label for="webhook_author_iconURL">Webhook Author Icon URL: </label><input type="text" id="webhook_author_iconURL" name="webhook_author_iconURL"><br>
-            <label for="webhook_URL">Webhook URL: </label><input type="text" id="webhook_URL" name="webhook_URL"><br>
-            <br><input type="checkbox" id="webhook_sendAudio" name="webhook_sendAudio"> Send broadcast audio<br>
-            <br><br>
+            <h3>CAP Alert Filtering</h3>
 
-            <h3>Alert logging to text file</h3>
-            <p>QuantumENDEC will log alerts to a text file called 'alertlog.txt', this allows you to view the log on the Alert Log tab on this web interface.</p>
-            <input type="checkbox" id="enable_LogToTxt" name="enable_LogToTxt"> Log alerts to text file<br>
-            <br><br>
-
-            <h3>CAP Filter: Status</h3>
+            <h4>CAP Filter: Status</h4>
             <input type="checkbox" id="statusTest" name="statusTest"> Test<br>
             <input type="checkbox" id="statusActual" name="statusActual"> Actual<br>
-            <br><br>
+            <br>
             
-            <h3>CAP Filter: Message Type</h3>
+            <h4>CAP Filter: Message Type</h4>
             <input type="checkbox" id="messagetypeAlert" name="messagetypeAlert"> Alert<br>
             <input type="checkbox" id="messagetypeUpdate" name="messagetypeUpdate"> Update<br>
             <input type="checkbox" id="messagetypeCancel" name="messagetypeCancel"> Cancel<br>
             <input type="checkbox" id="messagetypeTest" name="messagetypeTest"> Test<br>
-            <br><br>
+            <br>
 
-            <h3>CAP Filter: Severity</h3>
+            <h4>CAP Filter: Severity</h4>
             <input type="checkbox" id="severityExtreme" name="severityExtreme"> Extreme<br>
             <input type="checkbox" id="severitySevere" name="severitySevere"> Severe<br>
             <input type="checkbox" id="severityModerate" name="severityModerate"> Moderate<br>
             <input type="checkbox" id="severityMinor" name="severityMinor"> Minor<br>
             <input type="checkbox" id="severityUnknown" name="severityUnknown"> Unknown<br>
-            <br><br>
+            <br>
 
-            <h3>CAP Filter: Urgency</h3>
+            <h4>CAP Filter: Urgency</h4>
             <input type="checkbox" id="urgencyImmediate" name="urgencyImmediate"> Immediate<br>
             <input type="checkbox" id="urgencyExpected" name="urgencyExpected"> Expected<br>
             <input type="checkbox" id="urgencyFuture" name="urgencyFuture"> Future<br>
@@ -175,41 +208,43 @@
             <input type="checkbox" id="urgencyUnknown" name="urgencyUnknown"> Unknown<br>
             <br><br>
 
-            <h3>Location code filters for CAP</h3>
+            <h4>Location code filters for CAP</h4>
             <p>No spaces, seprate the codes by a comma (,).</p>
             <label for="AllowedLocations_Geocodes">Allowed CAP-CP Geocodes: </label><input type="text" id="AllowedLocations_Geocodes" name="AllowedLocations_Geocodes"><p>(Won't work on American CAP.)</p>
             <br>
             <label for="AllowedLocations_CLC">Allowed SAME location codes (CLC/FIPS): </label><input type="text" id="AllowedLocations_CLC" name="AllowedLocations_CLC"><br>
             <p>You can wildcard partial counties. Example(s): *04,*04123</p>
-            <br><br>
-
-            <h3>SAME event code filters for CAP</h3>
+            <br>
+            
+            <h4>SAME event code filters for CAP</h4>
             <p>If SAME relay is disabled, these settings will be ignored. No spaces, seprate the codes by a comma (,).</p>
             <label for="CAP_SAMEevent_Whitelist">Allowed SAME event codes: </label><input type="text" id="CAP_SAMEevent_Whitelist" name="CAP_SAMEevent_Whitelist">
             <br>
             <label for="CAP_SAMEevent_Blocklist">Blocked SAME event codes: </label><input type="text" id="CAP_SAMEevent_Blocklist" name="CAP_SAMEevent_Blocklist">
-            <br><br>
+            <br><br><br>
             
-            <h3>TCP Streams</h3>
+            <h3>CAP Monitor Sources</h3>
+
+            <h4>TCP Streams</h4>
             <p>Set up TCP streams for alert reception, normally you'd want to keep the NAADs TCP addresses. If you have an alternate source or a satellite receiver, you'd want to change this. You'd want to use TCP stream address that sends out XML, it's explained in the Pelmorex LMD Guide linked in the readme file. When setting the stream address, ensure that you input a [host]:[port] format, or things will break.</p>
             <input type="checkbox" id="TCP" name="TCP"> Enable TCP connection<br>
             <label for="TCP1">Stream 1 (NAADs 1) </label><input type="text" id="TCP1" name="TCP1"><br>
             <label for="TCP2">Stream 2 (NAADs 2) </label><input type="text" id="TCP2" name="TCP2"><br>
             <br><br>
 
-            <h3>HTTP CAP Capture</h3>
+            <h4>HTTP CAP Capture</h4>
             <p>Set up HTTP CAP capture for CAP streams via HTTP. Use this to receive IPAWS CAP. </p>
             <input type="checkbox" id="HTTP_CAP" name="HTTP_CAP"> Enable HTTP CAP Capture<br>
             <label for="HTTP_CAP_ADDR">HTTP CAP URL: </label><input type="text" id="HTTP_CAP_ADDR" name="HTTP_CAP_ADDR"><br>
             <br><br>
 
-            <h3>NWS CAP Capture</h3>
+            <h4>NWS CAP Capture</h4>
             <p>NWS CAP has a different way of getting alerts, you can set that up here. QuantumENDEC is programmed to grab from the api.weather.gov <strong>ATOM</strong> feed. You should research the NWS CAP ATOM API to narrow down to your area.</p>
             <input type="checkbox" id="Enable_NWSCAP" name="Enable_NWSCAP"> Enable NWS CAP Capture<br>
             <label for="NWSCAP_AtomLink">NWS CAP URL: </label><input type="text" id="NWSCAP_AtomLink" name="NWSCAP_AtomLink"><br>
             <br><br>
 
-            <h3>SAME Monitor Settings</h3>
+            <h3>S.A.M.E Monitor Settings</h3>
             <p>QuantumENDEC can now monitor SAME alerts from a physical audio source or from an IP audio stream.</p>
             <p>Set up the SAME monitor filters, no spaces, seprate the values (FIPS, Event codes, Originator codes) by a comma (,).</p>
             <input type="checkbox" id="SAMEmonitor" name="SAMEmonitor"> Enable overall SAME monitor<br>
@@ -231,7 +266,7 @@
             <br><br>
             <button class="button" type="button" onclick="saveConfig()">Save</button>
             <button class="button" id="downloadButton">Download config file</button>
-            <button class="button"><a href="uploadConfig.html">Load config file</a></button>
+            <button class="button"><a href="/uploadConfig.html">Load config file</a></button>
             <br><br>
         </form>
         <p id="version">QuantumENDEC ?</p><p>Copyright ApatheticDELL 2024</p><script>function fetchText() {fetch('/version.txt') .then(response => response.text()) .then(data => {document.getElementById('version').innerText = data;}) .catch(error => {console.error('Error fetching text:', error);});} document.addEventListener('DOMContentLoaded', fetchText);</script>

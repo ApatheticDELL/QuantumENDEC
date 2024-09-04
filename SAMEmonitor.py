@@ -35,6 +35,9 @@ def createXML(SAME, audioInput, XMLfolder, monitorName):
         with open(audioInput, 'rb') as wav_file: wav_data = wav_file.read()
         encoded_data = base64.b64encode(wav_data).decode('utf-8')
 
+        SAME = SAME.replace("\n", "")
+        monitorName = monitorName.replace("\n", "")
+
         XML = f"""
         <alert>
             <InternalMonitor>SAME</InternalMonitor>
