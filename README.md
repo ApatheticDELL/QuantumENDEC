@@ -25,7 +25,7 @@ You will first require the following...
 - Python (3+)
 ...to be installed on your System
 
-And then, you need the following required Python modules: EASGen, EAS2Text, discord_webhook, pyttsx3, sounddevice, numpy, scipy, requests, argparse, xmltodict, pydub, ffmpeg-python, flask, soundfile, email
+And then, you need the following required Python modules: EASGen, EAS2Text, discord_webhook, pyttsx3, sounddevice, numpy, scipy, requests, argparse, xmltodict, pydub, ffmpeg-python, flask, soundfile
 
 If running on windows: You may also need pythoncom
 
