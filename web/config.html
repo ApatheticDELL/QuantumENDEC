@@ -45,56 +45,39 @@
             <label for="CGENcolor_advisory_picker">Advisory Color: </label><input type="color" id="CGENcolor_advisory_picker" onchange="updateColorValue('CGENcolor_advisory_picker', 'CGENcolor_advisory')"><br>
             <label for="CGENcolor_advisory">Selected value: </label><input type="text" id="CGENcolor_advisory" name="CGENcolor_advisory" readonly><br><br>
             
-            <input type="checkbox" id="CGEN_ClearAfterAlert" name="CGEN_ClearAfterAlert"> Clear CGEN after alert (This will get rid of the alert text after an alert has been transmitted on both fullscreen and scroll)<br>
+            <input type="checkbox" id="CGEN_ClearAfterAlert" name="CGEN_ClearAfterAlert"><label for="CGEN_ClearAfterAlert"> Clear CGEN after alert (This will get rid of the alert text after an alert has been transmitted on both fullscreen and scroll)</label><br>
             <br><br>
-
-            <!--
-            <h4>Serial Port Settings</h4>
-            <p>Port 1</p>
-            <input type="checkbox" id="Serial1_Enable" name="Serial1_Enable"> Enable Serial Port<br>
-            <select id="Serial1_PORT_SELECT" onchange="updateTextBox('Serial1_PORT_SELECT', 'Serial1_PORT')"></select><br>
-            <label for="Serial1_PORT">Selected value:</label><input type="text" id="Serial1_PORT" name="Serial1_PORT" readonly><br>
-            <label for="Serial1_BAUD">Baud Rate: </label><input type="text" id="Serial1_BAUD" name="Serial1_BAUD"><br>
-            <label for="Serial1_CommandBefore">Command (Before Alert): </label><input type="text" id="Serial1_CommandBefore" name="Serial1_CommandBefore"><br>
-            <label for="Serial1_CommandAfter">Command (After Alert): </label><input type="text" id="Serial1_CommandAfter" name="Serial1_CommandAfter"><br>
-            <br>
-
-            <p>Port 2</p>
-            <input type="checkbox" id="Serial1_Enable" name="Serial1_Enable"> Enable Serial Port<br>
-            <select id="Serial2_PORT_SELECT" onchange="updateTextBox('Serial2_PORT_SELECT', 'Serial2_PORT')"></select><br>
-            <label for="Serial2_PORT">Selected value:</label><input type="text" id="Serial2_PORT" name="Serial2_PORT" readonly><br>
-            <label for="Serial2_BAUD">Baud Rate: </label><input type="text" id="Serial2_BAUD" name="Serial2_BAUD"><br>
-            <label for="Serial2_CommandBefore">Command (Before Alert): </label><input type="text" id="Serial2_CommandBefore" name="Serial2_CommandBefore"><br>
-            <label for="Serial2_CommandAfter">Command (After Alert): </label><input type="text" id="Serial2_CommandAfter" name="Serial2_CommandAfter"><br>
-            <br>
-
-            <p>Port 3</p>
-            <input type="checkbox" id="Serial1_Enable" name="Serial1_Enable"> Enable Serial Port<br>
-            <select id="Serial3_PORT_SELECT" onchange="updateTextBox('Serial3_PORT_SELECT', 'Serial3_PORT')"></select><br>
-            <label for="Serial3_PORT">Selected value:</label><input type="text" id="Serial3_PORT" name="Serial3_PORT" readonly><br>
-            <label for="Serial3_BAUD">Baud Rate: </label><input type="text" id="Serial3_BAUD" name="Serial3_BAUD"><br>
-            <label for="Serial3_CommandBefore">Command (Before Alert): </label><input type="text" id="Serial3_CommandBefore" name="Serial3_CommandBefore"><br>
-            <label for="Serial3_CommandAfter">Command (After Alert): </label><input type="text" id="Serial3_CommandAfter" name="Serial3_CommandAfter"><br>
-            <br><br>
-            -->
 
             <h4>Discord webhook configuration</h4>
-            <input type="checkbox" id="enable_discord_webhook" name="enable_discord_webhook"> Enable Discord Webhook<br>
+            <input type="checkbox" id="enable_discord_webhook" name="enable_discord_webhook"><label for="enable_discord_webhook"> Enable Discord webhook.</label><br>
             <p>The fields below will not have any effect if the box is not selected.</p>
             <label for="webhook_author_name">Webhook Author Name: </label><input type="text" id="webhook_author_name" name="webhook_author_name"><br>
             <label for="webhook_author_URL">Webhook Author URL: </label><input type="text" id="webhook_author_URL" name="webhook_author_URL"><br>
             <label for="webhook_author_iconURL">Webhook Author Icon URL: </label><input type="text" id="webhook_author_iconURL" name="webhook_author_iconURL"><br>
             <label for="webhook_URL">Webhook URL: </label><input type="text" id="webhook_URL" name="webhook_URL"><br>
-            <br><input type="checkbox" id="webhook_sendAudio" name="webhook_sendAudio"> Send broadcast audio<br>
+            <br><input type="checkbox" id="webhook_sendAudio" name="webhook_sendAudio"><label for="webhook_sendAudio"> Send broadcast audio.</label><br>
+            <br><br>
+            
+            <h4>Email configuration</h4>
+            <input type="checkbox" id="enable_email" name="enable_email"><label for="enable_email"> Enable Email.</label><br>
+            <input type="checkbox" id="FancyHTML" name="FancyHTML"><label for="FancyHTML"> Use HTML (make the email a little fancy)</label><br>
+            <br>
+            <label for="email_server">SMTP server: </label><input type="text" id="email_server" name="email_server"><br>
+            <label for="email_server_port">Port: </label><input type="text" id="email_server_port" name="email_server_port"><br>
+            <label for="email_user">Username: </label><input type="text" id="email_user" name="email_user"><br>
+            <label for="email_user_pass">Password: </label><input type="password" id="email_user_pass" name="email_user_pass"><br>
+            <br>
+            <p>Separate multiple recipients with a comma, no spaces!</p>
+            <label for="email_sendto">Recipient(s): </label><input type="text" id="email_sendto" name="email_sendto"><br>
             <br><br>
 
             <h4>Alert logging to text file</h4>
             <p>QuantumENDEC will log alerts to a text file called 'alertlog.txt', this allows you to view the log on the Alert Log tab on this web interface.</p>
-            <input type="checkbox" id="enable_LogToTxt" name="enable_LogToTxt"> Log alerts to text file<br>
+            <input type="checkbox" id="enable_LogToTxt" name="enable_LogToTxt"><label for="enable_LogToTxt"> Log alerts to text file.</label><br>
             <br><br>
             
             <h3>Audio configuration</h3>
-            <input type="checkbox" id="UseSpecified_AudioOutput" name="UseSpecified_AudioOutput"> Use Specified Audio Output Device<br>
+            <input type="checkbox" id="UseSpecified_AudioOutput" name="UseSpecified_AudioOutput"><label for="UseSpecified_AudioOutput"> Use Specified Audio Output Device.</label><br>
             <p>The field below will not have any effect if the box is not selected.</p>
             
             <label for="SpecifiedAudioDeviceSELECT">Specified Audio Device: </label>
@@ -103,8 +86,8 @@
             <br>
             
             <h4>Passthrough switching</h4>
-            <input type="checkbox" id="EnablePassThru" name="EnablePassThru"> Activate passthrough switching<br>
-            <input type="checkbox" id="UseSpecified_Passthrough_AudioInput" name="UseSpecified_Passthrough_AudioInput"> Use Specified Audio Input Device<br>
+            <input type="checkbox" id="EnablePassThru" name="EnablePassThru"><label for="EnablePassThru"> Activate passthrough switching.</label><br>
+            <input type="checkbox" id="UseSpecified_Passthrough_AudioInput" name="UseSpecified_Passthrough_AudioInput"><label for="UseSpecified_Passthrough_AudioInput"> Use Specified Audio Input Device.</label><br>
             <br>
             <label for="Passthrough_AudioInputSELECT">Specified Audio Input: </label>
             <select id="Passthrough_AudioInputSELECT" onchange="updateTextBox('Passthrough_AudioInputSELECT', 'Passthrough_AudioInput')"></select><br>
@@ -123,24 +106,24 @@
             </select><br>
             <label for="AttentionTone">Selected value:</label><input type="text" id="AttentionTone" name="AttentionTone" readonly>
             <br><br>
-            <input type="checkbox" id="Attn_BasedOnCountry" name="Attn_BasedOnCountry"> Use attention tones based on alert's country (only works with CAP)</input>
+            <input type="checkbox" id="Attn_BasedOnCountry" name="Attn_BasedOnCountry"><label for="Attn_BasedOnCountry"> Attention tones based on alert's country (only works with CAP)</label>
             <br>
             <p>If it can't detect what attention tone to use, it will revert to the one selected in Attention tone flavour.</p>
             <br>
 
             <h4>Force 120 seconds of broadcast audio</h4>
-            <input type="checkbox" id="Force120" name="Force120"> Force 120 seconds of broadcast audio<br>
+            <input type="checkbox" id="Force120" name="Force120"><label for="Force120"> Force 120 seconds of broadcast audio</label><br>
             <p>For broadcast audio that happens to be over the 120 second limit, you can enable this option to cut the audio down to 120 seconds.</p>
             <br>
             
             <h4>Playout configuration</h4>
-            <input type="checkbox" id="PlayoutNoSAME" name="PlayoutNoSAME"> Transmit alerts without S.A.M.E<br>
-            <input type="checkbox" id="relay_en" name="relay_en"> Relay in English<br>
-            <input type="checkbox" id="relay_fr" name="relay_fr"> Relay in French<br>
+            <input type="checkbox" id="PlayoutNoSAME" name="PlayoutNoSAME"><label for="PlayoutNoSAME"> Transmit alerts without S.A.M.E</label><br>
+            <input type="checkbox" id="relay_en" name="relay_en"><label for="relay_en"> Relay in English</label><br>
+            <input type="checkbox" id="relay_fr" name="relay_fr"><label for="relay_fr">Relay in French</label><br>
             <br><br>
             
             <h4>TTS voice configuration</h4>
-            <input type="checkbox" id="UseDefaultVoices" name="UseDefaultVoices"> Use Default Voices (for pyttsx3 or flite only)<br>
+            <input type="checkbox" id="UseDefaultVoices" name="UseDefaultVoices"><label for="UseDefaultVoices"> Use Default Voices (for pyttsx3 or flite only)</label><br>
 
             <h4>TTS Service Selection</h4>
             <label for="TTSserviceSELECT">TTS Service: </label>
@@ -181,31 +164,33 @@
             <h3>CAP Alert Filtering</h3>
 
             <h4>CAP Filter: Status</h4>
-            <input type="checkbox" id="statusTest" name="statusTest"> Test<br>
+            <input type="checkbox" id="statusTest" name="statusTest"><label for="statusTest"> Test</label><br>
             <input type="checkbox" id="statusActual" name="statusActual"> Actual<br>
             <br>
             
             <h4>CAP Filter: Message Type</h4>
-            <input type="checkbox" id="messagetypeAlert" name="messagetypeAlert"> Alert<br>
-            <input type="checkbox" id="messagetypeUpdate" name="messagetypeUpdate"> Update<br>
-            <input type="checkbox" id="messagetypeCancel" name="messagetypeCancel"> Cancel<br>
-            <input type="checkbox" id="messagetypeTest" name="messagetypeTest"> Test<br>
+            <input type="checkbox" id="messagetypeAlert" name="messagetypeAlert"><label for="messagetypeAlert"> Alert</label><br>
+            <input type="checkbox" id="messagetypeUpdate" name="messagetypeUpdate"><label for="messagetypeUpdate"> Update</label><br>
+            <input type="checkbox" id="messagetypeCancel" name="messagetypeCancel"><label for="messagetypeCancel"> Cancel</label><br>
+            <input type="checkbox" id="messagetypeTest" name="messagetypeTest"><label for="messagetypeTest"> Test</label><br>
             <br>
 
             <h4>CAP Filter: Severity</h4>
-            <input type="checkbox" id="severityExtreme" name="severityExtreme"> Extreme<br>
-            <input type="checkbox" id="severitySevere" name="severitySevere"> Severe<br>
-            <input type="checkbox" id="severityModerate" name="severityModerate"> Moderate<br>
-            <input type="checkbox" id="severityMinor" name="severityMinor"> Minor<br>
-            <input type="checkbox" id="severityUnknown" name="severityUnknown"> Unknown<br>
+            <input type="checkbox" id="severityExtreme" name="severityExtreme"><label for="severityExtreme"> Extreme</label><br>
+            <input type="checkbox" id="severitySevere" name="severitySevere"><label for="severitySevere"> Severe</label><br>
+            <input type="checkbox" id="severityModerate" name="severityModerate"><label for="severityModerate"> Moderate</label><br>
+            <input type="checkbox" id="severityMinor" name="severityMinor"><label for="severityMinor"> Minor</label><br>
+            <input type="checkbox" id="severityUnknown" name="severityUnknown"><label for="severityUnknown"> Unknown</label><br>
             <br>
 
             <h4>CAP Filter: Urgency</h4>
-            <input type="checkbox" id="urgencyImmediate" name="urgencyImmediate"> Immediate<br>
-            <input type="checkbox" id="urgencyExpected" name="urgencyExpected"> Expected<br>
-            <input type="checkbox" id="urgencyFuture" name="urgencyFuture"> Future<br>
-            <input type="checkbox" id="urgencyPast" name="urgencyPast"> Past<br>
-            <input type="checkbox" id="urgencyUnknown" name="urgencyUnknown"> Unknown<br>
+            <input type="checkbox" id="urgencyImmediate" name="urgencyImmediate"><label for="urgencyImmediate"> Immediate</label><br>
+            <input type="checkbox" id="urgencyExpected" name="urgencyExpected"><label for="urgencyExpected"> Expected</label><br>
+            <input type="checkbox" id="urgencyFuture" name="urgencyFuture"><label for="urgencyFuture"> Future</label><br>
+            <input type="checkbox" id="urgencyPast" name="urgencyPast"><label for="urgencyPast"> Past</label><br>
+            <input type="checkbox" id="urgencyUnknown" name="urgencyUnknown"><label for="urgencyUnknown"> Unknown</label><br>
+
+
             <br><br>
 
             <h4>Location code filters for CAP</h4>
@@ -227,27 +212,27 @@
 
             <h4>TCP Streams</h4>
             <p>Set up TCP streams for alert reception, normally you'd want to keep the NAADs TCP addresses. If you have an alternate source or a satellite receiver, you'd want to change this. You'd want to use TCP stream address that sends out XML, it's explained in the Pelmorex LMD Guide linked in the readme file. When setting the stream address, ensure that you input a [host]:[port] format, or things will break.</p>
-            <input type="checkbox" id="TCP" name="TCP"> Enable TCP connection<br>
+            <input type="checkbox" id="TCP" name="TCP"><label for="TCP"> Enable TCP connection</label><br>
             <label for="TCP1">Stream 1 (NAADs 1) </label><input type="text" id="TCP1" name="TCP1"><br>
             <label for="TCP2">Stream 2 (NAADs 2) </label><input type="text" id="TCP2" name="TCP2"><br>
             <br><br>
 
             <h4>HTTP CAP Capture</h4>
             <p>Set up HTTP CAP capture for CAP streams via HTTP. Use this to receive IPAWS CAP. </p>
-            <input type="checkbox" id="HTTP_CAP" name="HTTP_CAP"> Enable HTTP CAP Capture<br>
+            <input type="checkbox" id="HTTP_CAP" name="HTTP_CAP"><label for="HTTP_CAP"> Enable HTTP CAP Capture</label><br>
             <label for="HTTP_CAP_ADDR">HTTP CAP URL: </label><input type="text" id="HTTP_CAP_ADDR" name="HTTP_CAP_ADDR"><br>
             <br><br>
 
             <h4>NWS CAP Capture</h4>
             <p>NWS CAP has a different way of getting alerts, you can set that up here. QuantumENDEC is programmed to grab from the api.weather.gov <strong>ATOM</strong> feed. You should research the NWS CAP ATOM API to narrow down to your area.</p>
-            <input type="checkbox" id="Enable_NWSCAP" name="Enable_NWSCAP"> Enable NWS CAP Capture<br>
+            <input type="checkbox" id="Enable_NWSCAP" name="Enable_NWSCAP"><label for="Enable_NWSCAP"> Enable NWS CAP Capture</label><br>
             <label for="NWSCAP_AtomLink">NWS CAP URL: </label><input type="text" id="NWSCAP_AtomLink" name="NWSCAP_AtomLink"><br>
             <br><br>
 
             <h3>S.A.M.E Monitor Settings</h3>
             <p>QuantumENDEC can now monitor SAME alerts from a physical audio source or from an IP audio stream.</p>
             <p>Set up the SAME monitor filters, no spaces, seprate the values (FIPS, Event codes, Originator codes) by a comma (,).</p>
-            <input type="checkbox" id="SAMEmonitor" name="SAMEmonitor"> Enable overall SAME monitor<br>
+            <input type="checkbox" id="SAMEmonitor" name="SAMEmonitor"><label for="SAMEmonitor"> Enable overall SAME monitor</label><br>
             <label for="SAMEmonitor-ORIGINATOR-filter">Allowed originators (ORG) </label><input type="text" id="SAMEmonitor-ORIGINATOR-filter" name="SAMEmonitor-ORIGINATOR-filter"><br>
             <label for="SAMEmonitor-EVENT-filter">Allowed events (EVE) </label><input type="text" id="SAMEmonitor-EVENT-filter" name="SAMEmonitor-EVENT-filter"><br>
             <br>
@@ -256,7 +241,7 @@
             <br><br>
             <h4>SAME Audio Device Monitor</h4>
             <p>The SAME audio device monitor will only listen to the default audio input device set by the operating system.</p>
-            <input type="checkbox" id="SAME-AudioDevice-Monitor" name="SAME-AudioDevice-Monitor"> Enable SAME audio device monitor</input>
+            <input type="checkbox" id="SAME-AudioDevice-Monitor" name="SAME-AudioDevice-Monitor"><label for="SAME-AudioDevice-Monitor"> Enable SAME audio device monitor</label></input>
             <br><br>
             <h4>SAME IP Monitors</h4>
             <label for="SAME-AudioStream-Monitor1">IP stream 1 </label><input type="text" id="SAME-AudioStream-Monitor1" name="SAME-AudioStream-Monitor1"><br>
@@ -402,7 +387,7 @@
                         } else if (element.tagName === 'SELECT') {
                             // Do nothing
                         } else {
-                            if (element.name === 'AllowedLocations_Geocodes' || element.name === 'AllowedLocations_CLC' || element.name === 'SAMEmonitor-ORIGINATOR-filter' || element.name === 'SAMEmonitor-EVENT-filter' || element.name === 'SAMEmonitor-FIPS-filter' || element.name === 'CAP_SAMEevent_Whitelist' || element.name === 'CAP_SAMEevent_Blocklist') {
+                            if (element.name === 'AllowedLocations_Geocodes' || element.name === 'AllowedLocations_CLC' || element.name === 'SAMEmonitor-ORIGINATOR-filter' || element.name === 'SAMEmonitor-EVENT-filter' || element.name === 'SAMEmonitor-FIPS-filter' || element.name === 'CAP_SAMEevent_Whitelist' || element.name === 'CAP_SAMEevent_Blocklist' || element.name === 'email_sendto') {
                                 // Convert comma-separated string to JSON array
                                 config[element.name] = element.value.split(',').map(item => item.trim()).filter(Boolean);
                             } else {

@@ -1,6 +1,8 @@
+import subprocess, smtplib
 from discord_webhook import DiscordWebhook, DiscordEmbed
 from datetime import datetime
-import subprocess
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 class Log:
     def __init__(self, ConfigData):
@@ -38,6 +40,96 @@ class Log:
         webhook.add_embed(embed)
         webhook.execute()
 
+    def SendEmail(self, Title, Description, ZCZC, HookColor=None):
+        Description = Description.replace("\n", " ")
+        ZCZC = ZCZC.replace("\n", "")
+        if len(ZCZC) > 1: ZCZC = f"S.A.M.E: {ZCZC}" 
+        if HookColor is None or HookColor == "": HookColor = "101010"
+        
+        date = datetime.now()
+        date = date.astimezone()
+        date = date.strftime("Log: %H:%M%z %d/%m/%Y")
+
+        style = """
+            <style>
+                    body {
+                        background-color: #414141;
+                        color: white;
+                        font-family: Arial, sans-serif;
+                        margin: 0;
+                        padding: 0;
+                    }
+                    header {
+                        background-color: """ + f"#{HookColor}" + """;
+                        padding: 20px;
+                        text-align: center;
+                    }
+                    header h1 {
+                        margin: 0;
+                        font-size: 2em;
+                    }
+                    main {
+                        padding: 20px;
+                    }
+                    footer {
+                        background-color: """ + f"#{HookColor}" + """;
+                        padding: 10px;
+                        text-align: center;
+                        position: fixed;
+                        width: 100%;
+                        bottom: 0;
+                    }
+            </style>
+        """
+
+        body = f"""
+        <!DOCTYPE html>
+        <html>
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>QuantumENDEC Email Log</title>
+                {style}
+            </head>
+            <body>
+                <header>
+                    <h1>QuantumENDEC Email Log</h1>
+                </header>
+
+                <main>
+                    <h2>{Title}</h2>
+                    <p>{Description}</p>
+                    <p>{ZCZC}</p>
+                </main>
+
+                <footer>
+                    <p>QuantumENDEC - {date}</p>
+                </footer>
+            </body>
+        </html>
+        """
+
+        message = MIMEMultipart()
+        message["From"] = self.ConfigData["email_user"]
+        message["Subject"] = f"QuantumENDEC: {Title} - {date}"
+        if(type(self.ConfigData["email_sendto"]) == list): message['To'] = ",".join(self.ConfigData["email_sendto"])
+        else: message['To'] = self.ConfigData["email_sendto"]
+
+        if self.ConfigData["FancyHTML"] is True:    
+            thing = MIMEText(body, 'html')
+            message.attach(thing)
+        else:
+            basic_text = f"QuantumENDEC... {Title}\n{Description}\n{ZCZC}"
+            thing = MIMEText(basic_text, 'plain')
+            message.attach(thing)
+
+        mail = smtplib.SMTP(self.ConfigData['email_server'], int(self.ConfigData['email_server_port']))
+        mail.ehlo()
+        mail.starttls()
+        mail.login(self.ConfigData["email_user"], self.ConfigData["email_user_pass"])
+        mail.sendmail(self.ConfigData["email_user"], self.ConfigData["email_sendto"], message.as_string())
+        mail.quit()
+
     def TxtLog(self, Title, Description, ZCZC):
         dateNow = datetime.now().strftime("%B %d, %Y %H:%M:%S")
         if ZCZC == "": log = f"{Title}\n{Description}"
@@ -58,6 +150,11 @@ class Log:
             print("Logging to alertlog.txt...")
             try: self.TxtLog(Title, Description, ZCZC)
             except: print("Text file, failed to log.")
+
+        if self.ConfigData['enable_email'] is True:
+            print("Logging to email...")
+            try: self.SendEmail(Title, Description, ZCZC, HookColor)
+            except: print("Email, failed to log,")
 
         print("Finished logging.")
 

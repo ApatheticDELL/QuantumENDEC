@@ -1026,8 +1026,11 @@ def Relay():
                             with open("AlertText.json", 'w') as json_file: json.dump(CGEN_Dict, json_file, indent=2)
                         except: pass
 
-                        logge = Log(ConfigData)
-                        logge.SendLog("Emergency Alert Transmission", Decoded[1], Decoded[0], "TX", alertColor)
+                        try:
+                            logge = Log(ConfigData)
+                            logge.SendLog("Emergency Alert Transmission", Decoded[1], Decoded[0], "TX", alertColor)
+                        except: pass
+
                         PlayAlert = Playout(ConfigData, False)
 
                         try: 
@@ -1146,17 +1149,19 @@ def Relay():
                             with open("AlertText.json", 'w') as json_file: json.dump(CGEN_Dict, json_file, indent=2)
                         except: pass
 
-                        try: 
-                            stopPassthrough.set()
-                            PassthroughThread.join()
-                            print("Passthrough stopped.")
-                        except: pass
-
                         if ConfigData[f'PlayoutNoSAME'] is False:
                             print(f"\n...NEW ALERT TO RELAY...\nSAME: {GeneratedHeader}, \nBroadcast Text: {BroadcastText}\nSending alert...")
                             Gen.AudioSAME(GeneratedHeader)
-                            if lang == "fr": logge.SendLog("ALERTE D'URGENCE", BroadcastText, GeneratedHeader, "TX", alertColor)
-                            else: logge.SendLog("EMERGENCY ALERT", BroadcastText, GeneratedHeader, "TX", alertColor)
+                            try:
+                                if lang == "fr": logge.SendLog("ALERTE D'URGENCE", BroadcastText, GeneratedHeader, "TX", alertColor)
+                                else: logge.SendLog("EMERGENCY ALERT", BroadcastText, GeneratedHeader, "TX", alertColor)
+                            except: pass
+                            try: 
+                                stopPassthrough.set()
+                                PassthroughThread.join()
+                                print("Passthrough stopped.")
+                            except: pass
+                            
                             PlayAlert.AlertIntro()                
                             PlayAlert.AlertSAME()
                             PlayAlert.AlertAttn()
@@ -1166,9 +1171,16 @@ def Relay():
                             Plugins_Run("afterRelay", GeneratedHeader, BroadcastText, InfoEN)
                         else:
                             print(f"\n...NEW ALERT TO RELAY...\nSAME Header is disabled. \nBroadcast Text: {BroadcastText}\nSending alert...")
-                            if lang == "fr": logge.SendLog("ALERTE D'URGENCE", BroadcastText, "", "TX", alertColor)
-                            else: logge.SendLog("EMERGENCY ALERT", BroadcastText, "", "TX", alertColor)
-                            
+                            try:
+                                if lang == "fr": logge.SendLog("ALERTE D'URGENCE", BroadcastText, "", "TX", alertColor)
+                                else: logge.SendLog("EMERGENCY ALERT", BroadcastText, "", "TX", alertColor)
+                            except: pass
+                            try: 
+                                stopPassthrough.set()
+                                PassthroughThread.join()
+                                print("Passthrough stopped.")
+                            except: pass
+
                             if AlertIntro_HasBeenPlayed is False:
                                 PlayAlert.AlertIntro()
                                 PlayAlert.AlertAttn()
@@ -1178,7 +1190,9 @@ def Relay():
 
                 if Alert_Playout is True:
                     PlayAlert.AlertOutro()
-                    Plugins_Run("afterRelay", GeneratedHeader, BroadcastText, InfoEN)
+
+                    if ConfigData["PlayoutNoSAME"] is True:
+                        Plugins_Run("afterRelay", GeneratedHeader, BroadcastText, InfoEN)
 
                     try:
                         if ConfigData["CGEN_ClearAfterAlert"] is True:
@@ -1309,6 +1323,13 @@ def createDefaultConfig():
         "webhook_author_URL": "",
         "webhook_author_iconURL": "",
         "webhook_URL": "",
+        "enable_email": False,
+        "email_server": "",
+        "email_server_port" : 587,
+        "email_user": "",
+        "email_user_pass": "",
+        "email_sendto": [],
+        "FancyHTML": True,
         "enable_LogToTxt": True,
         "statusTest": True,
         "statusActual": True,
@@ -1383,6 +1404,7 @@ def setup():
 
 
 if __name__ == "__main__":
+    Plugins_Run("startup")
     parser = argparse.ArgumentParser(description='QuantumENDEC')
     parser.add_argument('-v', '--version', action='store_true', help='Displays QuantumENDECs version and exits.')
     parser.add_argument('-k', '--keepScreen', action='store_true', help='Prevents the terminal screen from clearing.')
