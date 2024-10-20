@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Fullscreen CGEN with Image/Map</title>
+        <style>
+            body {
+                height: 90vh;
+                /*margin: 2%;*/
+                
+                display: flex;
+                flex-direction: column;
+                align-items: center; /* Horizontally center the content */
+                justify-content: center; /* Align the content to the top */
+                text-align: left; /* Center the text itself */
+                
+                /* position: fixed;
+                left: 0px;
+                right: 0px;
+                bottom: 6vh;
+                width: fit-content;
+                max-width: fit-content; 
+                margin-inline: auto;*/
+
+                background-color: black;
+                font-family: sans-serif;
+            }
+
+            .wrapper {
+                display: grid;
+                grid-template-columns: 50vh 3vh 80vh;
+                grid-template-rows: 5vh 22.5vh 22.5vh;
+
+                width: 133vh;
+                max-width: 133vh;
+
+                height: 50vh;
+                max-height: 50vh;
+                
+            }
+
+            .gridImage {
+                grid-column: 1;
+                grid-row: 1 / span 3;
+                background-color: #002255ff;
+                overflow: show;
+
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                /*align-content: center;*/
+
+                /*outline-style: solid;
+                outline-color: white;
+                outline-width: 1%;
+                border-radius: 0.1em;*/
+                
+            }
+
+            .gridImage img {
+                width: 100%; /* Make sure the image fits the container */
+                height: auto;
+            }
+
+            .gridHeadline {
+                grid-column: 3;
+                grid-row: 1;
+                background-color: rgba(0, 0, 0, 0);
+                color: white;
+                text-align: left;
+                padding: 1vh;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                /*align-content: center;*/
+                font-size: 2vh;
+            }
+            
+            .gridDescription {
+                grid-column: 3;
+                grid-row: 2 / span 2;
+                background-color: rgba(0, 0, 0, 0);
+                color: white;
+                font-size: 2.6vh;
+                padding: 1vh;
+                align-content: top;
+                text-align: justify;
+                /*overflow: hidden; /* Ensure no overflow */
+                /* height: 100%; /* Set a fixed height */
+                overflow: show;
+            }
+
+            .spacer {
+                grid-column: 2;
+                grid-row: 1 / span 3;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="wrapper" id="EAS_BOX">
+            <div class="gridHeadline">
+                <h1 id="alert-headline"></h1>
+            </div>
+            <div class="gridDescription">
+                <strong id="page-counter"></strong>
+                <p id="alert-text"></p>
+            </div>
+            <div class="gridImage"><img id="alertImage" src="images/alertImage.png" /></div>
+        </div>
+
+        <script>
+            // TODO for the main QuantumENDEC code: add alertStatus value for AlertText.json, true if alert, false if no alert.
+            // TODO for the server QE code: add Jstyle.html to the list of accessable URLs without login.
+            
+            function refreshImage() {
+                const img = document.getElementById('alertImage');
+                const timestamp = new Date().getTime(); // Create a unique timestamp
+                img.src = 'images/alertImage.png?' + timestamp; // Append timestamp to prevent caching
+            }
+
+            let textChunks = []; // Array to hold text chunks
+            let currentChunkIndex = 0;
+            let previousData = {}; // To hold the previous JSON data
+            let updateTextInterval; // Variable to store the updateText interval ID
+        
+            async function fetchAlertText() {
+                try {
+                    const response = await fetch('/alertText');
+                    if (response.ok) {
+                        const data = await response.json();
+        
+                        if (JSON.stringify(data) !== JSON.stringify(previousData)) {
+                            const alertTextHeadline = document.getElementById('alert-headline');
+                            const EASBOX = document.getElementById('EAS_BOX');
+                            splitTextIntoChunks(data.text); 
+                            document.documentElement.style.backgroundColor = `#${data.color}`; // Update entire page background color
+                            document.body.style.backgroundColor = `#${data.color}`;
+                            alertTextHeadline.textContent = data.headline;
+        
+                            // Update the previous data with the new data
+                            previousData = data;
+        
+                            // Immediately update text when new data is detected
+                            updateText();
+                            refreshImage();
+                            //EASBOX.style.display = "grid";
+        
+                            // Reset the updateText interval
+                            resetUpdateTextInterval();
+                        }
+                    } else {
+                        console.error('Failed to fetch alert text');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                }
+            }
+            
+            
+            function splitTextIntoChunks(text) {
+                const words = text.split(' ');
+                textChunks = [];
+                for (let i = 0; i < words.length; i += 120) {
+                    const chunk = words.slice(i, i + 120).join(' ');
+                    textChunks.push(chunk);
+                }
+                currentChunkIndex = 0; // Reset chunk index when new data is received
+                updatePageCounter(); // Update the page counter when new data is received
+            }
+            
+        
+            function updateText() {
+                if (textChunks.length > 0) {
+                    const alertTextElement = document.getElementById('alert-text');
+                    alertTextElement.textContent = textChunks[currentChunkIndex];
+                    updatePageCounter(); // Update the page counter when text is updated
+                    currentChunkIndex = (currentChunkIndex + 1) % textChunks.length; // Cycle to the next chunk
+                }
+            }
+        
+            function updatePageCounter() {
+                const pageCounterElement = document.getElementById('page-counter');
+                pageCounterElement.textContent = `(${currentChunkIndex + 1}/${textChunks.length})`;
+            }
+        
+            function resetUpdateTextInterval() {
+                // Clear the existing interval if it exists
+                if (updateTextInterval) {
+                    clearInterval(updateTextInterval);
+                }
+        
+                // Set a new interval for cycling through the text chunks
+                updateTextInterval = setInterval(updateText, 30000);
+            }
+        
+            // Fetch the alert text every second
+            setInterval(fetchAlertText, 1000);
+        
+            // Initial fetch when the page loads
+            fetchAlertText();
+            resetUpdateTextInterval(); // Set the initial interval
+        </script>
+    </body>
+</html>

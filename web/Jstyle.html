@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>J-style EAS box</title>
+        <style>
+            body {
+                position: fixed;
+                left: 0px;
+                right: 0px;
+                bottom: 6vh;
+                width: fit-content;
+                max-width: fit-content;
+                margin-inline: auto;
+                background-color: rgba(0, 0, 0, 0);
+                font-family: sans-serif;
+                font-size: 2.5vh;
+            }
+
+            .wrapper {
+                display: none;
+                grid-template-columns: 25vh 60vh;
+                grid-template-rows: 4vh 10.5vh 10.5vh;
+
+                width: 85vh;
+                max-width: 85vh;
+
+                height: 25vh;
+                max-height: 25vh;
+
+                outline-style: solid;
+                outline-color: white;
+                outline-width: 1%;
+                border-radius: 0.1em;
+                
+            }
+
+            .gridImage {
+                grid-column: 1;
+                grid-row: 1 / span 3;
+                background-color: #002255ff;
+                overflow: hidden;
+
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                /*align-content: center;*/
+
+                outline-style: solid;
+                outline-color: white;
+                outline-width: 1%;
+                border-radius: 0.1em;
+                
+            }
+
+            .gridImage img {
+                width: 100%; /* Make sure the image fits the container */
+                height: auto;
+            }
+
+            .gridHeadline {
+                grid-column: 2;
+                grid-row: 1;
+                background-color: #ff2a2aff;
+                color: white;
+                text-align: center;
+
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                /*align-content: center;*/
+                font-size: 2.5vh;
+            }
+
+            .gridDescription {
+                grid-column: 2;
+                grid-row: 2 / span 2;
+                background-color: #003380ff;
+                color: white;
+
+                padding: 1vh;
+                align-content: top;
+                text-align: justify;
+                /*overflow: hidden; /* Ensure no overflow */
+                /* height: 100%; /* Set a fixed height */
+                overflow: hidden;
+            }
+
+            p#alert-text {
+                display: inline;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="wrapper" id="EAS_BOX">
+            <div class="gridHeadline" id="divHeadline"><strong id="alert-headline">EMERGENCY ALERT</strong></div>
+            <div class="gridDescription"><strong id="page-counter"></strong> <p id="alert-text"></p></div>
+            <div class="gridImage"><img id="alertImage" src="images/alertImage.png" /></div>
+        </div>
+
+        <script>
+            // TODO for the main QuantumENDEC code: add alertStatus value for AlertText.json, true if alert, false if no alert.
+            // TODO for the server QE code: add Jstyle.html to the list of accessable URLs without login.
+            
+            function refreshImage() {
+                const img = document.getElementById('alertImage');
+                const timestamp = new Date().getTime(); // Create a unique timestamp
+                img.src = 'images/alertImage.png?' + timestamp; // Append timestamp to prevent caching
+            }
+
+            let textChunks = []; // Array to hold text chunks
+            let currentChunkIndex = 0;
+            let previousData = {}; // To hold the previous JSON data
+            let updateTextInterval; // Variable to store the updateText interval ID
+        
+            async function fetchAlertText() {
+                try {
+                    const response = await fetch('/alertText');
+                    if (response.ok) {
+                        const data = await response.json();
+        
+                        // Check if the fetched data is different from the previous one
+                        if (data.alertStat == false) {
+                            const EASBOX = document.getElementById('EAS_BOX');
+                            EASBOX.style.display = "none";
+                        }
+                        else if (JSON.stringify(data) !== JSON.stringify(previousData)) {
+                            const alertTextHeadline = document.getElementById('alert-headline');
+                            const alertDivHeadline = document.getElementById('divHeadline')
+                            const EASBOX = document.getElementById('EAS_BOX');
+                            splitTextIntoChunks(data.text); 
+                            alertTextHeadline.textContent = data.headline;
+                            alertDivHeadline.style.backgroundColor = `#${data.color}`;
+        
+                            // Update the previous data with the new data
+                            previousData = data;
+        
+                            // Immediately update text when new data is detected
+                            updateText();
+                            refreshImage();
+                            EASBOX.style.display = "grid";
+        
+                            // Reset the updateText interval
+                            resetUpdateTextInterval();
+                        }
+                    } else {
+                        console.error('Failed to fetch alert text');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                }
+            }
+            
+            function splitTextIntoChunks(text) {
+                const chunkSize = 310;
+                textChunks = [];
+                
+                for (let i = 0; i < text.length; i += chunkSize) {
+                    const chunk = text.slice(i, i + chunkSize);
+                    textChunks.push(chunk);
+                }
+                
+                currentChunkIndex = 0; // Reset chunk index when new data is received
+                updatePageCounter(); // Update the page counter when new data is received
+            }
+            
+            //function splitTextIntoChunks(text) {
+            //    const words = text.split(' ');
+            //    textChunks = [];
+            //    for (let i = 0; i < words.length; i += 74) {
+            //        const chunk = words.slice(i, i + 74).join(' ');
+            //        textChunks.push(chunk);
+            //    }
+            //    currentChunkIndex = 0; // Reset chunk index when new data is received
+            //    updatePageCounter(); // Update the page counter when new data is received
+            //}
+            
+        
+            function updateText() {
+                if (textChunks.length > 0) {
+                    const alertTextElement = document.getElementById('alert-text');
+                    alertTextElement.textContent = textChunks[currentChunkIndex];
+                    updatePageCounter(); // Update the page counter when text is updated
+                    currentChunkIndex = (currentChunkIndex + 1) % textChunks.length; // Cycle to the next chunk
+                }
+            }
+        
+            function updatePageCounter() {
+                const pageCounterElement = document.getElementById('page-counter');
+                pageCounterElement.textContent = `(${currentChunkIndex + 1}/${textChunks.length})`;
+            }
+        
+            function resetUpdateTextInterval() {
+                // Clear the existing interval if it exists
+                if (updateTextInterval) {
+                    clearInterval(updateTextInterval);
+                }
+        
+                // Set a new interval for cycling through the text chunks
+                updateTextInterval = setInterval(updateText, 10000);
+            }
+        
+            // Fetch the alert text every second
+            setInterval(fetchAlertText, 1000);
+        
+            // Initial fetch when the page loads
+            fetchAlertText();
+            resetUpdateTextInterval(); // Set the initial interval
+        </script>
+    </body>
+</html>

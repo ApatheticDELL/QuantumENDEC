@@ -24,6 +24,10 @@ class Log:
                 try:
                     subprocess.run(["ffmpeg", "-y", "-i", "Audio/audio.wav", "-map", "0:a:0", "-b:a", "64k", "Audio/tmp/DiskAudio.mp3"], capture_output=True, text=True)
                     with open("Audio/tmp/DiskAudio.mp3", "rb") as f: webhook.add_file(file=f.read(), filename="audio.mp3")
+                    
+                    if self.ConfigData["ProduceImages"] is True:
+                        with open("images/alertImage.png", "rb") as f: webhook.add_file(file=f.read(), filename="image.png")
+
                 except: pass
 
         if HookColor is None or HookColor == "": Wcolor = "ffffff"

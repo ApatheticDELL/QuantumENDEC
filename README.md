@@ -1,5 +1,5 @@
 ApatheticDELL presents...
-# QuantumENDEC (v5 Public Beta 8)
+# QuantumENDEC (v5 Public Beta 9)
 
 ### Credits
 Developed by...
@@ -26,7 +26,7 @@ You will first require the following...
 ...to be installed on your System
 
 And then, you need the following required Python modules: EASGen, EAS2Text, discord_webhook, pyttsx3, sounddevice, numpy, scipy, requests, argparse, xmltodict, pydub, ffmpeg-python, flask, soundfile
-
+You may also need: pyaudio
 If running on windows: You may also need pythoncom
 
 If you are using any of the SAME monitor functions with QuantumENDEC on linux: You need to install multimon-ng.

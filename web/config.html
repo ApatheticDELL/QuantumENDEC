@@ -46,6 +46,7 @@
             <label for="CGENcolor_advisory">Selected value: </label><input type="text" id="CGENcolor_advisory" name="CGENcolor_advisory" readonly><br><br>
             
             <input type="checkbox" id="CGEN_ClearAfterAlert" name="CGEN_ClearAfterAlert"><label for="CGEN_ClearAfterAlert"> Clear CGEN after alert (This will get rid of the alert text after an alert has been transmitted on both fullscreen and scroll)</label><br>
+            <input type="checkbox" id="ProduceImages" name="ProduceImages"><label for="ProduceImages"> Produce Images (Grab images or generate a alert map image. They will be sent over discord and shown on HTML CGENs with image capabilities)</label><br>
             <br><br>
 
             <h4>Discord webhook configuration</h4>
@@ -103,6 +104,7 @@
                 <option value="AttnEBS.wav">United States (EBS)</option>
                 <option value="Attn1050.wav">1050hz</option>
                 <option value="AttnEgg.wav">Egg Timer</option>
+                <option value="AttnRumble.wav">Rumble</option>
             </select><br>
             <label for="AttentionTone">Selected value:</label><input type="text" id="AttentionTone" name="AttentionTone" readonly>
             <br><br>
@@ -218,9 +220,13 @@
             <br><br>
 
             <h4>HTTP CAP Capture</h4>
-            <p>Set up HTTP CAP capture for CAP streams via HTTP. Use this to receive IPAWS CAP. </p>
+            <p>Set up HTTP CAP capture for CAP streams via HTTP. You may leave any text box blank if you have no source.</p>
             <input type="checkbox" id="HTTP_CAP" name="HTTP_CAP"><label for="HTTP_CAP"> Enable HTTP CAP Capture</label><br>
-            <label for="HTTP_CAP_ADDR">HTTP CAP URL: </label><input type="text" id="HTTP_CAP_ADDR" name="HTTP_CAP_ADDR"><br>
+            <label for="HTTP_CAP_ADDR">HTTP CAP URL 1: </label><input type="text" id="HTTP_CAP_ADDR" name="HTTP_CAP_ADDR"><br>
+            <label for="HTTP_CAP_ADDR1">HTTP CAP URL 2: </label><input type="text" id="HTTP_CAP_ADDR1" name="HTTP_CAP_ADDR1"><br>
+            <label for="HTTP_CAP_ADDR2">HTTP CAP URL 3: </label><input type="text" id="HTTP_CAP_ADDR2" name="HTTP_CAP_ADDR2"><br>
+            <label for="HTTP_CAP_ADDR3">HTTP CAP URL 4: </label><input type="text" id="HTTP_CAP_ADDR3" name="HTTP_CAP_ADDR3"><br>
+            <label for="HTTP_CAP_ADDR4">HTTP CAP URL 5: </label><input type="text" id="HTTP_CAP_ADDR3" name="HTTP_CAP_ADDR4"><br>
             <br><br>
 
             <h4>NWS CAP Capture</h4>

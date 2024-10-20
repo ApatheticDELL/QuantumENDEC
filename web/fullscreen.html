@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Red Background Page</title>
+    <title>QE CGEN - Fullscreen</title>
     <style>
         body, html {
             height: 100%;
@@ -36,7 +36,7 @@
 </head>
 <body>
     <h1 id="alert-headline">Emergency Alert Details</h1>
-    <p id="page-counter"></p>
+    <p id="page-counter">1 / 1</p>
     <p id="alert-text"></p>
 
     <script>
@@ -108,7 +108,7 @@
             }
     
             // Set a new interval for cycling through the text chunks
-            updateTextInterval = setInterval(updateText, 20000);
+            updateTextInterval = setInterval(updateText, 30000);
         }
     
         // Fetch the alert text every second
@@ -118,6 +118,8 @@
         fetchAlertText();
         resetUpdateTextInterval(); // Set the initial interval
     </script>
+    
+    
     
 </body>
 </html>

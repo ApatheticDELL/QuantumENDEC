@@ -354,7 +354,7 @@ def send_alert():
 
 @app.before_request
 def require_login():
-    if request.path not in ['/login', '/login.html', '/scroll.html', '/alertText', '/css/scrollStyle.css', '/fullscreen.html']:
+    if request.path not in ['/login', '/login.html', '/scroll.html', '/alertText', '/css/scrollStyle.css', '/fullscreen.html', '/Jstyle.html', '/images/alertImage.png', '/fullscreenWimage.html']:
         if not is_authenticated():
             return redirect(url_for('login'))
 

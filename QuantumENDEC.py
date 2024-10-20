@@ -3,20 +3,21 @@ with open("version.txt", "r") as f: QEversion = f.read()
 # local imports
 from webserver import *
 from logger import Log
+import AIOMG
 
 import sys
 if sys.version_info.major >= 3: pass
 else: print("You are not running this program with Python 3, run it with Python 3. (Or update python)"); exit()
 
 try:
-    import re, pyttsx3, requests, shutil, time, socket, threading, json, os, argparse, base64, subprocess
+    import re, pyttsx3, requests, shutil, time, socket, threading, json, os, argparse, base64, subprocess, importlib
     import sounddevice as sd
     from scipy.io import wavfile
     from datetime import datetime, timezone
     from urllib.request import Request, urlopen
     from EASGen import EASGen
     from EAS2Text import EAS2Text
-    from itertools import zip_longest
+    #from itertools import zip_longest
     from pydub import AudioSegment
 except Exception as e: print(f"IMPORT FAIL: {e}.\nOne or more modules has failed to import, install the requirements!"); exit()
 
@@ -52,39 +53,43 @@ def Plugins_Run(mode=None, ZCZC=None, BROADCASTTEXT=None, XML=None):
 
     if not os.path.exists(pluginFolder): pass
     else:
+        print("Attempting to run plugins...")
         pluginList = os.listdir(pluginFolder)
 
         if mode == "beforeRelay":
             for plug in pluginList:
                 if ".py" in plug:
-                    print("Running plugin: ", plug)
                     plug = plug.replace(".py", "")
                     plug = f"{pluginFolder}.{plug}"
                     try:
-                        exec(f"import {plug}")
-                        exec(f"{plug}.ExecutePlugin_BeforeRelay('{ZCZC}', '{BROADCASTTEXT}', '{XML}')")
+                        print("importing... ", plug)
+                        module = importlib.import_module(plug)
+                        print("Running plugin: ", plug)
+                        module.ExecutePlugin_BeforeRelay(ZCZC, BROADCASTTEXT, XML)
                     except Exception as e: print(f"{plug} has failed to run.", e)
 
         elif mode == "afterRelay":
             for plug in pluginList:
                 if ".py" in plug:
-                    print("Running plugin: ", plug)
                     plug = plug.replace(".py", "")
                     plug = f"{pluginFolder}.{plug}"
                     try:
-                        exec(f"import {plug}")
-                        exec(f"{plug}.ExecutePlugin_AfterRelay('{ZCZC}', '{BROADCASTTEXT}', '{XML}')")
+                        print("importing... ", plug)
+                        module = importlib.import_module(plug)
+                        print("Running plugin: ", plug)
+                        module.ExecutePlugin_AfterRelay(ZCZC, BROADCASTTEXT, XML)
                     except Exception as e: print(f"{plug} has failed to run.", e)
         
         elif mode == "startup":
             for plug in pluginList:
                 if ".py" in plug:
-                    print("Running plugin: ", plug)
                     plug = plug.replace(".py", "")
                     plug = f"{pluginFolder}.{plug}"
                     try:
-                        exec(f"import {plug}")
-                        exec(f"{plug}.ExecutePlugin_OnStart()")
+                        print("importing... ", plug)
+                        module = importlib.import_module(plug)
+                        print("Running plugin: ", plug)
+                        module.ExecutePlugin_OnStart()
                     except Exception as e: print(f"{plug} has failed to run.", e)
         
         else: pass
@@ -625,7 +630,7 @@ class Generate:
         return GeneratedHeader
     
     def LastWordThing(self, headline):
-        target_words = {"test", "watch", "warning", "alert"}
+        target_words = {"test", "watch", "warning", "alert", "emergency"}
         words = headline.split()
         if words:
             last_word = words[-1].lower()
@@ -735,25 +740,33 @@ class Generate:
                     self.GetAudio(AudioLink,"Audio/tmp/PreAudio.mp3",Decode)
                     self.ConvAudioFormat("Audio/tmp/PreAudio.mp3", "Audio/tmp/PreAudio.wav")
                     os.remove("Audio/tmp/PreAudio.mp3")
+                    self.LoudenAudio("Audio/tmp/PreAudio.wav", "Audio/audio.wav")
+                    os.remove("Audio/tmp/PreAudio.wav")
 
                 elif AudioType == "audio/x-ms-wma":
                     self.GetAudio(AudioLink,"Audio/tmp/PreAudio.wma",Decode)
                     self.ConvAudioFormat("Audio/tmp/PreAudio.wma", "Audio/tmp/PreAudio.wav")
                     os.remove("Audio/tmp/PreAudio.wma")
+                    self.LoudenAudio("Audio/tmp/PreAudio.wav", "Audio/audio.wav")
+                    os.remove("Audio/tmp/PreAudio.wav")
 
                 elif AudioType == "audio/wave":
                     self.GetAudio(AudioLink,"Audio/tmp/PreAudio.wav",Decode)
+                    self.LoudenAudio("Audio/tmp/PreAudio.wav", "Audio/audio.wav")
+                    os.remove("Audio/tmp/PreAudio.wav")
 
                 elif AudioType == "audio/wav":
                     self.GetAudio(AudioLink,"Audio/tmp/PreAudio.wav",Decode)
+                    self.LoudenAudio("Audio/tmp/PreAudio.wav", "Audio/audio.wav")
+                    os.remove("Audio/tmp/PreAudio.wav")
 
                 elif AudioType == "audio/x-ipaws-audio-mp3":
                     self.GetAudio(AudioLink,"Audio/tmp/PreAudio.mp3",Decode)
                     self.ConvAudioFormat("Audio/tmp/PreAudio.mp3", "Audio/tmp/PreAudio.wav")
                     os.remove("Audio/tmp/PreAudio.mp3")
-                
-                self.LoudenAudio("Audio/tmp/PreAudio.wav", "Audio/audio.wav")
-                os.remove("Audio/tmp/PreAudio.wav")
+                    self.LoudenAudio("Audio/tmp/PreAudio.wav", "Audio/audio.wav")
+                    os.remove("Audio/tmp/PreAudio.wav")
+                else: pass
         except:
             print("Generating TTS audio...")
             try: pythoncom.CoInitialize()
@@ -1002,6 +1015,7 @@ def Relay():
                 print("\n\n...HEARTBEAT DETECTED...")
                 References = re.search(r'<references>\s*(.*?)\s*</references>', RelayXML, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)
                 Check.Heartbeat(References, "XMLqueue", "XMLhistory")
+
             elif "<InternalMonitor>SAME</InternalMonitor>" in RelayXML:
                 UpdateStatus("Relay", f"Alert detected.")
                 print("\n\n...NEW ALERT DETECTED - SAME MONITOR...")
@@ -1016,11 +1030,15 @@ def Relay():
                         if Check.DuplicateSAME(Decoded[0]) is True: print("No relay: duplicate SAME header detected from a previous relay."); continue
                         alertColor = GetAlertLevelColor(ConfigData, Decoded[0])
                         Plugins_Run("beforeRelay", Decoded[0], Decoded[1], None)
+
+                        if ConfigData["ProduceImages"] is True: AIOMG.OutputAlertImage(Fallback=True)
+                        
                         try:
                             CGEN_Dict = {
                                 "color": alertColor,
                                 "headline": "EMERGENCY ALERT SYSTEM",
-                                "text": Decoded[1]
+                                "text": Decoded[1],
+                                "alertStat": True
                             }
                             #with open("./alert.txt", "w") as f: f.write(Decoded[1])
                             with open("AlertText.json", 'w') as json_file: json.dump(CGEN_Dict, json_file, indent=2)
@@ -1064,6 +1082,7 @@ def Relay():
                                 #with open("./alert.txt", "w") as f: f.write(Decoded[1])
                                 with open("AlertText.json", 'w') as json_file: json.dump(CGEN_Dict, json_file, indent=2)
                         except: pass
+
             else:
                 UpdateStatus("Relay", f"Alert detected.")
                 print("\n\n...NEW ALERT DETECTED...")
@@ -1131,19 +1150,22 @@ def Relay():
                         else:
                             alertColor = GetAlertLevelColor(ConfigData)
                         
+                        if ConfigData["ProduceImages"] is True: AIOMG.OutputAlertImage(InfoEN, alertColor)
+
                         print("Generating audio products...")
                         logge = Log(ConfigData)
                         Gen.Audio(BroadcastText, lang, ConfigData)
                         Alert_Playout = True
                         Plugins_Run("beforeRelay", GeneratedHeader, BroadcastText, InfoEN)
-
+                        
                         try:
                             if lang == "fr": CGEN_headline = "ALERTE D'URGENCE"
                             else: CGEN_headline = "EMERGENCY ALERT"
                             CGEN_Dict = {
                                 "color": alertColor,
                                 "headline": CGEN_headline,
-                                "text": BroadcastText
+                                "text": BroadcastText,
+                                "alertStat": True
                             }
                             #with open("./alert.txt", "w") as f: f.write(Decoded[1])
                             with open("AlertText.json", 'w') as json_file: json.dump(CGEN_Dict, json_file, indent=2)
@@ -1199,7 +1221,8 @@ def Relay():
                             CGEN_Dict = {
                                 "color": "000000",
                                 "headline": "Emergency Alert Details",
-                                "text": ""
+                                "text": "",
+                                "alertStat": False
                             }
                             #with open("./alert.txt", "w") as f: f.write(Decoded[1])
                             with open("AlertText.json", 'w') as json_file: json.dump(CGEN_Dict, json_file, indent=2)
@@ -1214,28 +1237,30 @@ def Relay():
             print("[WARNING] General exception in relay!")
             time.sleep(5)
 
-def HTTP_CAP(outputFolder, CAP_URL):
-    print(f"[HTTP Capture]: HTTP CAP Capture active! {CAP_URL}")
-    while True:
-        try:
-            UpdateStatus("HTTPCAPcapture", "HTTP CAP Capture is active!")
-            ReqCAP = Request(url = f'{CAP_URL}')
-            CAP = urlopen(ReqCAP).read()
-            CAP = CAP.decode('utf-8')
-            CAP = re.findall(r'<alert\s*(.*?)\s*</alert>', CAP, re.MULTILINE | re.IGNORECASE | re.DOTALL)
+def HTTP_CAP(outputFolder, CAP_URL, instance):
+    if CAP_URL is None or CAP_URL == "": UpdateStatus(f"HTTPCAPcapture{instance}", f"HTTP CAP capture {instance} disabled.")
+    else:
+        print(f"[HTTP Capture]: HTTP CAP Capture active! {CAP_URL}")
+        while True:
+            try:
+                UpdateStatus(f"HTTPCAPcapture{instance}", f"HTTP CAP Capture {instance} is active!")
+                ReqCAP = Request(url = f'{CAP_URL}')
+                CAP = urlopen(ReqCAP).read()
+                CAP = CAP.decode('utf-8')
+                CAP = re.findall(r'<alert\s*(.*?)\s*</alert>', CAP, re.MULTILINE | re.IGNORECASE | re.DOTALL)
 
-            for alert in CAP:
-                alert = f"<alert {alert}</alert>"
-                CapturedSent = re.search(r'<sent>\s*(.*?)\s*</sent>', alert, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1).replace("-", "_").replace("+", "p").replace(":", "_")
-                CapturedIdent = re.search(r'<identifier>\s*(.*?)\s*</identifier>', alert, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1).replace("-", "_").replace("+", "p").replace(":", "_")
-                filename = f"{CapturedSent}I{CapturedIdent}.xml"
-                with open(f"{outputFolder}/{filename}", 'w', encoding='utf-8') as file: file.write(alert)
-                print(f"[HTTP Capture]: I captured an XML, and saved it to: {outputFolder}/{filename} | From: {CAP_URL}")
-            time.sleep(30)
-        except Exception as e:
-            print("[HTTP Capture] Something went wrong.", e)
-            UpdateStatus("HTTPCAPcapture", "HTTP CAP Capture error.")
-            time.sleep(30)
+                for alert in CAP:
+                    alert = f"<alert {alert}</alert>"
+                    CapturedSent = re.search(r'<sent>\s*(.*?)\s*</sent>', alert, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1).replace("-", "_").replace("+", "p").replace(":", "_")
+                    CapturedIdent = re.search(r'<identifier>\s*(.*?)\s*</identifier>', alert, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1).replace("-", "_").replace("+", "p").replace(":", "_")
+                    filename = f"{CapturedSent}I{CapturedIdent}.xml"
+                    with open(f"{outputFolder}/{filename}", 'w', encoding='utf-8') as file: file.write(alert)
+                    print(f"[HTTP Capture]: I captured an XML, and saved it to: {outputFolder}/{filename} | From: {CAP_URL}")
+                time.sleep(30)
+            except Exception as e:
+                print("[HTTP Capture] Something went wrong.", e)
+                UpdateStatus(f"HTTPCAPcapture{instance}", f"HTTP CAP Capture {instance} error.")
+                time.sleep(30)
 
 def NWS_CAP(ATOM_LINK):
     # Goddamnit americans, you have to have every single alert source in their own goddamn way!
@@ -1377,7 +1402,8 @@ def createDefaultConfig():
 def setup():
     try:
         nothingThing = {
-            "nothing":True
+            "nothing":True,
+            "alertStat": False
             }
         with open("AlertText.json", 'w') as json_file: json.dump(nothingThing, json_file, indent=2)
         #with open(f"alert.txt", "w") as f: f.write("")
@@ -1437,7 +1463,13 @@ if __name__ == "__main__":
         UpdateStatus("NAAD2", "TCP CAP Capture is disabled.")
         print("[TCP Capture]: TCP CAP capture has been disabled!")
 
-    if ConfigData["HTTP_CAP"] is True: HTTPcaptureThread = threading.Thread(target=HTTP_CAP, args=("XMLqueue", ConfigData["HTTP_CAP_ADDR"]))
+    if ConfigData["HTTP_CAP"] is True:
+        HTTPcaptureThread1 = threading.Thread(target=HTTP_CAP, args=("XMLqueue", ConfigData["HTTP_CAP_ADDR"], "1"))
+        HTTPcaptureThread2 = threading.Thread(target=HTTP_CAP, args=("XMLqueue", ConfigData["HTTP_CAP_ADDR1"], "2"))
+        HTTPcaptureThread3 = threading.Thread(target=HTTP_CAP, args=("XMLqueue", ConfigData["HTTP_CAP_ADDR2"], "3"))
+        HTTPcaptureThread4 = threading.Thread(target=HTTP_CAP, args=("XMLqueue", ConfigData["HTTP_CAP_ADDR3"], "4"))
+        HTTPcaptureThread5 = threading.Thread(target=HTTP_CAP, args=("XMLqueue", ConfigData["HTTP_CAP_ADDR4"], "5"))
+
     else:
         print("[HTTP Capture]: HTTP CAP Capture is disabled.")
         UpdateStatus("HTTPCAPcapture", "HTTP CAP Capture is disabled.")
@@ -1463,7 +1495,15 @@ if __name__ == "__main__":
     try: TCP2capture_thread.start()
     except: pass
     
-    try: HTTPcaptureThread.start()
+    try: HTTPcaptureThread1.start()
+    except: pass
+    try: HTTPcaptureThread2.start()
+    except: pass
+    try: HTTPcaptureThread3.start()
+    except: pass
+    try: HTTPcaptureThread4.start()
+    except: pass
+    try: HTTPcaptureThread5.start()
     except: pass
 
     try: NWSCAPthread.start()
@@ -1489,7 +1529,15 @@ if __name__ == "__main__":
     try: TCP2capture_thread.join()
     except: pass
 
-    try: HTTPcaptureThread.join()
+    try: HTTPcaptureThread1.join()
+    except: pass
+    try: HTTPcaptureThread2.join()
+    except: pass
+    try: HTTPcaptureThread3.join()
+    except: pass
+    try: HTTPcaptureThread4.join()
+    except: pass
+    try: HTTPcaptureThread5.join()
     except: pass
 
     try: NWSCAPthread.join()
