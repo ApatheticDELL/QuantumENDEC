@@ -1961,29 +1961,28 @@ class Generate_AlertMap:
         ])
 
         # Add map features
+        ax.add_feature(cfeature.COASTLINE)
+        ax.add_feature(cfeature.BORDERS, linestyle=':')
+        ax.add_feature(cfeature.STATES, linestyle='--')
+        ax.add_feature(cfeature.LAND, facecolor='#00AA44')
+        ax.add_feature(cfeature.OCEAN, facecolor='#002255')
+        ax.add_feature(cfeature.LAKES, facecolor='#002255')
+
         if os.path.exists("./map_addons/counties/ne_10m_admin_2_counties.shp"):
-            print("counties shapefile detected") # add county lines
+            print("counties shapefile detected")
             countines = cfeature.ShapelyFeature(
                 shpreader.Reader("./map_addons/counties/ne_10m_admin_2_counties.shp").geometries(),
                 ccrs.PlateCarree(),
-                facecolor='none', edgecolor='grey' )
-            ax.add_feature(countines, linestyle="--")
+                facecolor='none', edgecolor='black' )
+            ax.add_feature(countines)
 
         if os.path.exists("./map_addons/roads/ne_10m_roads.shp"):
-            print("roads shapefile detected") # add roads
+            print("roads shapefile detected")
             roads = cfeature.ShapelyFeature(
                 shpreader.Reader("./map_addons/roads/ne_10m_roads.shp").geometries(),
                 ccrs.PlateCarree(),
                 facecolor='none', edgecolor='white' )
             ax.add_feature(roads)
-
-        ax.add_feature(cfeature.LAND, facecolor='#00AA44')
-        ax.add_feature(cfeature.OCEAN, facecolor='#002255')
-        ax.add_feature(cfeature.LAKES, facecolor='#002255')
-        ax.add_feature(cfeature.COASTLINE)
-        ax.add_feature(cfeature.STATES, linestyle='-')
-        ax.add_feature(cfeature.BORDERS, linestyle='-')
-        
 
         # Draw polygons
         for i in self.polygon_coords:
@@ -2013,7 +2012,7 @@ class Generate_AlertMap:
                         
                         # Add label (if available)
                         label = record.attributes.get(label_field, "Unknown")
-                        ax.text((geometry.x + 0.05), (geometry.y + 0.05), label, fontsize=8, color=color, transform=ccrs.PlateCarree())
+                        ax.text(geometry.x, (geometry.y + 0.05), label, fontsize=8, color=color, transform=ccrs.PlateCarree())
 
         ax.set_aspect('auto')
         legend_patch = Line2D([0], [0], marker='o', color='w', markerfacecolor=polygon_color, markersize=10, label=self.headline)
