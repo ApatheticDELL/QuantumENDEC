@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>QE CGEN - Fullscreen with Image</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: sans-serif;
+      background-color: transparent;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #EAS_BOX {
+      display: none; /* Hidden by default */
+    }
+
+    .wrapper {
+      display: grid;
+      grid-template-columns: 80vh 3vh 50vh;
+      grid-template-rows: 5vh 22.5vh 22.5vh;
+      width: 133vh;
+      max-width: 133vh;
+      height: 50vh;
+      max-height: 50vh;
+    }
+
+    .gridImage {
+      grid-column: 3;
+      grid-row: 1 / span 3;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .gridImage img {
+      width: 100%;
+      height: auto;
+    }
+
+    .gridHeadline {
+      grid-column: 1;
+      grid-row: 1;
+      background: transparent;
+      text-align: left;
+      padding: 1vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      font-size: 2vh;
+    }
+
+    .gridDescription {
+      grid-column: 1;
+      grid-row: 2 / span 2;
+      background: transparent;
+      font-size: 2.6vh;
+      padding: 1vh;
+      text-align: justify;
+    }
+
+    .spacer {
+      grid-column: 2;
+      grid-row: 1 / span 3;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper" id="EAS_BOX">
+    <div class="gridHeadline">
+      <h1 id="alert-headline">Emergency Alert Details</h1>
+    </div>
+    <div class="gridDescription">
+      <strong id="page-counter">1 / 1</strong>
+      <p id="alert-text"></p>
+    </div>
+    <div class="gridImage">
+      <img id="alertImage" src="./tmp/alert_image.png" />
+    </div>
+    <div class="spacer"></div>
+  </div>
+
+  <script>
+    //function refreshImage() {
+    //    const img = document.getElementById('alertImage');
+    //    const timestamp = new Date().getTime(); // Create a unique timestamp
+    //    img.src = './tmp/alert_image.png?' + timestamp; // Append timestamp to prevent caching
+    //}
+
+    function refreshImage() {
+        const img = document.getElementById('alertImage');
+        const timestamp = new Date().getTime(); // Unique timestamp to prevent caching
+        const testSrc = './tmp/alert_image.png?' + timestamp;
+
+        // Create a temporary Image object to test if the image exists
+        const testImg = new Image();
+        testImg.onload = function() {
+            img.src = testSrc;
+            img.style.display = 'block'; // Show the image if it loads
+        };
+        testImg.onerror = function() {
+            img.style.display = 'none'; // Hide the image if it fails to load
+        };
+        testImg.src = testSrc;
+    }
+
+    let textChunks = [];
+    let currentChunkIndex = 0;
+    let previousData = {};
+    let updateTextInterval;
+
+    async function fetchAlertText() {
+      try {
+        const response = await fetch('/alertText');
+        if (!response.ok) throw new Error("Fetch failed");
+
+        const data = await response.json();
+
+        // Only update if data has changed
+        if (JSON.stringify(data) !== JSON.stringify(previousData)) {
+          previousData = data;
+
+          const wrapper = document.getElementById('EAS_BOX');
+          const headlineElement = document.getElementById('alert-headline');
+          const alertTextElement = document.getElementById('alert-text');
+          const pageCounterElement = document.getElementById('page-counter');
+
+          if (data.alert_status === false) {
+            wrapper.style.display = 'none';
+            document.body.style.backgroundColor = 'transparent';
+            return;
+          }
+
+          // Show wrapper and apply new colors
+          wrapper.style.display = 'grid';
+          document.body.style.backgroundColor = `#${data.background_color}`;
+
+          const textColor = `#${data.text_color}`;
+          headlineElement.style.color = textColor;
+          alertTextElement.style.color = textColor;
+          pageCounterElement.style.color = textColor;
+
+          // Set headline
+          headlineElement.textContent = data.headline || 'Alert';
+
+          // Split and update text
+          splitTextIntoChunks(data.text || '');
+          updateText();
+          refreshImage();
+          resetUpdateTextInterval();
+        }
+      } catch (err) {
+        console.error("Error fetching or processing alert text:", err);
+      }
+    }
+
+    function splitTextIntoChunks(text) {
+      const words = text.split(/\s+/);
+      textChunks = [];
+      for (let i = 0; i < words.length; i += 120) {
+        textChunks.push(words.slice(i, i + 120).join(' '));
+      }
+      currentChunkIndex = 0;
+      updatePageCounter();
+    }
+
+    function updateText() {
+      if (textChunks.length > 0) {
+        document.getElementById('alert-text').textContent = textChunks[currentChunkIndex];
+        updatePageCounter();
+        currentChunkIndex = (currentChunkIndex + 1) % textChunks.length;
+      }
+    }
+
+    function updatePageCounter() {
+      document.getElementById('page-counter').textContent = `${currentChunkIndex + 1} / ${textChunks.length}`;
+    }
+
+    function resetUpdateTextInterval() {
+      if (updateTextInterval) clearInterval(updateTextInterval);
+      updateTextInterval = setInterval(updateText, 30000);
+    }
+
+    // Start the fetch loop
+    setInterval(fetchAlertText, 1000);
+    fetchAlertText(); // Initial fetch
+  </script>
+</body>
+</html>

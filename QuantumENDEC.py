@@ -2528,7 +2528,6 @@ def MonitorsCaptures(CONFIG_DATA):
     return THREADSLIST
 
 if __name__ == "__main__":
-    set_status("QuantumENDEC", "Starting up...")
     parser = argparse.ArgumentParser(description='QuantumENDEC')
     parser.add_argument('-v', '--version', action='store_true', help='Displays QuantumENDECs version and exits.')
     parser.add_argument('-H', '--headless', action='store_true', help='Start QuantumENDEC without starting the webserver.')
@@ -2543,13 +2542,15 @@ if __name__ == "__main__":
     WebserverThread = None
 
     while True:
-        print("Starting QuantumENDEC...")
         qe_status("set", 0)
 
         if Setup() is True: pass
         else:
             print("[WARNING]: Setup failed. Exiting...")
             exit()
+
+        print("Starting QuantumENDEC...")
+        set_status("QuantumENDEC", "Starting up...")
 
         CONFIG_DATA = load_json(f"{assets_folder}/config.json")
         THREADSLIST = []

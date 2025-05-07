@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>QuantumENDEC Web Interface</title>
+        <link rel="stylesheet" href="./style.css">
+        <style>
+            form {
+                padding-top: 1vh;
+            }
+            input[type=text] {
+                width: 100%;
+                padding: 10px 10px;
+                margin: 8px 0;
+                box-sizing: border-box;
+                margin-bottom: 15px;
+            }
+            input[type="checkbox"] {
+                width: 20px;
+                height: 20px;
+                margin-bottom: 20px;
+            }
+            input[type="color"] {
+                width: 100px;
+            }
+            select {
+                width: 100%;
+                padding: 15px 20px;
+                border: none;
+                border-radius: 4px;
+                background-color: #f1f1f1;
+                margin-top: 10px;
+                margin-bottom: 10px;
+            }
+            .outline_container {
+                border: 3px solid rgb(255, 255, 255); padding: 10px;
+                margin-bottom: 10px;
+            }
+            a, a:visited, a:link { color: white; text-decoration: none; }
+
+            .input-container {
+                display: flex;
+                flex-wrap: wrap;
+                border: 1px solid #ffffff;
+                padding: 5px;
+                
+            }
+            .input-container input {
+                border: none;
+                outline: none;
+                flex-grow: 1;
+            }
+            .tag {
+                display: inline-flex;
+                align-items: center;
+                background-color: #ff2a2a;
+                color: white;
+                border-radius: 3px;
+                padding: 5px;
+                margin: 3px;
+            }
+            .tag .remove-tag {
+                cursor: pointer;
+                margin-left: 5px;
+            }
+
+            input[type=submit] {
+                background-color: #ff2a2a;
+                border: none;
+                color: white;
+                padding: 15px 32px;
+                text-align: center;
+                text-decoration: none;
+                display: inline-block;
+                font-size: 16px;
+                margin: 4px 2px;
+                cursor: pointer;
+            }
+        </style>
+    </head>
+    <body>
+        <header>
+            <div class="header_logo">
+                <img src="./logo.png" />
+                <h1>QuantumENDEC Web Interface</h1>
+            </div>
+            <div class="topnav">
+                <a href="./index.html">Dashboard</a>
+                <a class="active" href="./configuration.html">Configuration</a>
+                <a href="./send.html">Send Alert</a>
+                <a href="./alertLog.html">Alert Log</a>
+                <a href="./change_password.html">Change Access Password</a>
+            </div>
+        </header>
+
+        <main>
+            <h2>Configuration</h2>
+            <p>Configure QuantumENDEC on this page. Changed some settings may require a restart of QuantumENDEC to take effect.</p>
+            
+            <form action="/submit_config" method="POST">
+                <h3>Web server settings</h3>
+                <label for="webserver_host">Host (Default: 0.0.0.0)</label><input type="text" id="webserver_host" name="webserver_host">
+                <label for="webserver_port">Port (Default: 80)</label><input type="text" id="webserver_port" name="webserver_port">
+                
+                <h3>Relay Language</h3>
+                <input type="checkbox" id="relay_en" name="relay_en"><label for="relay_en"> Relay in English</label><br />
+                <input type="checkbox" id="relay_fr" name="relay_fr"><label for="relay_fr"> Relay in French</label><br />
+
+                <h3>Alert Presentation</h3>
+                <input type="checkbox" id="force_120" name="force_120"><label for="force_120"> Force 120 seconds of broadcast audio</label><br />
+                <input type="checkbox" id="produce_alertimage" name="produce_alertimage"><label for="produce_alertimage"> Produce images (and alert maps)</label><br />
+                <input type="checkbox" id="enable_plugins" name="enable_plugins"><label for="enable_plugins"> Enable plugins</label><br />
+
+                <div class="outline_container">
+                    <h4>Lead in/out (pre/post roll)</h4>
+                    <input type="checkbox" id="enable_leadin" name="enable_leadin"><label for="enable_leadin"> Enable lead in (pre-roll)</label><br />
+                    <input type="checkbox" id="enable_leadout" name="enable_leadout"><label for="enable_leadout"> Enable lead out (post/after alert)</label><br />
+                    <a class="button" href="./manage_lead_inout.html">Manage lead in/out</a>
+                </div>
+
+                <div class="outline_container">
+                    <label for="attn_tone_select">Attention tone flavour</label>
+                    <select id="attn_tone_select" onchange="updateTextBox('attn_tone_select', 'attn_tone')">
+                        <option value="AttnCAN.wav">Canada (Alert Ready)</option>
+                        <option value="AttnEBS.wav">United States (EBS)</option>
+                        <option value="Attn1050.wav">1050hz</option>
+                        <option value="AttnEgg.wav">Egg Timer</option>
+                        <option value="AttnRumble.wav">Rumble</option>
+                    </select>
+                    <label for="attn_tone">Selected value</label>
+                    <input type="text" id="attn_tone" name="attn_tone" readonly>
+                    <p>If QuantumENDEC can't detect what attention tone to use, it will revert to the one selected in Attention tone flavour.</p>
+                    <input type="checkbox" id="attn_basedoncountry" name="attn_basedoncountry"><label for="attn_basedoncountry"> Attention tones based on alert's country (only works with CAP)</label><br />
+                </div>
+
+                <div class="outline_container">
+                    <h4>Discord webhook</h4>
+                    <input type="checkbox" id="discordwebhook_enable" name="discordwebhook_enable"><label for="discordwebhook_enable"> Enable Discord webhook</label><br />
+                    <label for="discordwebhook_author_name">Author name</label><input type="text" id="discordwebhook_author_name" name="discordwebhook_author_name">
+                    <label for="discordwebhook_author_URL">Author URL</label><input type="text" id="discordwebhook_author_URL" name="discordwebhook_author_URL">
+                    <label for="discordwebhook_author_iconURL">Author Icon URL</label><input type="text" id="discordwebhook_author_iconURL" name="discordwebhook_author_iconURL">
+                    <label for="discordwebhook_URL">Webhook URL</label><input type="text" id="discordwebhook_URL" name="discordwebhook_URL">
+                    <input type="checkbox" id="discordwebhook_sendAudio" name="discordwebhook_sendAudio"><label for="discordwebhook_sendAudio"> Include alert audio</label><br />
+                    <input type="checkbox" id="discordwebhook_sendImage" name="discordwebhook_sendImage"><label for="discordwebhook_sendImage"> Include alert image</label><br />
+                </div>
+
+                <div class="outline_container">
+                    <h4>Email logger</h4>
+                    <p>You can log via email using SMTP.</p>
+                    <input type="checkbox" id="email_enable" name="email_enable"><label for="email_enable"> Enable email logger</label><br />
+                    <label for="email_user">Email user: </label><input type="text" id="email_user" name="email_user">
+                    <label for="email_userPassword">Email password: </label><input type="text" id="email_userPassword" name="email_userPassword">
+                    <label for="email_SMTPserver">Email SMTP server: </label><input type="text" id="email_SMTPserver" name="email_SMTPserver">
+                    <label for="email_SMTPport">Email SMTP port: </label><input type="text" id="email_SMTPport" name="email_SMTPport">
+                    <label for="email_recipients">Email recipients: </label><input type="text" id="email_recipients" name="email_recipients">
+                    <p>Multiple emails seprated by commas. Like this: email1@email, email2@email</p>
+                </div>
+
+                <h4>TTS configuration</h4>
+                <!--<div class="outline_container">
+                    <h4>PYTTSX3 configuration</h4>
+                    <input type="checkbox" id="use_defaultTTS" name="use_defaultTTS"><label for="use_defaultTTS"> Use default TTS voice.</label><br />
+                    <div class="outline_container">
+                        <label for="TTS_en_select">English voice: </label>
+                        <select id="TTS_en_select" onchange="updateTextBox('TTS_en_select', 'TTS_en')"></select><br />
+                        <label for="TTS_en">Selected value:</label><input type="text" id="TTS_en" name="TTS_en" readonly>
+                    </div>
+                    <div class="outline_container">
+                        <label for="TTS_fr_select">French voice: </label>
+                        <select id="TTS_fr_select" onchange="updateTextBox('TTS_fr_select', 'TTS_fr')"></select><br />
+                        <label for="TTS_fr">Selected value:</label><input type="text" id="TTS_fr" name="TTS_fr" readonly>
+                    </div>
+                </div>-->
+
+                <div class="outline_container">
+                    <label for="tts_service_select">TTS service</label>
+                    <select id="tts_service_select" onchange="updateTextBox('tts_service_select', 'tts_service')">
+                        <option value="pyttsx3">PYTTSX3 (default)</option>
+                        <option value="flite">Flite</option>
+                        <option value="maki">Maki</option>
+                        <option value="ElevenLabs">ElevenLabs (Online API)</option>
+                    </select>
+                    <label for="tts_service">Selected value</label>
+                    <input type="text" id="tts_service" name="tts_service" readonly>
+                    <p>PYTTSX3 can be used with Windows or Linux</p>
+                    <p>Flite must be installed on your system in order to use. (Windows: and added to path)</p>
+                    <p>Maki is Windows only. It's included within QuantumENDEC.</p>
+                    <p>ElevenLabs is an online TTS API, you must be connected to the internet and have a valid API key in order to use it.</p>
+                    <p>Flite has no additional configuration settings, we just have it for specific aesthetic reasons.</p>
+                </div>
+                
+                <div class="outline_container">
+                    <h4>PYTTSX3 configuration</h4>
+                    <input type="checkbox" id="pyttsx3_defaultTTS" name="pyttsx3_defaultTTS"><label for="pyttsx3_defaultTTS"> Use default TTS voice.</label><br />
+                    <div class="outline_container">
+                        <label for="pyttsx3_en_select">English voice: </label>
+                        <select id="pyttsx3_en_select" onchange="updateTextBox('pyttsx3_en_select', 'pyttsx3_en')"></select><br />
+                        <label for="pyttsx3_en">Selected value:</label><input type="text" id="pyttsx3_en" name="pyttsx3_en" readonly>
+                    </div>
+                    <div class="outline_container">
+                        <label for="pyttsx3_fr_select">French voice: </label>
+                        <select id="pyttsx3_fr_select" onchange="updateTextBox('pyttsx3_fr_select', 'pyttsx3_fr')"></select><br />
+                        <label for="pyttsx3_fr">Selected value:</label><input type="text" id="pyttsx3_fr" name="pyttsx3_fr" readonly>
+                    </div>
+                </div>
+
+                <div class="outline_container">
+                    <h4>Maki TTS configuration</h4>
+                    <p><strong>Windows only.</strong> Maki allows the use of 32bit voices.</p>
+                    <div class="outline_container">
+                        <label for="maki_en_select">English voice: </label>
+                        <select id="maki_en_select" onchange="updateTextBox('maki_en_select', 'maki_en')"></select><br />
+                        <label for="maki_en">Selected value:</label><input type="text" id="maki_en" name="maki_en" readonly>
+                    </div>
+                    <div class="outline_container">
+                        <label for="maki_fr_select">French voice: </label>
+                        <select id="maki_fr_select" onchange="updateTextBox('maki_fr_select', 'maki_fr')"></select><br />
+                        <label for="maki_fr">Selected value:</label><input type="text" id="maki_fr" name="maki_fr" readonly>
+                    </div>
+                </div>
+
+                <div class="outline_container">
+                    <h4>ElevenLabs configuration</h4>
+                    <label for="ElevenLabs_apiKey">API key</label><input type="text" id="ElevenLabs_apiKey" name="ElevenLabs_apiKey">
+                    <div class="outline_container">
+                        <p><strong>English voice</strong></p>
+                        <label for="ElevenLabs_voiceID_en">Voice ID</label><input type="text" id="ElevenLabs_voiceID_en" name="ElevenLabs_voiceID_en">
+                        <label for="ElevenLabs_modelID_en">Model ID</label><input type="text" id="ElevenLabs_modelID_en" name="ElevenLabs_modelID_en">
+                    </div>
+                    <div class="outline_container">
+                        <p><strong>French voice</strong></p>
+                        <label for="ElevenLabs_voiceID_fr">Voice ID</label><input type="text" id="ElevenLabs_voiceID_fr" name="ElevenLabs_voiceID_fr">
+                        <label for="ElevenLabs_modelID_fr">Model ID</label><input type="text" id="ElevenLabs_modelID_fr" name="ElevenLabs_modelID_fr">
+                    </div>
+                </div>
+                
+                <h4>Audio configuration</h4>
+                <input type="checkbox" id="use_specifiedaudiooutput" name="use_specifiedaudiooutput"><label for="use_specifiedaudiooutput"> Use Specified Audio Output Device.</label><br />
+                <p>The field below will not have any effect if the box is not selected.</p>
+                <div class="outline_container">
+                    <label for="specifiedaudiooutput_select">Specified Audio Output Device: </label>
+                    <select id="specifiedaudiooutput_select" onchange="updateTextBox('specifiedaudiooutput_select', 'specifiedaudiooutput')"></select><br />
+                    <label for="specifiedaudiooutput">Selected value:</label><input type="text" id="specifiedaudiooutput" name="specifiedaudiooutput" readonly>
+                    <input type="checkbox" id="use_audiodevice_id" name="use_audiodevice_id"><label for="use_audiodevice_id"> Use audio device ID (unchecked: use device name).</label><br />
+                </div>
+
+                <h4>CGEN configuration</h4>
+                <input type="checkbox" id="CGEN_clear_after_relay" name="CGEN_clear_after_relay"><label for="CGEN_clear_after_relay"> Clear CGEN (after alert relays)</label><br />
+                <p>Change the background and text color of the CGEN</p>
+                <div class="outline_container">
+                    <p>Warnings</p>
+                    <label for="CGEN_warningcolor_background_picker">Background color</label>
+                    <input type="color" id="CGEN_warningcolor_background_picker" onchange="updateColorValue('CGEN_warningcolor_background_picker', 'CGEN_warningcolor_background')">
+                    <input style="width: 100px;" type="text" id="CGEN_warningcolor_background" name="CGEN_warningcolor_background" readonly>
+                    <br />
+                    <label for="CGEN_warningcolor_text_picker">Text color</label>
+                    <input type="color" id="CGEN_warningcolor_text_picker" onchange="updateColorValue('CGEN_warningcolor_text_picker', 'CGEN_warningcolor_text')">
+                    <input style="width: 100px;" type="text" id="CGEN_warningcolor_text" name="CGEN_warningcolor_text" readonly>
+                </div>
+                <div class="outline_container">
+                    <p>Watches</p>
+                    <label for="CGEN_watchcolor_background_picker">Background color</label>
+                    <input type="color" id="CGEN_watchcolor_background_picker" onchange="updateColorValue('CGEN_watchcolor_background_picker', 'CGEN_watchcolor_background')">
+                    <input style="width: 100px;" type="text" id="CGEN_watchcolor_background" name="CGEN_watchcolor_background" readonly>
+                    <br />
+                    <label for="CGEN_watchcolor_text_picker">Text color</label>
+                    <input type="color" id="CGEN_warningcolor_text_picker" onchange="updateColorValue('CGEN_watchcolor_text_picker', 'CGEN_watchcolor_text')">
+                    <input style="width: 100px;" type="text" id="CGEN_watchcolor_text" name="CGEN_watchcolor_text" readonly>
+                </div>
+                <div class="outline_container">
+                    <p>Advisory</p>
+                    <label for="CGEN_advisorycolor_background_picker">Background color</label>
+                    <input type="color" id="CGEN_advisorycolor_background_picker" onchange="updateColorValue('CGEN_advisorycolor_background_picker', 'CGEN_advisorycolor_background')">
+                    <input style="width: 100px;" type="text" id="CGEN_advisorycolor_background" name="CGEN_advisorycolor_background" readonly>
+                    <br />
+                    <label for="CGEN_advisorycolor_text_picker">Text color</label>
+                    <input type="color" id="CGEN_advisorycolor_text_picker" onchange="updateColorValue('CGEN_advisorycolor_text_picker', 'CGEN_advisorycolor_text')">
+                    <input style="width: 100px;" type="text" id="CGEN_advisorycolor_text" name="CGEN_advisorycolor_text" readonly>
+                </div>
+
+                <h3>CAP Alert Filtering</h3>
+                <h4>CAP Filter: Status</h4>
+                <input type="checkbox" id="statusTest" name="statusTest"><label for="statusTest"> Test</label><br />
+                <input type="checkbox" id="statusActual" name="statusActual"><label for="statusActual"> Actual</label><br />
+                <h4>CAP Filter: Message Type</h4>
+                <input type="checkbox" id="messagetypeAlert" name="messagetypeAlert"><label for="messagetypeAlert"> Alert</label><br />
+                <input type="checkbox" id="messagetypeUpdate" name="messagetypeUpdate"><label for="messagetypeUpdate"> Update</label><br />
+                <input type="checkbox" id="messagetypeCancel" name="messagetypeCancel"><label for="messagetypeCancel"> Cancel</label><br />
+                <input type="checkbox" id="messagetypeTest" name="messagetypeTest"><label for="messagetypeTest"> Test</label><br />
+                <h4>CAP Filter: Severity</h4>
+                <input type="checkbox" id="severityExtreme" name="severityExtreme"><label for="severityExtreme"> Extreme</label><br />
+                <input type="checkbox" id="severitySevere" name="severitySevere"><label for="severitySevere"> Severe</label><br />
+                <input type="checkbox" id="severityModerate" name="severityModerate"><label for="severityModerate"> Moderate</label><br />
+                <input type="checkbox" id="severityMinor" name="severityMinor"><label for="severityMinor"> Minor</label><br />
+                <input type="checkbox" id="severityUnknown" name="severityUnknown"><label for="severityUnknown"> Unknown</label><br />
+                <h4>CAP Filter: Urgency</h4>
+                <input type="checkbox" id="urgencyImmediate" name="urgencyImmediate"><label for="urgencyImmediate"> Immediate</label><br />
+                <input type="checkbox" id="urgencyExpected" name="urgencyExpected"><label for="urgencyExpected"> Expected</label><br />
+                <input type="checkbox" id="urgencyFuture" name="urgencyFuture"><label for="urgencyFuture"> Future</label><br />
+                <input type="checkbox" id="urgencyPast" name="urgencyPast"><label for="urgencyPast"> Past</label><br />
+                <input type="checkbox" id="urgencyUnknown" name="urgencyUnknown"><label for="urgencyUnknown"> Unknown</label><br />
+
+                <h4>Location code filters for CAP</h4>
+                <p>No spaces, seprate the codes by a comma (,).</p>
+                <label for="CAPCP_geocodefilter">Allowed FIPS/CLC: </label><input type="text" id="CAPCP_geocodefilter" name="CAPCP_geocodefilter">
+                <p>(Won't work on American CAP.)</p>
+
+                <h3>S.A.M.E configuration</h3>
+                <input type="checkbox" id="SAME" name="SAME"><label for="SAME"> Relay with SAME</label><br />
+                <p>Your SAME callsign must be 8 characters, no more, no less. There also cannot be any dashes (-). If you put an invalid SAME callsign, QuantumENDEC will use a default SAME callsign. If relaying with S.A.M.E is disabled, these settings will be ignored. This config section will affect both S.A.M.E audio monitors and CAP monitors.</p>
+                <label for="SAME_callsign">Callsign: </label><input type="text" id="SAME_callsign" name="SAME_callsign" maxlength="8">
+                <p>No spaces, for multiple codes, seprate the codes by a comma (,). This applies to setting the event codes, originator codes and FIPS/CLC. Simply leave the box blank to not use the filter!</p>
+                <label for="SAME_filterORG">Allowed originator codes: </label><input type="text" id="SAME_filterORG" name="SAME_filterORG">
+                <label for="SAME_filterEVE">Allowed event codes: </label><input type="text" id="SAME_filterEVE" name="SAME_filterEVE">
+                <label for="SAME_blockEVE">Blocked event codes (Overrides allowed event codes): </label><input type="text" id="SAME_blockEVE" name="SAME_blockEVE">
+                <p>You can wildcard partial counties. Example(s): *04,*04123</p>
+                <label for="SAME_filterFIPS">Allowed FIPS/CLC: </label><input type="text" id="SAME_filterFIPS" name="SAME_filterFIPS">
+
+                <h3>CAP Monitor Sources</h3>
+
+                <div class="outline_container">
+                    <h4>TCP Streams</h4>
+                    <p>Set up TCP streams for alert reception, normally you'd want to keep the NAADs TCP addresses. If you have an alternate source that uses TCP, you'd want to change this. You'd want to use TCP stream address that sends out XML, (For Canada CAP) it's explained in the Pelmorex LMD Guide linked in the readme file. When setting the stream address, ensure that you input a typical <strong>[host]:[port]</strong> format, or things will break.</p>
+                    <input type="checkbox" id="TCP_CAP" name="TCP_CAP"><label for="TCP_CAP"> Enable TCP CAP Capture</label><br />
+                    <label for="TCP_CAP_ADDR1">Stream 1 (NAADs 1): </label><input type="text" id="TCP_CAP_ADDR1" name="TCP_CAP_ADDR1">
+                    <label for="TCP_CAP_ADDR2">Stream 2 (NAADs 2): </label><input type="text" id="TCP_CAP_ADDR2" name="TCP_CAP_ADDR2">
+                </div>
+
+                <div class="outline_container">
+                    <h4>HTTP CAP Capture</h4>
+                    <p>Set up HTTP CAP capture for CAP streams via HTTP. You may leave any text box blank if you have no source.</p>
+                    <input type="checkbox" id="HTTP_CAP" name="HTTP_CAP"><label for="HTTP_CAP"> Enable HTTP CAP Capture</label><br />
+                    <label for="HTTP_CAP_ADDR1">HTTP CAP URL 1: </label><input type="text" id="HTTP_CAP_ADDR1" name="HTTP_CAP_ADDR1">
+                    <label for="HTTP_CAP_ADDR2">HTTP CAP URL 2: </label><input type="text" id="HTTP_CAP_ADDR2" name="HTTP_CAP_ADDR2">
+                    <label for="HTTP_CAP_ADDR3">HTTP CAP URL 3: </label><input type="text" id="HTTP_CAP_ADDR3" name="HTTP_CAP_ADDR3">
+                    <label for="HTTP_CAP_ADDR4">HTTP CAP URL 4: </label><input type="text" id="HTTP_CAP_ADDR4" name="HTTP_CAP_ADDR4">
+                    <label for="HTTP_CAP_ADDR5">HTTP CAP URL 5: </label><input type="text" id="HTTP_CAP_ADDR5" name="HTTP_CAP_ADDR5">
+                </div>
+
+                <div class="outline_container">
+                    <h4>NWS CAP Capture</h4>
+                    <p>NWS CAP has a different way of getting alerts, you can set that up here. QuantumENDEC is programmed to grab from the api.weather.gov <strong>ATOM</strong> feed. You should research the NWS CAP ATOM API to narrow down to your area.</p>
+                    <input type="checkbox" id="NWS_CAP" name="NWS_CAP"><label for="NWS_CAP"> Enable NWS CAP Capture</label><br />
+                    <label for="NWS_CAP_AtomLink">NWS CAP URL: </label><input type="text" id="NWS_CAP_AtomLink" name="NWS_CAP_AtomLink">
+                </div>
+
+                <h3>S.A.M.E Monitor Settings</h3>
+                <p>QuantumENDEC can monitor SAME alerts from a physical audio source or from an IP audio stream.</p>
+                
+                <div class="outline_container">
+                    <h4>SAME Audio Device Monitor</h4>
+                    <p>The SAME audio device monitor will only listen to the default audio input device set by the operating system.</p>
+                    <input type="checkbox" id="SAME_AudioDevice_Monitor" name="SAME_AudioDevice_Monitor"><label for="SAME_AudioDevice_Monitor"> Enable SAME audio device monitor</label><br />
+                </div>
+
+                <div class="outline_container">
+                    <h4>SAME IP Monitors</h4>
+                    <input type="checkbox" id="SAME_AudioStream_Monitor" name="SAME_AudioStream_Monitor"><label for="SAME_AudioStream_Monitor"> Enable SAME IP stream monitor</label><br />
+                    <label for="SAME_AudioStream_Monitor1">IP stream 1: </label><input type="text" id="SAME_AudioStream_Monitor1" name="SAME_AudioStream_Monitor1">
+                    <label for="SAME_AudioStream_Monitor2">IP stream 2: </label><input type="text" id="SAME_AudioStream_Monitor2" name="SAME_AudioStream_Monitor2">
+                    <label for="SAME_AudioStream_Monitor3">IP stream 3: </label><input type="text" id="SAME_AudioStream_Monitor3" name="SAME_AudioStream_Monitor3">
+                    <label for="SAME_AudioStream_Monitor4">IP stream 4: </label><input type="text" id="SAME_AudioStream_Monitor4" name="SAME_AudioStream_Monitor4">
+                </div>
+                
+                <input type="submit" value="Save">
+                <a class="button" href="./config_data">Download config file</a>
+                <a class="button" href="./uploadConfig.html">Load config file</a>
+            </form>
+        </main>
+
+        <script>
+            function updateTextBox(dropdownId, textboxId) {
+                // Get the selected value from the dropdown
+                var selectedValue = document.getElementById(dropdownId).value;
+                // Update the corresponding textbox with the selected value
+                document.getElementById(textboxId).value = selectedValue;
+            }
+
+            function updateColorValue(picker, boxxer) {
+                var colorPicker = document.getElementById(picker);
+                var hexValueBox = document.getElementById(boxxer);
+                var colorValue = colorPicker.value;
+            
+                // Remove the '#' from the color value
+                var hexValue = colorValue.substring(1);
+            
+                hexValueBox.value = hexValue;
+            }
+
+            document.addEventListener('DOMContentLoaded', function () {
+                // Populate audio output select
+                const audioSelect = document.getElementById('specifiedaudiooutput_select');
+                if (audioSelect) {
+                    fetch('/audio_outputs')
+                        .then(response => response.json())
+                        .then(devices => {
+                            audioSelect.innerHTML = ''; // Optional: clear existing options
+                            devices.forEach(device => {
+                                const option = document.createElement('option');
+                                option.value = device;
+                                option.textContent = device;
+                                audioSelect.appendChild(option);
+                            });
+                        })
+                        .catch(error => {
+                            console.error('Error loading audio outputs:', error);
+                        });
+                }
+
+                // Populate TTS voice selects
+                // Helper function to populate a pair of <select> elements
+                    function populateSelects(url, enSelectId, frSelectId) {
+                    const enSelect = document.getElementById(enSelectId);
+                    const frSelect = document.getElementById(frSelectId);
+
+                    if (enSelect && frSelect) {
+                        fetch(url)
+                            .then(response => {
+                                if (!response.ok) {
+                                    throw new Error(`Failed to fetch voices from ${url}`);
+                                }
+                                return response.json();
+                            })
+                            .then(voices => {
+                                enSelect.innerHTML = '';
+                                frSelect.innerHTML = '';
+
+                                voices.forEach(voice => {
+                                    const enOption = document.createElement('option');
+                                    enOption.textContent = voice;
+                                    enOption.value = voice;
+
+                                    const frOption = enOption.cloneNode(true);
+
+                                    enSelect.appendChild(enOption);
+                                    frSelect.appendChild(frOption);
+                                });
+                            })
+                            .catch(error => {
+                                console.error(`Error loading voices from ${url}:`, error);
+                            });
+                    } else {
+                        console.error(`Selects not found for ${enSelectId} or ${frSelectId}`);
+                    }
+                }
+
+                // Populate all three TTS sets
+                populateSelects('/tts_voices', 'TTS_en_select', 'TTS_fr_select');
+                populateSelects('/tts_voices', 'pyttsx3_en_select', 'pyttsx3_fr_select');
+                populateSelects('/maki_voices', 'maki_en_select', 'maki_fr_select');
+
+                // Load the current config
+                fetch('/config_data')
+                                .then(response => response.json())
+                                .then(config => {
+                                    for (const [key, value] of Object.entries(config)) {
+                                        const element = document.getElementById(key);
+                                        if (element) {
+                                            if (element.type === 'checkbox') {
+                                                element.checked = value;
+                                            } else if (element.type === 'color') {
+                                                element.value = value;
+                                            } else if (element.tagName === 'SELECT') {
+                                                // do nothing
+                                            } else {
+                                                // Handle text input and comma-separated lists
+                                                if (Array.isArray(value)) {
+                                                    element.value = value.join(',');
+                                                } else {
+                                                    element.value = value;
+                                                }
+                                            }
+                                        }
+                                    }
+                                });
+            });
+        </script>
+    </body>
+</html>

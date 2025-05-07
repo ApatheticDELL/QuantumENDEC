@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>QuantumENDEC Web Interface</title>
+        <link rel="stylesheet" href="./style.css">
+    </head>
+    <body>
+        <header>
+            <div class="header_logo">
+                <img src="./logo.png" />
+                <h1>QuantumENDEC Web Interface</h1>
+            </div>
+            <div class="topnav">
+                <a href="./index.html">Dashboard</a>
+                <a class="active" href="./configuration.html">Configuration</a>
+                <a href="./send.html">Send Alert</a>
+                <a href="./alertLog.html">Alert Log</a>
+                <a href="./change_password.html">Change Access Password</a>
+            </div>
+        </header>
+        <main>
+            <h2>Manage lead in/out</h2>
+            <p>Lead ins and lead outs are audio clips that play before (lead in) and/or after (lead out) an alert. Lead ins are also called pre-rolls. Upload and manage lead in/lead out wav files here. Ensure your lead ins/outs are breif.</p>
+            
+            <form id="uploadLeadin" enctype="multipart/form-data">
+                <input type="file" id="leadinInput" accept=".wav" />
+                <button class="button" type="submit">Upload Lead In</button>
+            </form>
+            <br />
+            <form id="uploadLeadout" enctype="multipart/form-data">
+                <input type="file" id="leadoutInput" accept=".wav" />
+                <button class="button" type="submit">Upload Lead Out</button>
+            </form>
+        
+            <br />
+            <a class="button" href="./configuration.html">Go back</a>
+
+            <h2>Preview</h2>
+            <p>Lead in (pre-roll)</p>
+            <audio controls>
+                <source src="./pre.wav" type="audio/wav">
+              Your browser does not support the audio element.
+            </audio>
+            <p>Lead out (post)</p>
+            <audio controls>
+                <source src="./post.wav" type="audio/wav">
+              Your browser does not support the audio element.
+            </audio>
+            <p>If you can't play the audio, it's most likely not on the server.</p>
+
+            <h2>Remove lead in/out</h2>
+            <p>Watch out, you can remove alert lead in/out audio here.</p>
+            <button class="button" id="removeLeadinButton">Remove Lead-in Audio</button>
+            <button class="button" id="removeLeadoutButton">Remove Lead-out Audio</button>
+        </main>
+    </body>
+    <script>
+        document.getElementById('uploadLeadin').addEventListener('submit', async (event) => {
+            event.preventDefault(); // Prevent default form submission
+
+            const fileInput = document.getElementById('leadinInput');
+            if (fileInput.files.length === 0) {
+                alert('Please select a file to upload.');
+                return;
+            }
+
+            const file = fileInput.files[0];
+            if (file.type !== 'audio/wav') {
+                alert('Only wav files are accepted.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch('/upload_leadin', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    alert('File uploaded successfully!')
+                    window.location.href = './manage_lead_inout.html';
+                } else {
+                    alert('File upload failed.');
+                }
+            } catch (error) {
+                console.error('Error uploading file:', error);
+                alert('An error occurred while uploading the file.');
+            }
+        });
+
+        document.getElementById('uploadLeadout').addEventListener('submit', async (event) => {
+            event.preventDefault(); // Prevent default form submission
+
+            const fileInput = document.getElementById('leadoutInput');
+            if (fileInput.files.length === 0) {
+                alert('Please select a file to upload.');
+                return;
+            }
+
+            const file = fileInput.files[0];
+            if (file.type !== 'audio/wav') {
+                alert('Only wav files are accepted.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch('/upload_leadout', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    alert('File uploaded successfully!')
+                    window.location.href = './manage_lead_inout.html';
+                } else {
+                    alert('File upload failed.');
+                }
+            } catch (error) {
+                console.error('Error uploading file:', error);
+                alert('An error occurred while uploading the file.');
+            }
+        });
+        document.getElementById('removeLeadinButton').addEventListener('click', async () => {
+            try {
+                const response = await fetch('/remove_Leadin', {
+                    method: 'POST'
+                });
+                const result = await response.json();
+                alert(result.success || result.error);
+            } catch (error) {
+                console.error('Error removing lead-in audio:', error);
+                alert('An error occurred while removing lead-in audio.');
+            }
+        });
+
+        document.getElementById('removeLeadoutButton').addEventListener('click', async () => {
+            try {
+                const response = await fetch('/remove_Leadout', {
+                    method: 'POST'
+                });
+                const result = await response.json();
+                alert(result.success || result.error);
+            } catch (error) {
+                console.error('Error removing lead-out audio:', error);
+                alert('An error occurred while removing lead-out audio.');
+            }
+        });
+    </script>
+</html>
