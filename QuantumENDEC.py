@@ -902,98 +902,80 @@ def ZCZC_test(inp):
             elif len(inp[e+3]) != 6: return False
     else: return False
 
+def rm_end(audio_file):
+    try: delete_file(f"{audio_file}.rmend")
+    except: pass
+    audio = AudioSegment.from_file(audio_file)
+    trimmed_audio = audio[:-1200]  # Remove last 1200 ms
+    trimmed_audio.export(f"{audio_file}.rmend", format="wav")
+    move_file(f"{audio_file}.rmend", audio_file)
+    print("Removed EOMs", audio_file)
+    
 def get_len(fname):
-    with contextlib.closing(wave.open(fname,'r')) as f:
+    with contextlib.closing(wave.open(fname, 'r')) as f:
         frames = f.getnframes()
         rate = f.getframerate()
-        duration = frames / float(rate)
-        return duration
+        return frames / float(rate)
 
 def freq(file, start_time, end_time):
     sr, data = wavfile.read(file)
-    if data.ndim > 1: data = data[:, 0]
-    else: pass
-    dataToRead = data[int(start_time * sr / 1000) : int(end_time * sr / 1000) + 1]
-    N = len(dataToRead)
-    yf = rfft(dataToRead)
-    xf = rfftfreq(N, 1 / sr)
-    idx = numpy.argmax(numpy.abs(yf)) # Get the most dominant frequency and return it
-    freq = xf[idx]
-    return freq
-
-def Remove_EOMandATTN(AudioFile):
-    try:
-        # Remove END (EOMs)
-        # audio = AudioSegment.from_file(f"Audio/tmp/{moniName}out.wav")
-        audio = AudioSegment.from_file(AudioFile)
-        lengthaudio = len(audio)
-        start = 0
-        threshold = lengthaudio - 1200
-        end = 0
-        counter = 0
-        end += threshold
-        chunk = audio[start:end]
-        filename = f"{AudioFile}.rmend"
-        chunk.export(filename, format="wav")
-        counter +=1
-        start += threshold
-    except: pass
+    if data.ndim > 1:
+        data = data[:, 0]  # Use only first channel if stereo
+    data_segment = data[int(start_time * sr / 1000):int(end_time * sr / 1000)]
     
-    try:
-        # Remove attention tone
-        timelist = []
-        freqlist = []
-        ATTNCUT = 0
-        file_length = get_len(f"{AudioFile}.rmend")
-        if file_length < 23: file_length = round(file_length)
-        else: file_length = 80
-        cnt = 0
-        for e in range(file_length):
-            cnt = cnt + 1
-            val = 300
-            start = e * val
-            offset = start + val
-            timelist.append(start)
-            frequency = freq(f"{AudioFile}.rmend", start, offset)
-            freqlist.append(frequency)
-        freqlist = list(freqlist)
-        mainlen = len(freqlist)
-        found = False
-        for e in range(len(freqlist)):
-            if found == False:
-                if 810 < round(int(freqlist[e])) < 1070:
-                    if 810 < round(int(freqlist[e + 1])) < 1070 and 810 < round(int(freqlist[e + 2])) < 1070:
-                        found = True
-            elif found == True:
-                if freqlist[e] < 810 or freqlist[e] > 1070:
-                    if e + 5 < mainlen:
-                        if freqlist[e + 1] < 810 or freqlist[e + 1] > 1070 and freqlist[e + 2] < 810 or freqlist[e + 2] > 1070 and freqlist[e + 3] < 810 or freqlist[e + 3] > 1070 and freqlist[e + 4] < 810 or freqlist[e + 4] > 1070 and freqlist[e + 5] < 810 or freqlist[e + 5] > 1070:
-                            end_point = e
-                            found = None
-        if(found == None): pass
-        else:
-            gl = round(get_len(f"{AudioFile}.rmend"))
-            if(gl > 4): end_point = 17 #5 seconds
-            else: end_point = gl // 2
-        audio = AudioSegment.from_file(f"{AudioFile}.rmend")
-        lengthaudio = len(audio)
-        cut = 300 * end_point
-        start = cut
-        threshold = lengthaudio - cut
-        end = lengthaudio
-        counter = 0
-        move_file(AudioFile, f"{AudioFile}.backup")
-        while start < len(audio):
-            end += threshold
-            chunk = audio[start:end]
-            chunk.export(AudioFile, format="wav")
-            counter +=1
-            start += threshold
-        delete_file(f"{AudioFile}.backup")
-    except Exception as e:
-        print("Error in removing the attention tone: ", e)
-        try: move_file(f"{AudioFile}.backup", AudioFile)
-        except: pass
+    N = len(data_segment)
+    yf = rfft(data_segment)
+    xf = rfftfreq(N, 1 / sr)
+    
+    dominant_freq = xf[numpy.argmax(numpy.abs(yf))]
+    return dominant_freq
+
+def rm_attn_tone(audio_file):
+    freqlist = []
+    ATTENTION_RANGE = (810, 1070)
+    SEGMENT_MS = 300  # Duration of each segment in milliseconds
+    file_length_sec = min(get_len(audio_file), 80)
+    
+    # Scan each segment for dominant frequencies
+    for i in range(int(file_length_sec * 1000 // SEGMENT_MS)):
+        start = i * SEGMENT_MS
+        end = start + SEGMENT_MS
+        try:
+            f = freq(audio_file, start, end)
+            freqlist.append(f)
+        except Exception: freqlist.append(0)  # If error occurs, use placeholder
+    
+    # Identify where attention tone ends
+    end_point = 0
+    for i in range(len(freqlist) - 5):
+        in_range = lambda x: ATTENTION_RANGE[0] < x < ATTENTION_RANGE[1]
+        if all(in_range(freqlist[j]) for j in range(i, i + 3)):
+            for j in range(i + 3, len(freqlist) - 5):
+                if all(not in_range(freqlist[k]) for k in range(j, j + 5)):
+                    end_point = j
+                    break
+            break
+
+    # Fallback in case detection fails
+    if end_point == 0:
+        end_point = 17 if file_length_sec > 4 else int(file_length_sec * 1000 // SEGMENT_MS) // 2
+
+    # Cut audio after attention tone
+    try: delete_file(f"{audio_file}.rmattn")
+    except: pass
+    cut_point_ms = end_point * SEGMENT_MS
+    audio = AudioSegment.from_file(audio_file)
+    final_audio = audio[cut_point_ms:]
+    final_audio.export(f"{audio_file}.rmattn", format="wav")
+    move_file(f"{audio_file}.rmattn", audio_file)
+
+    print(f"Removed ATTN Tone from {audio_file}")
+
+def Remove_EOMandATTN(thing_file):
+    try: rm_end(thing_file)
+    except: pass
+    try: rm_attn_tone(thing_file)
+    except: pass
 
 def CreateXML_from_MonitorSAME(SAME, audioInput, monitorName):
     try:
@@ -1730,6 +1712,8 @@ class Monitor_Stream:
                 print(f"[{self.monitorName}] Stopped Recording Thread")
                 Remove_EOMandATTN(output_file)
                 CreateXML_from_MonitorSAME(ZCZC, output_file, self.monitorName)
+                try: delete_file(output_file)
+                except: pass
                 set_status(self.monitorName, f"Alert sent.")
                 print(f"[{self.monitorName}]  Alert Sent!\n\n")
                 exit()
@@ -1848,6 +1832,8 @@ class Monitor_Local:
                             print(f"[{self.monitorName}] Stopped Recording Thread")
                             Remove_EOMandATTN(OutputFile)
                             CreateXML_from_MonitorSAME(SAME, OutputFile, self.monitorName)
+                            try: delete_file(OutputFile)
+                            except: pass
                             set_status(self.monitorName, f"Alert sent.")
                             print(f"[{self.monitorName}]  Alert Sent!")
                             exit()
