@@ -16,7 +16,7 @@ ChatGPT ... chat.openai.com
 ```
 
 ### Description
-QuantumENDEC is a Canadian CAP Emergency Alerting Software. Its primary goal is to encode Canadian Emergency Alerts into S.A.M.E alerts!
+QuantumENDEC is a Emergency Alerting Software. It has the ability to grab alerts from Canadian CAP, American CAP, and SAME.
 
 ### Install
 Installing the QuantumENDEC is quite easy.
@@ -26,8 +26,8 @@ Installing the QuantumENDEC is quite easy.
 
 You will also require the following software...
 - [FFmpeg](https://www.ffmpeg.org/download.html#build-windows)
-- [Python](https://www.python.org/downloads/release/python-3119/) (3.11.9 or higher recommended)
-- [Microsoft Visual C++ Redistributable](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170#latest-microsoft-visual-c-redistributable-version)
+- [Python](https://www.python.org/downloads/release/python-3119/) (3.13+)
+- [Microsoft Visual C++ Redistributable](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170#latest-microsoft-visual-c-redistributable-version) (If you are going to use map generation)
 ...to be installed
 
 All the required Python modules are in the 'requirements.txt' text file.
@@ -40,8 +40,9 @@ The Multimon-NG binary for windows is included with QuantumENDEC.
 ### Setup
 Before doing anything, you need to have some knowledge of the Canadian public alerting system... more precisely, Pelmorex and its CAP-CP XML files.
 You can read about it on this PDF from Pelmorex: https://alerts.pelmorex.com/wp-content/uploads/2021/06/NAADS-LMD-User-Guide-R10.0.pdf
+You may not need this if you are just using QuantumENDEC with S.A.M.E audio monitors.
 
-Just run ```python QuantumENDEC.py``` to start QuantumENDEC and the web interface server.
+Just run ```py QuantumENDEC.py``` or whatever to run the main QuantumENDEC.py script to start QuantumENDEC and the web interface server.
 The python command may be different depending on your python installation... (it could be py, or python3)
 
 QuantumENDEC will already be running.
@@ -76,13 +77,9 @@ And then you can still use the full code to be very spicific in both CAP-CP Geoc
 
 After you're done configuring, make sure you save your changes by pressing "Save" on the bottom of the page.
 
-The web interface has the ability to load the current configuration when you access the page, except for the discord webhook color (you're going to need to keep setting the discord webhook color every time you make a change.)
+The web interface has the ability to load the current configuration when you access the page.
 
 You can run QuantumENDEC with arguments, run it with "-h" for more info.
-
-NOTE!!
-In the audio folder, the attention tones are static! Try not to remove/change it. (Unless you know what you're doing)
-You can add pre.wav and/or post.wav in the Audio folder. (Or do it in the web interface (Home tab, there is the button to manage lead in/out audio))
 
 Everything should work on its own!
 

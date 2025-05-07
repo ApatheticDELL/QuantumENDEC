@@ -1,15 +1,36 @@
-pyttsx3
-requests
-sounddevice
-scipy
-pydub
-EASGen
-EAS2Text
-msvc-runtime
-matplotlib
-basemap
-discord_webhook
-ffmpeg-python
-soundfile
-numpy
+# The following are requirements for QuantumENDEC v5
+# ! Designed for Python 3.13+
+
+# You can quickly install these modules by running: py -m pip install -r requirements.txt
+# Linux might be a different story and it's all over the place... Let's assume that if you're using Linux then you what you're doing! Good luck!
+
+# --- Mandatory requirements ---
+# The following modules listed are mandatory. QuantumENDEC will not work if not installed.
 flask
+EASGen-Remastered
+EAS2Text-Remastered
+requests
+xmltodict
+ffmpeg-python
+pyttsx3
+numpy
+sounddevice
+soundfile
+pydub
+scipy
+audioop-lts
+
+# --- Optional requirements ---
+# The following modules listed are optional. Some features will simply not work if not installed.
+
+# If you're going to use elevenlabs API for voice generation 
+elevenlabs
+
+# If you're going to log alerts to a discord webhook
+discord_webhook
+
+# If you want to generate alert map polygons
+matplotlib
+cartopy
+msvc-runtime
+

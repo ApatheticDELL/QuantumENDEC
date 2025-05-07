@@ -94,117 +94,115 @@
         <div class="wrapper" id="EAS_BOX">
             <div class="gridHeadline" id="divHeadline"><strong id="alert-headline">EMERGENCY ALERT</strong></div>
             <div class="gridDescription"><strong id="page-counter"></strong> <p id="alert-text"></p></div>
-            <div class="gridImage"><img id="alertImage" src="./tmp/alertImage.png" /></div>
+            <div class="gridImage"><img id="alertImage" src="./tmp/alert_image.png" /></div>
         </div>
 
         <script>
-            // TODO for the main QuantumENDEC code: add alertStatus value for AlertText.json, true if alert, false if no alert.
-            // TODO for the server QE code: add Jstyle.html to the list of accessable URLs without login.
-            
+            //function refreshImage() {
+            //    const img = document.getElementById('alertImage');
+            //    const timestamp = new Date().getTime(); // Create a unique timestamp
+            //    img.src = './tmp/alert_image.png?' + timestamp; // Append timestamp to prevent caching
+            //}
+        
             function refreshImage() {
                 const img = document.getElementById('alertImage');
-                const timestamp = new Date().getTime(); // Create a unique timestamp
-                img.src = './tmp/alertImage.png?' + timestamp; // Append timestamp to prevent caching
+                const timestamp = new Date().getTime(); // Unique timestamp to prevent caching
+                const testSrc = './tmp/alert_image.png?' + timestamp;
+        
+                // Create a temporary Image object to test if the image exists
+                const testImg = new Image();
+                testImg.onload = function() {
+                    img.src = testSrc;
+                    img.style.display = 'block'; // Show the image if it loads
+                };
+                testImg.onerror = function() {
+                    img.style.display = 'none'; // Hide the image if it fails to load
+                };
+                testImg.src = testSrc;
             }
-
-            let textChunks = []; // Array to hold text chunks
+        
+            let textChunks = [];
             let currentChunkIndex = 0;
-            let previousData = {}; // To hold the previous JSON data
-            let updateTextInterval; // Variable to store the updateText interval ID
+            let previousData = {};
+            let updateTextInterval;
         
             async function fetchAlertText() {
-                try {
-                    const response = await fetch('/alertText');
-                    if (response.ok) {
-                        const data = await response.json();
+              try {
+                const response = await fetch('/alertText');
+                if (!response.ok) throw new Error("Fetch failed");
         
-                        // Check if the fetched data is different from the previous one
-                        if (data.alertStat == false) {
-                            const EASBOX = document.getElementById('EAS_BOX');
-                            EASBOX.style.display = "none";
-                        }
-                        else if (JSON.stringify(data) !== JSON.stringify(previousData)) {
-                            const alertTextHeadline = document.getElementById('alert-headline');
-                            const alertDivHeadline = document.getElementById('divHeadline')
-                            const EASBOX = document.getElementById('EAS_BOX');
-                            splitTextIntoChunks(data.text); 
-                            alertTextHeadline.textContent = data.headline;
-                            alertDivHeadline.style.backgroundColor = `#${data.color}`;
+                const data = await response.json();
         
-                            // Update the previous data with the new data
-                            previousData = data;
+                // Only update if data has changed
+                if (JSON.stringify(data) !== JSON.stringify(previousData)) {
+                  previousData = data;
         
-                            // Immediately update text when new data is detected
-                            updateText();
-                            refreshImage();
-                            EASBOX.style.display = "grid";
+                  const wrapper = document.getElementById('EAS_BOX');
+                  const headlineElement = document.getElementById('alert-headline');
+                  const alertTextElement = document.getElementById('alert-text');
+                  const pageCounterElement = document.getElementById('page-counter');
+                  const alertDivHeadline = document.getElementById('divHeadline');
         
-                            // Reset the updateText interval
-                            resetUpdateTextInterval();
-                        }
-                    } else {
-                        console.error('Failed to fetch alert text');
-                    }
-                } catch (error) {
-                    console.error('Error:', error);
+                  if (data.alert_status === false) {
+                    wrapper.style.display = 'none';
+                    //document.body.style.backgroundColor = 'transparent';
+                    return;
+                  }
+        
+                  // Show wrapper and apply new colors
+                  wrapper.style.display = 'grid';
+                  //document.body.style.backgroundColor = `#${data.background_color}`;
+                  alertDivHeadline.style.backgroundColor = `#${data.background_color}`;
+        
+                  const textColor = `#${data.text_color}`;
+                  headlineElement.style.color = textColor;
+                  //alertTextElement.style.color = textColor;
+                  //pageCounterElement.style.color = textColor;
+        
+                  // Set headline
+                  headlineElement.textContent = data.headline || 'Alert';
+        
+                  // Split and update text
+                  splitTextIntoChunks(data.text || '');
+                  updateText();
+                  refreshImage();
+                  resetUpdateTextInterval();
                 }
+              } catch (err) {
+                console.error("Error fetching or processing alert text:", err);
+              }
             }
-            
+        
             function splitTextIntoChunks(text) {
-                const chunkSize = 310;
-                textChunks = [];
-                
-                for (let i = 0; i < text.length; i += chunkSize) {
-                    const chunk = text.slice(i, i + chunkSize);
-                    textChunks.push(chunk);
-                }
-                
-                currentChunkIndex = 0; // Reset chunk index when new data is received
-                updatePageCounter(); // Update the page counter when new data is received
+              const words = text.split(/\s+/);
+              textChunks = [];
+              for (let i = 0; i < words.length; i += 50) {
+                textChunks.push(words.slice(i, i + 50).join(' '));
+              }
+              currentChunkIndex = 0;
+              updatePageCounter();
             }
-            
-            //function splitTextIntoChunks(text) {
-            //    const words = text.split(' ');
-            //    textChunks = [];
-            //    for (let i = 0; i < words.length; i += 74) {
-            //        const chunk = words.slice(i, i + 74).join(' ');
-            //        textChunks.push(chunk);
-            //    }
-            //    currentChunkIndex = 0; // Reset chunk index when new data is received
-            //    updatePageCounter(); // Update the page counter when new data is received
-            //}
-            
         
             function updateText() {
-                if (textChunks.length > 0) {
-                    const alertTextElement = document.getElementById('alert-text');
-                    alertTextElement.textContent = textChunks[currentChunkIndex];
-                    updatePageCounter(); // Update the page counter when text is updated
-                    currentChunkIndex = (currentChunkIndex + 1) % textChunks.length; // Cycle to the next chunk
-                }
+              if (textChunks.length > 0) {
+                document.getElementById('alert-text').textContent = textChunks[currentChunkIndex];
+                updatePageCounter();
+                currentChunkIndex = (currentChunkIndex + 1) % textChunks.length;
+              }
             }
         
             function updatePageCounter() {
-                const pageCounterElement = document.getElementById('page-counter');
-                pageCounterElement.textContent = `(${currentChunkIndex + 1}/${textChunks.length})`;
+              document.getElementById('page-counter').textContent = `(${currentChunkIndex + 1}/${textChunks.length})`;
             }
         
             function resetUpdateTextInterval() {
-                // Clear the existing interval if it exists
-                if (updateTextInterval) {
-                    clearInterval(updateTextInterval);
-                }
-        
-                // Set a new interval for cycling through the text chunks
-                updateTextInterval = setInterval(updateText, 10000);
+              if (updateTextInterval) clearInterval(updateTextInterval);
+              updateTextInterval = setInterval(updateText, 30000);
             }
         
-            // Fetch the alert text every second
+            // Start the fetch loop
             setInterval(fetchAlertText, 1000);
-        
-            // Initial fetch when the page loads
-            fetchAlertText();
-            resetUpdateTextInterval(); // Set the initial interval
-        </script>
+            fetchAlertText(); // Initial fetch
+          </script>
     </body>
 </html>

@@ -3,15 +3,23 @@
 
 /history
 /queue
-/assets/tmp
-/assets/stats
+/assets
+/tmp
+/stats
+
+/plugins
+
 /assets/alertlog.txt
-/assets/AlertText.json
-/assets/audio.wav
-/assets/same.wav
-/assets/eom.wav
+/assets/cgen.json
+/assets/config.json
+
+/assets/pre.wav
+/assets/post.wav
 
 /config.json
 /relay.xml
-/run-qe.bat
+/start.bat
 /map_addons
+/password.json
+
+/__pycache__

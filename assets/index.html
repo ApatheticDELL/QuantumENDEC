@@ -2,103 +2,236 @@
 <html>
     <head>
         <title>QuantumENDEC Web Interface</title>
-        <link type="text/css" rel="stylesheet" href="/style.css"/>
+        <link rel="stylesheet" href="./style.css">
+        <style>
+            table {
+                font-family: arial, sans-serif;
+                font-size: large;
+                border-collapse: collapse;
+                width: 100%;
+                table-layout: fixed;
+            }
+
+            td, th {
+                border: 2px solid black;
+                text-align: left;
+                padding: 8px;
+                color: black;
+            }
+
+            tr { background-color: #32cd32; }
+
+            .grouped_buttons {
+                display: flex;
+                column-gap: 10px;
+                
+            }
+
+        </style>
     </head>
     <body>
-        <h1><img src="/logo.png" alt="QuantumENDEC logo" width="10%" height="10%"> QuantumENDEC Web Interface</h1>
-        <nav>
-            <ul>
-                <li><a class="selected">Home</a></li>
-                <li><a href="/status.html">Status</a></li>
-                <li><a href="/config.html">Configuration</a></li>
-                <li><a href="/sendAlert.html">Send Alert</a></li>
-                <li><a href="/alertLog.html">Alert Log</a></li>
-                <li><a href="/changePass.html">Change Access Password</a></li>
-            </ul>
-        </nav>
-
-        <h2>Home</h2>
-        <p>Watch out! QuantumENDEC version 5 is still in beta! Things could break at any moment! <strong>Please give feedback! Open up an issue on the GitHub page if you find any bugs/issues!</strong></p>
-        <br /><br />
-        <h3>QuantumENDEC Quick Actions</h3>
-        <button class="button"><a href="/scroll.html">View Scroll CGEN</a></button>
-        <button class="button"><a href="/fullscreen.html">View Full Screen CGEN</a></button>
-        <button class="button"><a href="/fullscreenWimage.html">View Full Screen CGEN (for Image/Map support)</a></button>
-        <button class="button"><a href="/Jstyle.html">View overlay CGEN (for Image/Map support)</a></button>
-        <br /><br />
-        <form id="logoutForm" action="/logout" method="post"><button class="button" type="submit">Logout</button></form>
-        <br />
-        <button class="button" type="button" onclick="RestartQE()">Restart QuantumENDEC</button>
-        <br /><br />
-        <button class="button"><a href="/shutconfirm.html">Shutdown QuantumENDEC</a></button>
-        <br /><br />
-        <button class="button"><a href="/managePrePost.html">Manage alert lead in/out</a></button>
-
-        <h2>Active Alerts</h2>
-        <div class="activeAlerts-container"><ul class="activeAlerts-list" id="alertsList"></ul></div>
-        <br /><br />
+        <header>
+            <div class="header_logo">
+                <img src="./logo.png" />
+                <h1>QuantumENDEC Web Interface</h1>
+            </div>
+            <div class="topnav">
+                <a class="active" href="./index.html">Dashboard</a>
+                <a href="./configuration.html">Configuration</a>
+                <a href="./send.html">Send Alert</a>
+                <a href="./alertLog.html">Alert Log</a>
+                <a href="./change_password.html">Change Access Password</a>
+            </div>
+        </header>
         
-        <p id="version">QuantumENDEC ?</p><p>Copyright ApatheticDELL 2024</p><script>function fetchText() {fetch('/version') .then(response => response.text()) .then(data => {document.getElementById('version').innerText = data;}) .catch(error => {console.error('Error fetching text:', error);});} document.addEventListener('DOMContentLoaded', fetchText);</script>
-    
-        <script>
-            /*
-            async function fetchAlerts() {
-                try {
-                    const response = await fetch('/activeAlerts');
-                    const data = await response.json();
-                    const alertsList = document.getElementById('alertsList');
-                    
-                    data.forEach(alert => {
-                        const listItem = document.createElement('li');
-                        listItem.textContent = alert;
-                        listItem.className = 'activeAlert-item';
-                        alertsList.appendChild(listItem);
-                    });
-                } catch (error) {
-                    console.error('Error fetching alerts:', error);
-                }
-            } */
+        <main>
+            <h2>Dashboard</h2>
+            <h3>Quick Actions</h3>
+            <div class="grouped_buttons">
+                <form id="logoutForm" action="/logout" method="post"><button class="button" type="submit">Logout</button></form>
+                <button class="button" type="button" onclick="RestartQE()">Restart QuantumENDEC</button>
+                <a href="/shutdown" class="button">Shutdown QuantumENDEC</a>
+            </div>
+            
+            <h3>Access CGEN(s)</h3>
+            <a href="./scroll.html" class="button">Scroll CGEN</a>
+            <a href="./scroll_fancy.html" class="button">Fancy Scroll CGEN</a>
+            <a href="./fullscreen.html" class="button">Fullscreen CGEN</a>
+            <a href="./fullscreen_image.html" class="button">Fullscreen CGEN (image support)</a>
+            <a href="./Jstyle.html" class="button">J-Style CGEN (image support)</a>
 
-            function RestartQE() {
-                fetch('/restart', {
-                    method: 'GET',
-                    headers: { 'Content-Type': 'application/json' },
-                })
-                .then(response => response.text())
-                .then(result => {
-                    alert(result); // Success message
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Failed to restart QuantumENDEC.');
+            <h2>Status</h2>
+            <table>
+                <tr>
+                    <th style="width: 25%;">Service</th>
+                    <th>Status</th>
+                </tr>
+                
+                <tr>
+                    <td>QuantumENDEC</td>
+                    <td id="QuantumENDEC_status">...</td>
+                </tr>
+
+                <tr>
+                    <td>Relay</td>
+                    <td id="relay_status">...</td>
+                </tr>
+
+                <tr>
+                    <td>TCP CAP Capture 1</td>
+                    <td id="TCP1_status">...</td>
+                </tr>
+
+                <tr>
+                    <td>TCP CAP Capture 2</td>
+                    <td id="TCP2_status">...</td>
+                </tr>
+
+                <tr>
+                    <td>HTTP CAP Capture 1</td>
+                    <td id="HTTPCAPcapture1_status">...</td>
+                </tr>
+
+                <tr>
+                    <td>HTTP CAP Capture 2</td>
+                    <td id="HTTPCAPcapture2_status">...</td>
+                </tr>
+                
+                <tr>
+                    <td>HTTP CAP Capture 3</td>
+                    <td id="HTTPCAPcapture3_status">...</td>
+                </tr>
+
+                <tr>
+                    <td>HTTP CAP Capture 4</td>
+                    <td id="HTTPCAPcapture4_status">...</td>
+                </tr>
+
+                <tr>
+                    <td>HTTP CAP Capture 5</td>
+                    <td id="HTTPCAPcapture5_status">...</td>
+                </tr>
+
+                <tr>
+                    <td>HTTP NWS CAP Capture</td>
+                    <td id="NWSCAPcapture_status">...</td>
+                </tr>
+
+                <tr>
+                    <td>SAME Local Audio Monitor</td>
+                    <td id="SAME_AudioDevice_Monitor_status">...</td>
+                </tr>
+                
+                <tr>
+                    <td>SAME Stream Audio Monitor 1</td>
+                    <td id="SAME_AudioStream_Monitor1_status">...</td>
+                </tr>
+
+                <tr>
+                    <td>SAME Stream Audio Monitor 2</td>
+                    <td id="SAME_AudioStream_Monitor2_status">...</td>
+                </tr>
+
+                <tr>
+                    <td>SAME Stream Audio Monitor 3</td>
+                    <td id="SAME_AudioStream_Monitor3_status">...</td>
+                </tr>
+
+                <tr>
+                    <td>SAME Stream Audio Monitor 4</td>
+                    <td id="SAME_AudioStream_Monitor4_status">...</td>
+                </tr>
+            </table>
+        
+            <h2>Active Alerts</h2>
+            <div class="activeAlerts-container"><ul class="activeAlerts-list" id="alertsList"></ul></div>
+            <br /><br />
+        </main>
+        
+        <footer>
+            <p id="version">QuantumENDEC ?</p><p>&copy; 2025 ApatheticDELL</p><script>function fetchText() {fetch('/version') .then(response => response.text()) .then(data => {document.getElementById('version').innerText = `QuantumENDEC ${data}`;}) .catch(error => {console.error('Error fetching text:', error);});} document.addEventListener('DOMContentLoaded', fetchText);</script>
+        </footer>
+
+    <script>
+        function RestartQE() {
+            fetch('/restart', {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
+            })
+            .then(response => response.text())
+            .then(result => {
+                alert(result); // Success message
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to restart QuantumENDEC.');
+            });
+        }
+
+        async function fetchAlerts() {
+            try {
+                const response = await fetch('/activeAlerts');
+                const data = await response.json();
+                const alertsList = document.getElementById('alertsList');
+                data.forEach(alert => {
+                    const listItem = document.createElement('li');
+                    
+                    // Replace newlines with <br /> tags
+                    const formattedAlert = alert.replace(/\n/g, '<br />');
+
+                    // Set the HTML content of the list item
+                    listItem.innerHTML = formattedAlert;
+                    
+                    listItem.className = 'activeAlert-item';
+                    alertsList.appendChild(listItem);
                 });
+            } catch (error) {
+                console.error('Error fetching alerts:', error);
             }
-            
-            
-            async function fetchAlerts() {
-                try {
-                    const response = await fetch('/activeAlerts');
-                    const data = await response.json();
-                    const alertsList = document.getElementById('alertsList');
-                    data.forEach(alert => {
-                        const listItem = document.createElement('li');
-                        
-                        // Replace newlines with <br /> tags
-                        const formattedAlert = alert.replace(/\n/g, '<br />');
+        }
+        fetchAlerts();
 
-                        // Set the HTML content of the list item
-                        listItem.innerHTML = formattedAlert;
-                        
-                        listItem.className = 'activeAlert-item';
-                        alertsList.appendChild(listItem);
-                    });
-                } catch (error) {
-                    console.error('Error fetching alerts:', error);
+        // List of all known status element IDs in the table
+        const statusIds = [
+            "QuantumENDEC_status",
+            "relay_status",
+            "TCP1_status",
+            "TCP2_status",
+            "HTTPCAPcapture1_status",
+            "HTTPCAPcapture2_status",
+            "HTTPCAPcapture3_status",
+            "HTTPCAPcapture4_status",
+            "HTTPCAPcapture5_status",
+            "NWSCAPcapture_status",
+            "SAME_AudioDevice_Monitor_status",
+            "SAME_AudioStream_Monitor1_status",
+            "SAME_AudioStream_Monitor2_status",
+            "SAME_AudioStream_Monitor3_status",
+            "SAME_AudioStream_Monitor4_status"
+        ];
+
+        async function updateStatuses() {
+            try {
+                const response = await fetch('/statuses');
+                if (!response.ok) {
+                    throw new Error(`HTTP error: ${response.status}`);
                 }
+
+                const data = await response.json();
+
+                for (const id of statusIds) {
+                    const element = document.getElementById(id);
+                    if (element) {
+                        element.textContent = id in data ? data[id] : '...';
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching statuses:', error);
             }
-            
-                    
-            fetchAlerts();
-        </script>
+        }
+
+        updateStatuses();
+        setInterval(updateStatuses, 1000);
+    </script>
     </body>
 </html>

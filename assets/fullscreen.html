@@ -1,125 +1,127 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QE CGEN - Fullscreen</title>
-    <style>
-        body, html {
-            height: 100%;
-            margin: 2%;
-            overflow: hidden;
-            background-color: #000000;
-            display: flex;
-            flex-direction: column;
-            align-items: center; /* Horizontally center the content */
-            justify-content: flex-start; /* Align the content to the top */
-            text-align: center; /* Center the text itself */
-        }
-        
-        h1{
-            margin: 1%;
-            /* padding: 20px; */
-            color: white;
-            font-size: 3.5vw;
-            font-family: sans-serif;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>QE CGEN - Fullscreen</title>
+  <style>
+    body, html {
+      height: 100%;
+      margin: 2%;
+      overflow: hidden;
+      background-color: #00000000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      text-align: center;
+    }
 
-        p{
-            margin: 1%;
-            /*padding: 20px;*/
-            color: white;
-            font-size: 2.5vw;
-            font-family: sans-serif;
-        }
-    </style>
+    h1, p {
+      margin: 1%;
+      font-family: sans-serif;
+    }
+
+    h1 {
+      font-size: 3.5vw;
+    }
+
+    p {
+      font-size: 2.5vw;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+  </style>
 </head>
 <body>
-    <h1 id="alert-headline">Emergency Alert Details</h1>
-    <p id="page-counter">1 / 1</p>
-    <p id="alert-text"></p>
+  <h1 id="alert-headline">Emergency Alert Details</h1>
+  <p id="page-counter">1 / 1</p>
+  <p id="alert-text"></p>
 
-    <script>
-        let textChunks = []; // Array to hold text chunks
-        let currentChunkIndex = 0;
-        let previousData = {}; // To hold the previous JSON data
-        let updateTextInterval; // Variable to store the updateText interval ID
-    
-        async function fetchAlertText() {
-            try {
-                const response = await fetch('/alertText');
-                if (response.ok) {
-                    const data = await response.json();
-    
-                    // Check if the fetched data is different from the previous one
-                    if (JSON.stringify(data) !== JSON.stringify(previousData)) {
-                        const alertTextHeadline = document.getElementById('alert-headline');
-                        splitTextIntoChunks(data.text); // Split the text into chunks of 120 words
-                        alertTextHeadline.textContent = data.headline;
-                        document.documentElement.style.backgroundColor = `#${data.color}`; // Update entire page background color
-                        document.body.style.backgroundColor = `#${data.color}`;
-    
-                        // Update the previous data with the new data
-                        previousData = data;
-    
-                        // Immediately update text when new data is detected
-                        updateText();
-    
-                        // Reset the updateText interval
-                        resetUpdateTextInterval();
-                    }
-                } else {
-                    console.error('Failed to fetch alert text');
-                }
-            } catch (error) {
-                console.error('Error:', error);
+  <script>
+    let textChunks = [];
+    let currentChunkIndex = 0;
+    let previousData = {};
+    let updateTextInterval;
+
+    async function fetchAlertText() {
+      try {
+        const response = await fetch('/alertText');
+        if (response.ok) {
+          const data = await response.json();
+
+          // Check if the new data is different
+          if (JSON.stringify(data) !== JSON.stringify(previousData)) {
+            previousData = data;
+
+            // Handle visibility
+            const showAlert = data.alert_status === true;
+            document.body.classList.toggle('hidden', !showAlert);
+            if (!showAlert) {
+                document.documentElement.style.backgroundColor = '#00000000'; // Reset to transparent
+                return;
             }
-        }
-    
-        function splitTextIntoChunks(text) {
-            const words = text.split(' ');
-            textChunks = [];
-            for (let i = 0; i < words.length; i += 120) {
-                const chunk = words.slice(i, i + 120).join(' ');
-                textChunks.push(chunk);
-            }
-            currentChunkIndex = 0; // Reset chunk index when new data is received
-            updatePageCounter(); // Update the page counter when new data is received
-        }
-    
-        function updateText() {
-            if (textChunks.length > 0) {
-                const alertTextElement = document.getElementById('alert-text');
-                alertTextElement.textContent = textChunks[currentChunkIndex];
-                updatePageCounter(); // Update the page counter when text is updated
-                currentChunkIndex = (currentChunkIndex + 1) % textChunks.length; // Cycle to the next chunk
-            }
-        }
-    
-        function updatePageCounter() {
+
+            // Update headline and colors
+            const headlineElement = document.getElementById('alert-headline');
+            const alertTextElement = document.getElementById('alert-text');
             const pageCounterElement = document.getElementById('page-counter');
-            pageCounterElement.textContent = `${currentChunkIndex + 1} / ${textChunks.length}`;
+
+            headlineElement.textContent = data.headline;
+            document.documentElement.style.backgroundColor = `#${data.background_color}`;
+            //document.body.style.backgroundColor = `#${data.background_color}`;
+
+            const textColor = `#${data.text_color}`;
+            headlineElement.style.color = textColor;
+            alertTextElement.style.color = textColor;
+            pageCounterElement.style.color = textColor;
+
+            // Split new text into chunks
+            splitTextIntoChunks(data.text);
+            updateText(); // Show the first chunk
+            resetUpdateTextInterval(); // Restart the interval
+          }
+        } else {
+          console.error('Failed to fetch alert text');
         }
-    
-        function resetUpdateTextInterval() {
-            // Clear the existing interval if it exists
-            if (updateTextInterval) {
-                clearInterval(updateTextInterval);
-            }
-    
-            // Set a new interval for cycling through the text chunks
-            updateTextInterval = setInterval(updateText, 30000);
-        }
-    
-        // Fetch the alert text every second
-        setInterval(fetchAlertText, 1000);
-    
-        // Initial fetch when the page loads
-        fetchAlertText();
-        resetUpdateTextInterval(); // Set the initial interval
-    </script>
-    
-    
-    
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    }
+
+    function splitTextIntoChunks(text) {
+      const words = text.split(' ');
+      textChunks = [];
+      for (let i = 0; i < words.length; i += 120) {
+        textChunks.push(words.slice(i, i + 120).join(' '));
+      }
+      currentChunkIndex = 0;
+      updatePageCounter();
+    }
+
+    function updateText() {
+      if (textChunks.length > 0) {
+        document.getElementById('alert-text').textContent = textChunks[currentChunkIndex];
+        updatePageCounter();
+        currentChunkIndex = (currentChunkIndex + 1) % textChunks.length;
+      }
+    }
+
+    function updatePageCounter() {
+      const pageCounter = document.getElementById('page-counter');
+      pageCounter.textContent = `${currentChunkIndex + 1} / ${textChunks.length}`;
+    }
+
+    function resetUpdateTextInterval() {
+      if (updateTextInterval) clearInterval(updateTextInterval);
+      updateTextInterval = setInterval(updateText, 30000);
+    }
+
+    setInterval(fetchAlertText, 1000);
+    fetchAlertText();
+    resetUpdateTextInterval();
+  </script>
 </body>
 </html>
