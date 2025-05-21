@@ -484,7 +484,7 @@ valid_configs = {
 default_config = {
     "quantumendec_version":f"{QuantumENDEC_Version}",
     "webserver_host":"0.0.0.0",
-    "webserver_port":"80",
+    "webserver_port":"5000",
     "relay_en":True,
     "relay_fr":False,
     "force_120":True,

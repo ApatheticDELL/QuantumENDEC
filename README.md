@@ -46,7 +46,7 @@ Just run ```py QuantumENDEC.py``` or whatever to run the main QuantumENDEC.py sc
 The python command may be different depending on your python installation... (it could be py, or python3)
 
 QuantumENDEC will already be running.
-The web interface server by default will be running on port 8050, to access, simply open a web browser and go to http://localhost:8050 or http://{ip_of_device}:8050
+The web interface server by default will be running on port 5000, to access, simply open a web browser and go to http://localhost:5000 or http://{ip_of_device}:5000
 You can change this in the configuration section of the web interface server, or in the config.json file.
 
 The default password to access the web interface server is ```hackme```
