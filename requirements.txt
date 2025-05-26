@@ -1,8 +1,6 @@
 # The following are requirements for QuantumENDEC v5
-# ! Designed for Python 3.13+
-
 # You can quickly install these modules by running: py -m pip install -r requirements.txt
-# Linux might be a different story and it's all over the place... Let's assume that if you're using Linux then you what you're doing! Good luck!
+# Linux might be a different story and it's all over the place... Let's assume that if you're using Linux, you already know what you're doing. Good luck!
 
 # --- Mandatory requirements ---
 # The following modules listed are mandatory. QuantumENDEC will not work if not installed.
@@ -18,6 +16,11 @@ sounddevice
 soundfile
 pydub
 scipy
+
+# pytz is needed for EAS2Text
+pytz
+
+# This is needed if you are using Python 3.13+
 audioop-lts
 
 # --- Optional requirements ---
@@ -32,5 +35,7 @@ discord_webhook
 # If you want to generate alert map polygons
 matplotlib
 cartopy
+
+# This one's only for Windows users, required for matplotlib
 msvc-runtime
 

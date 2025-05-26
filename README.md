@@ -1,7 +1,7 @@
 ApatheticDELL presents...
 # QuantumENDEC v5
 
-### Credits
+## Credits
 Developed by...
 ```
 Dell ... ApatheticDELL
@@ -15,29 +15,42 @@ AC ... AC5230
 ChatGPT ... chat.openai.com
 ```
 
-### Description
+## Description
 QuantumENDEC is a Emergency Alerting Software. It has the ability to grab alerts from Canadian CAP, American CAP, and SAME.
 
-### Install
+## Install
 Installing the QuantumENDEC is quite easy.
 
 > [!CAUTION]
 > QuantumENDEC must be run on a system with one or more audio output devices. It will most likely not function in an online environment, thus, issues with QuantumENDEC inside of online environments such as github.dev may be ignored and closed.
 
+### Required software
 You will also require the following software...
-- [FFmpeg](https://www.ffmpeg.org/download.html#build-windows)
-- [Python](https://www.python.org/downloads/release/python-3119/) (3.13+)
-- [Microsoft Visual C++ Redistributable](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170#latest-microsoft-visual-c-redistributable-version) (If you are going to use map generation)
+- [Python](https://www.python.org/) (At least 3.13+)
+- [FFmpeg](https://ffmpeg.org/)
+
+### Optional software
+- [multimon-ng](https://github.com/EliasOenal/multimon-ng) If you are using any of the SAME monitor functions with QuantumENDEC on linux: You need to install multimon-ng. (The Multimon-NG binary for windows is included with QuantumENDEC.)
+- [Microsoft Visual C++ Redistributable](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170#latest-microsoft-visual-c-redistributable-version) (If you are going to use map generation on Windows)
 ...to be installed
 
+### Software for TTS generation
+Not all of them needs to be installed. You can choose what TTS service you want to use in the QuantumENDEC web interface.
+- [eSpeak NG](https://github.com/espeak-ng/espeak-ng) (Windows and Linux.)
+- [Piper](https://github.com/rhasspy/piper) (Windows and Linux.)
+- [flite](https://github.com/festvox/flite) (Linux. You MAY be able to use it on Windows if you can find a Windows binary and add it to the PATH)
+
+#### Some things to account for
+- Note, that eSpeak NG is selected by default.
+- To use Piper with QuantumENDEC in Windows and Linux, you must place the Piper folder with it's binary within the root of the QuantumENDEC folder.
+- Piper voices and their JSON must be placed in a folder called piper_voices in the root of the QuantumENDEC folder.
+- Maki is Windows only, and it's binary is already included. Maki allows the use of 32bit and 64bit TTS voices on Windows.
+- ElevenLabs voices uses a python module, you may already have it if you installed all the python modules from (requirements.txt)
+
+### Required python modules
 All the required Python modules are in the 'requirements.txt' text file.
-If you are using Python 3.13+, you may need to use the 'requirements313.txt' text file.
-If running on Windows: You may also need pythoncom
 
-If you are using any of the SAME monitor functions with QuantumENDEC on linux: You need to install multimon-ng.
-The Multimon-NG binary for windows is included with QuantumENDEC.
-
-### Setup
+## Setup
 Before doing anything, you need to have some knowledge of the Canadian public alerting system... more precisely, Pelmorex and its CAP-CP XML files.
 You can read about it on this PDF from Pelmorex: https://alerts.pelmorex.com/wp-content/uploads/2021/06/NAADS-LMD-User-Guide-R10.0.pdf
 You may not need this if you are just using QuantumENDEC with S.A.M.E audio monitors.
@@ -46,7 +59,7 @@ Just run ```py QuantumENDEC.py``` or whatever to run the main QuantumENDEC.py sc
 The python command may be different depending on your python installation... (it could be py, or python3)
 
 QuantumENDEC will already be running.
-The web interface server by default will be running on port 5000, to access, simply open a web browser and go to http://localhost:5000 or http://{ip_of_device}:5000
+The web interface server by default will be running on port 8050, to access, simply open a web browser and go to http://localhost:5000 or http://{ip_of_device}:5000
 You can change this in the configuration section of the web interface server, or in the config.json file.
 
 The default password to access the web interface server is ```hackme```
@@ -65,11 +78,11 @@ Also, some settings will require a restart of QuantumENDEC to take effect.
 
 Filter by province example...
 SAME CLC: 04 for Ontario. (Don't put 040000 unless you want to exclude its sub-regions) 
-CAP-CP Geocode: 35 for Ontario.
+CAP-CP Geocode: 35* for Ontario.
 
 Filter by region example...
 SAME CLC: 0466 for Halton - Peel, Ontario. (Don't put 046600 unless you want to exclude its sub-regions)
-CAP-CP Geocode: 3521 for Peel Region, Ontario
+CAP-CP Geocode: 3521 for just Peel Region, Ontario or 3521* for Peel region and anything else in there.
 
 And then you can still use the full code to be very spicific in both CAP-CP Geocodes and SAME CLC. You'll still need to know the codes... here are some resources for finding location codes.
 (For SAME CLC (Canada's FIPS)): https://en.wikipedia.org/wiki/Forecast_region
@@ -84,6 +97,8 @@ You can run QuantumENDEC with arguments, run it with "-h" for more info.
 Everything should work on its own!
 
 If you see anything about matches or match files, it just means that the software already processed the thing/file in question.
+
+## Additional Information
 
 Emergency information does come from official resources (by default, unless changed), though one shouldn't fully rely on QuantumENDEC itself for emergency information as errors could still occur
 

@@ -3,6 +3,7 @@
 
 /history
 /queue
+/assets
 /tmp
 /stats
 
@@ -22,3 +23,6 @@
 /password.json
 
 /__pycache__
+
+/piper
+/piper_voices

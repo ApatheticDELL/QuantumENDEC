@@ -82,9 +82,9 @@ footer {
     padding: 0;
 }
 .activeAlert-item {
-    margin: 5px 0;
+    margin: 15px 0;
     padding: 10px;
-    background-color: #2f4158;
+    background-color: #242d3b;
     border-radius: 5px;
 }
 

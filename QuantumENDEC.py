@@ -27,7 +27,6 @@ import hashlib
 import secrets
 import logging
 import signal
-import pyttsx3
 import importlib.util
 
 import numpy
@@ -82,9 +81,14 @@ except Exception as e:
 QuantumENDEC_Version = "v5source"
 assets_folder = "./assets"
 history_folder = "./history"
-queue_folder = "./queue"
-tmp_folder = f"{assets_folder}/tmp"
-
+tmp_folder = f"./{assets_folder}/tmp"
+config_file = f"./{assets_folder}/config.json"
+ALERT_QUEUE = []
+ALERT_NOW = []
+ALERT_QUEUE_STATUS = "No alerts"
+ACTIVE_ALERTS = []
+CAP_QUEUE = []
+RELAYED_SAMES = []
 PlayoutAlerts = True
 global_qe_status = 0
 
@@ -94,8 +98,6 @@ def get_platform():
     if sys.platform == "win32": platform = "win"
     else: platform = "other"
     return platform
-
-if get_platform() == "win": import pythoncom
 
 def get_cap_value(data={}, key="valueName", value=""):
     """ will return None if not found """
@@ -167,7 +169,7 @@ def run_plugins(mode=None, ZCZC="", broadcast_text="", alert_xml="", info_dict={
                     print(f"Plugin '{plugin_name}' failed to run. Error: {e}")
 
 def log_alert(content):
-    output = "./assets/alertlog.txt"
+    output = f"{assets_folder}/alertlog.txt"
     content = content + "\n\n"
     try: append_file(content, output)
     except: write_file(content, output)
@@ -194,6 +196,12 @@ def qe_status(mode="read", new_data=0):
 def set_status(name, description=""):
     write_file(description, f"./stats/{name}_status.txt")
 
+def special_sleep(duration):
+    while duration != 0:
+        if qe_status() != 0: break
+        time.sleep(1)
+        duration -= 1
+
 def update_cgen(headline="EAS DETAILS", text="", background_color="000000", text_color="ffffff", alert_status=True):
     cgen_j = {
         "headline":headline,
@@ -202,7 +210,7 @@ def update_cgen(headline="EAS DETAILS", text="", background_color="000000", text
         "text_color":text_color,
         "alert_status":alert_status
     }
-    write_json("./assets/cgen.json", cgen_j)
+    write_json(f"{assets_folder}/cgen.json", cgen_j)
     print("Updated CGEN. Showing:", alert_status)
 
 def get_audio_outputs():
@@ -215,24 +223,24 @@ def get_audio_outputs():
         return_devices.append(f"{dev_id}, {dev_name}")
     return return_devices
 
-def list_tts_voices():
+def list_espeakng_voices():
+    result = subprocess.run(['espeak-ng', '--voices'], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True, encoding='utf-8')
+    lines = result.stdout.splitlines()
+    voices = []
+    for line in lines[1:]:  # skip the header line
+        parts = line.split()
+        if len(parts) >= 4: voices.append(parts[4])
+    voices.sort()
+    return voices
+
+def list_piper_voices():
+    voices = []
     try:
-        try: pythoncom.CoInitialize()
-        except: pass
-        engine = pyttsx3.init()
-        voices = engine.getProperty('voices')
-        listed_voices = []
-        for voice in voices:
-            voice_id = voice.id
-            voice_id = voice_id.replace("\\", "/")
-            listed_voices.append(voice.name)
-        engine.stop()
-        return listed_voices
-    except Exception as e:
-        print("[Webserver]: Exception getting the list of TTS voices (pyttsx3): ", e)
-        try: engine.stop()
-        except: pass
-        return []
+        x = list_folder("./piper_voices")
+        for i in x:
+            if not (".json" in i): voices.append(f"./piper_voices/{i}")
+    except: pass
+    return voices
 
 cap2same_org = { "Met": "WXR", "Admin": "EAS", "Other": "CIV", }
 
@@ -395,6 +403,8 @@ valid_configs = {
     "relay_fr":"bool",
     "force_120":"bool",
     "produce_alertimage":"bool",
+    "generate_mapImage":"bool",
+    "relay_mode":"text",
     "attn_tone":"text",
     "attn_basedoncountry":"bool",
     "enable_leadin":"bool",
@@ -416,22 +426,18 @@ valid_configs = {
     "use_specifiedaudiooutput":"bool",
     "specifiedaudiooutput":"list",
     "use_audiodevice_id":"bool",
-    #"use_defaultTTS":"bool",
-    #"TTS_en":"text",
-    #"TTS_fr":"text",
-
     "tts_service": "text",
-    "pyttsx3_defaultTTS": "bool",
-    "pyttsx3_en": "text",
-    "pyttsx3_fr": "text",
+    "espeakNG_en": "text",
+    "espeakNG_fr": "text",
     "maki_en": "text",
     "maki_fr": "text",
+    "piper_en":"text",
+    "piper_fr":"text",
     "ElevenLabs_apiKey": "text",
     "ElevenLabs_voiceID_en": "text",
     "ElevenLabs_modelID_en": "text",
     "ElevenLabs_voiceID_fr": "text",
     "ElevenLabs_modelID_fr": "text",
-
     "discordwebhook_enable": "bool",
     "discordwebhook_author_name": "text",
     "discordwebhook_author_URL": "text",
@@ -489,6 +495,8 @@ default_config = {
     "relay_fr":False,
     "force_120":True,
     "produce_alertimage":False,
+    "generate_mapImage":False,
+    "relay_mode":"automatic",
     "attn_tone":"AttnRumble.wav",
     "attn_basedoncountry":False,
     "enable_leadin":True,
@@ -513,12 +521,13 @@ default_config = {
     #"use_defaultTTS":True,
     #"TTS_en":"",
     #"TTS_fr":"",
-    "tts_service": "pyttsx3",
-    "pyttsx3_defaultTTS": True,
-    "pyttsx3_en": "",
-    "pyttsx3_fr": "",
+    "tts_service": "espeak-ng",
+    "espeakNG_en": "",
+    "espeakNG_fr": "",
     "maki_en": "",
     "maki_fr": "",
+    "piper_en":"",
+    "piper_fr":"",
     "ElevenLabs_apiKey": "",
     "ElevenLabs_voiceID_en": "",
     "ElevenLabs_modelID_en": "",
@@ -660,49 +669,22 @@ def get_alert_colors(ConfigData, ZCZC=None):
     
     return { "background_color":background_color, "text_color":text_color }
 
-def watch_notify(queue_folder="./queue", history_folder="./history"):
-    print(f"Waiting for an alert...")
-    while True:
-        if qe_status() != 0:
-            return None
-
-        queue_list = list_folder(queue_folder)
-        for file in queue_list:
-            with open(f"{queue_folder}/{file}", "r", encoding='UTF-8') as f: RelayXML = f.read()
-            AlertListXML = re.findall(r'<alert\s*(.*?)\s*</alert>', RelayXML, re.MULTILINE | re.IGNORECASE | re.DOTALL)
-            if len(AlertListXML) > 1:
-                print("WHY THE F*** IS THERE 2 ALERT ELEMENTS IN A SINGLE XML FILE?!!?")
-                delete_file(f"{queue_folder}/{file}")
-                AlertCount = 0
-                for AlertXML in AlertListXML:
-                    AlertCount = AlertCount + 1
-                    Sent = re.search(r'<sent>\s*(.*?)\s*</sent>', AlertXML, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1).replace("-", "_").replace("+", "p").replace(":", "_").replace("\n", "")
-                    Ident = re.search(r'<identifier>\s*(.*?)\s*</identifier>', AlertXML, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1).replace("-", "_").replace("+", "p").replace(":", "_").replace("\n", "")
-                    NAADsFilename = f"{Sent}I{Ident}.xml"
-                    AlertXML = f"<alert {AlertXML}</alert>"
-                    with open(f"{queue_folder}/{NAADsFilename}", 'w', encoding='utf-8') as f: f.write(AlertXML)
-            
-            elif file in list_folder(history_folder):
-                print("No relay: watch folder files matched.")
-                delete_file(f"{queue_folder}/{file}")
-            
-            else:
-                return f"{file}"
-
-        time.sleep(1)
+def is_expired(expires_iso):
+    """ Input ISO time from any timezone. Returns True or False depending on if expired """
+    Expired = False
+    try:
+        current_time = datetime.now(timezone.utc)
+        expires = datetime.fromisoformat(datetime.fromisoformat(expires_iso).astimezone(timezone.utc).isoformat())
+        if current_time > expires: Expired = True
+    except: Expired = True
+    return Expired
 
 def filter_check_CAP(config_data={}, info_dict={}):
     # Returns True if passed
     Urgency = info_dict.get("urgency")
     Severity = info_dict.get("severity")
     Expires = info_dict.get("expires", None)
-
-    try:
-        current_time = datetime.now(timezone.utc)
-        Expires = datetime.fromisoformat(datetime.fromisoformat(Expires).astimezone(timezone.utc).isoformat())
-        if current_time > Expires: Expired = True
-        else: Expired = False
-    except: Expired = False
+    Expired = is_expired(Expires)
     
     parameter = info_dict.get("parameter")
     if parameter is not None:
@@ -718,17 +700,21 @@ def filter_check_CAP(config_data={}, info_dict={}):
     else:
         GeocodeList = []
         areas = info_dict.get("area")
+        if isinstance(areas, dict): areas = [areas]
         for area in areas:
             geocodes = area.get("geocode")
-            x = get_cap_value(geocodes, "valueName", "profile:CAP-CP:Location:0.3")
-            if x is not None:
-                GeocodeList.append(str(x.get("value")))
+            if isinstance(geocodes, dict): geocodes = [geocodes]
+            for geocode in geocodes:
+                x = get_cap_value(geocode, "valueName", "profile:CAP-CP:Location:0.3")
+                if x is not None:
+                    GeocodeList.append(str(x.get("value")))
+
         GecodeResult = False
         if not (len(GeocodeList) == 0):
             for i in GeocodeList:
-                if i[:2] in config_data['CAPCP_geocodefilter']: GecodeResult = True
-                if i[:3] in config_data['CAPCP_geocodefilter']: GecodeResult = True
-                if i[:4] in config_data['CAPCP_geocodefilter']: GecodeResult = True
+                if f"{i[:2]}*" in config_data['CAPCP_geocodefilter']: GecodeResult = True
+                if f"{i[:3]}*" in config_data['CAPCP_geocodefilter']: GecodeResult = True
+                if f"{i[:4]}*" in config_data['CAPCP_geocodefilter']: GecodeResult = True
                 if i in config_data['CAPCP_geocodefilter']: GecodeResult = True
         else: GecodeResult = True
 
@@ -760,8 +746,7 @@ def filter_check_SAME(ConfigData, ZCZC=""):
     ORGINATOR = SAME_OOF.org
     LOCATIONS = SAME_OOF.FIPS
     
-    if "EAN" in EVENT or "NIC" in EVENT or "NPT" in EVENT or "RMT" in EVENT or "RWT" in EVENT:
-        EventAllowed = True
+    if "EAN" in EVENT or "NIC" in EVENT or "NPT" in EVENT or "RMT" in EVENT or "RWT" in EVENT: EventAllowed = True
     else:
         if len(ConfigData['SAME_filterEVE']) == 0: EventAllowed = True
         else:
@@ -818,7 +803,7 @@ def check_folder(dir, Clear=False):
 
 def grab_geotoclc():
     # this fixes that ugly code that i said aaron would cringe at
-    geo_to_clc_file = f"./{assets_folder}/GeoToCLC.csv"
+    geo_to_clc_file = f"{assets_folder}/GeoToCLC.csv"
     csv_contents = read_file(geo_to_clc_file)
     csv_dict = {}
     for line in csv_contents.strip().splitlines():
@@ -829,7 +814,7 @@ def grab_geotoclc():
             csv_dict[key] = value
     return csv_dict
 
-def process_heartbeat(References, QueueFolder, HistoryFolder):
+def process_heartbeat(References, HistoryFolder):
     print("[NAADS HEARTBEAT PROCESSOR]: Downloading (Pelmorex NAADs) alerts from received heartbeat...")
     RefList = References.split(" ")
     for i in RefList:
@@ -842,7 +827,6 @@ def process_heartbeat(References, QueueFolder, HistoryFolder):
         identifier = identifier.replace("-","_").replace("+", "p").replace(":","_")
         Dom1 = 'capcp1.naad-adna.pelmorex.com'
         Dom2 = 'capcp2.naad-adna.pelmorex.com'
-        Output = f"{QueueFolder}/{sent}I{identifier}.xml"
         if f"{sent}I{identifier}.xml" in os.listdir(f"{HistoryFolder}"):
             print("[NAADS HEARTBEAT PROCESSOR]: Heartbeat, no download: Files matched.")
         else:
@@ -851,10 +835,11 @@ def process_heartbeat(References, QueueFolder, HistoryFolder):
             req2 = Request(url = f'http://{Dom2}/{sentDT}/{sent}I{identifier}.xml', headers={'User-Agent': 'Mozilla/5.0'})
             try: xml = urlopen(req1).read()
             except:
+                xml = None
                 try: xml = urlopen(req2).read()
-                except: pass
+                except: xml = None
             try:
-                with open(Output, "wb") as f: f.write(xml)
+                if xml is not None: CAP_QUEUE.append(xml.decode("utf-8"))
             except: print("[NAADS HEARTBEAT PROCESSOR]: Heartbeat, download aborted: a general exception occurred, it could be that the URLs are temporarily unavailable.")
 
 def get_media(input_source, media_output, decode_type):
@@ -979,13 +964,14 @@ def Remove_EOMandATTN(thing_file):
 
 def CreateXML_from_MonitorSAME(SAME, audioInput, monitorName):
     try:
+        global CAP_QUEUE
         SAME = SAME.replace("\n", "")
         oof = EAS2Text(SAME)
         sent = datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%S-00:00')
         sent_rp = sent.replace("-","").replace(":","")
         ident_code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=10))
-        ident = f"{sent_rp}{ident_code}"
-        output = f"{queue_folder}/{monitorName}-{sent_rp}I{ident}.xml"
+        ident = f"{sent_rp}{ident_code}{monitorName}"
+        # output = f"{queue_folder}/{monitorName}-{sent_rp}I{ident}.xml"
         current_time = datetime.strptime(sent, "%Y-%m-%dT%H:%M:%S-00:00")
         Headline = f"{oof.orgText} has issued {oof.evntText}".replace("\n", "")
         
@@ -1040,7 +1026,8 @@ def CreateXML_from_MonitorSAME(SAME, audioInput, monitorName):
             </info>
         </alert>
         """
-        write_file(XML, output)
+        # write_file(XML, output)
+        CAP_QUEUE.append(XML)
     except: pass
 
 # CLASSES
@@ -1082,72 +1069,47 @@ class Webserver:
         session_id = ''.join(random.choices(string.ascii_letters + string.digits, k=32))
         self.SESSIONS[session_id] = True
         return session_id
-    
-    def get_active_alerts(self):
-        try:
-            ConfigData = load_json(f"{assets_folder}/config.json")
-            ActiveAlerts = []
-            XMLhistory = list_folder(history_folder)
-            current_time = datetime.now(timezone.utc)
-            for i in XMLhistory:
-                try:
-                    XML = read_file(f"{history_folder}/{i}")
-                    Sent = re.search(r'<sent>\s*(.*?)\s*</sent>', XML, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)
-                    MessageType = re.search(r'<msgType>\s*(.*?)\s*</msgType>', XML, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)
-                    Status = re.search(r'<status>\s*(.*?)\s*</status>', XML, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)
-                    XML = re.findall(r'<info>\s*(.*?)\s*</info>', XML, re.MULTILINE | re.IGNORECASE | re.DOTALL)
-                    InfoProc = 0
-                    ExpireProc = 0
-
-                    for InfoEN in XML:
-                        InfoProc = InfoProc + 1
-                        InfoEN = f"<info>{InfoEN}</info>"
-                        try:
-                            Expires = datetime.fromisoformat(datetime.fromisoformat(re.search(r'<expires>\s*(.*?)\s*</expires>', InfoEN, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)).astimezone(timezone.utc).isoformat())
-                            if current_time > Expires:
-                                ExpireProc = ExpireProc + 1
-                                continue
-                        except:
-                            ExpireProc = ExpireProc + 1
-                            continue
-                        
-                        try:
-                            if "fr" in re.search(r'<language>\s*(.*?)\s*</language>', InfoEN, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1): lang = "fr"
-                            elif "es" in re.search(r'<language>\s*(.*?)\s*</language>', InfoEN, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1): lang = "es"
-                            else: lang = "en"
-                        except: lang = "en"
-                        try:
-                            if ConfigData[f'relay_{lang}'] is False: continue
-                        except: continue
-
-                        Urgency = re.search(r'<urgency>\s*(.*?)\s*</urgency>', InfoEN, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)
-                        Severity = re.search(r'<severity>\s*(.*?)\s*</severity>', InfoEN, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)
-                        Sent = Sent.replace("T"," ")
-                        expire = re.search(r'<expires>\s*(.*?)\s*</expires>', InfoEN, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1).replace("T"," ") 
-                        senderName = re.search(r'<senderName>\s*(.*?)\s*</senderName>', InfoEN, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)
-                        Description = re.search(r'<description>\s*(.*?)\s*</description>', InfoEN, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)
-                        event = re.search(r'<event>\s*(.*?)\s*</event>', InfoEN, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)
-                        if Description == "###": continue
-                        ActiveAlerts.append(f"CAP from {senderName}\n Sent: {Sent}\n Expires: {expire}\n{Status}, {MessageType}\n {Urgency}, {Severity}\n Event: {event}\n\n {Description}")
-                    if InfoProc == ExpireProc:
-                        try: delete_file(f"{history_folder}/{i}")
-                        except: pass
-                except: continue
-            return ActiveAlerts
-        except: return ["Something went wrong getting alerts"]
 
     def setup_routes(self):
-        @self.QEWEB_flaskapp.route('/activeAlerts')
-        def activeAlerts():
+        @self.QEWEB_flaskapp.route('/abort')
+        def abort():
+            global ALERT_QUEUE, ACTIVE_ALERTS
+            identifier = request.args.get('identifier')
+            if identifier is not None:
+                for i in ALERT_QUEUE:
+                    if identifier in i.get("qe_id"):
+                        ALERT_QUEUE.remove(i)
+                        ACTIVE_ALERTS.append(i)
+                        break
+            return redirect('./alerts.html')
+        
+        @self.QEWEB_flaskapp.route('/relay')
+        def relay():
+            global ALERT_QUEUE, ACTIVE_ALERTS
+            identifier = request.args.get('identifier')
+            if identifier is not None:
+                for i in ACTIVE_ALERTS:
+                    if identifier in i.get("qe_id"):
+                        ACTIVE_ALERTS.remove(i)
+                        ALERT_QUEUE.append(i)
+                        break
+            return redirect('./alerts.html')
+
+        @self.QEWEB_flaskapp.route('/alert_info')
+        def alert_info():
             try:
-                ActiveAlerts = self.get_active_alerts()
-                if not ActiveAlerts: return jsonify(["No alerts"])
-                return jsonify(ActiveAlerts)
-            except: return jsonify(["Error fetching alerts"])
+                to_return = {
+                    "now_playing":ALERT_NOW,
+                    "alert_queue":ALERT_QUEUE,
+                    "alert_queue_status":ALERT_QUEUE_STATUS,
+                    "active_alerts":ACTIVE_ALERTS,
+                    "relayed_sames":RELAYED_SAMES
+                }
+                return jsonify(to_return)
+            except: return jsonify({})
 
         @self.QEWEB_flaskapp.route('/statuses')
         def get_stats():
-            if not self.is_authenticated(): return jsonify({'error': 'Unauthorized'}), 401
             status_dict = {}
             x = list_folder("./stats")
             for i in x:
@@ -1245,7 +1207,7 @@ class Webserver:
         @self.QEWEB_flaskapp.route('/logout', methods=['POST'])
         def logout():
             session.clear()  # Clear all session data
-            response = make_response(redirect('/login.html')) # Create a response object
+            response = make_response(redirect('login.html')) # Create a response object
             response.set_cookie(self.SESSION_COOKIE_NAME, '', expires=0) # Remove the session cookie
             return response
         
@@ -1264,7 +1226,7 @@ class Webserver:
         
         @self.QEWEB_flaskapp.route('/config_data')
         def config_data():
-            try: CONFIG_DATA = load_json(f"{assets_folder}/config.json")
+            try: CONFIG_DATA = load_json(config_file)
             except: CONFIG_DATA = default_config
             return jsonify(CONFIG_DATA)
 
@@ -1273,9 +1235,16 @@ class Webserver:
             devices = get_audio_outputs()
             return jsonify(devices)
 
-        @self.QEWEB_flaskapp.route('/tts_voices')
-        def tts_voices():
-            voices = list_tts_voices()
+        @self.QEWEB_flaskapp.route('/espeakng_voices')
+        def espeakng_voices():
+            try:
+                voices = list_espeakng_voices()
+                return jsonify(voices)
+            except: return jsonify([])
+        
+        @self.QEWEB_flaskapp.route('/piper_voices')
+        def piper_voices():
+            voices = list_piper_voices()
             return jsonify(voices)
         
         @self.QEWEB_flaskapp.route('/maki_voices')
@@ -1300,12 +1269,12 @@ class Webserver:
             file = request.files['file']    
             if file.filename == '': return jsonify({'error': 'No selected file'}), 400
             if not file.filename.endswith('.json'): return jsonify({'error': 'Only JSON files are accepted'}), 400
-            file.save(f"{assets_folder}/config.json")
+            file.save(config_file)
             return jsonify({'success': f'File uploaded and saved as {assets_folder}/config.json'}), 200
 
         @self.QEWEB_flaskapp.route('/upload_leadin', methods=['POST'])
         def upload_leadin():
-            SAVE_PATH = f'{assets_folder}/pre.wav'
+            SAVE_PATH = f'./{assets_folder}/pre.wav'
             if 'file' not in request.files: return jsonify({'error': 'No file part'}), 400
             file = request.files['file']    
             if file.filename == '': return jsonify({'error': 'No selected file'}), 400
@@ -1315,7 +1284,7 @@ class Webserver:
 
         @self.QEWEB_flaskapp.route('/upload_leadout', methods=['POST'])
         def upload_leadout():
-            SAVE_PATH = f'{assets_folder}/post.wav'
+            SAVE_PATH = f'./{assets_folder}/post.wav'
             if 'file' not in request.files: return jsonify({'error': 'No file part'}), 400
             file = request.files['file']    
             if file.filename == '': return jsonify({'error': 'No selected file'}), 400
@@ -1326,14 +1295,14 @@ class Webserver:
         @self.QEWEB_flaskapp.route('/remove_Leadin', methods=['POST'])
         def removeLeadin():
             try:
-                delete_file(f"{assets_folder}/pre.wav")
+                delete_file(f"./{assets_folder}/pre.wav")
                 return jsonify({'success': 'Lead in audio removed'})
             except: return jsonify({'error': 'Failed to remove Lead in audio'})
             
         @self.QEWEB_flaskapp.route('/remove_Leadout', methods=['POST'])
         def removeLeadout():
             try:
-                delete_file(f"{assets_folder}/post.wav")
+                delete_file(f"./{assets_folder}/post.wav")
                 return jsonify({'success': 'Lead out audio removed'})
             except: return jsonify({'error': 'Failed to remove Lead out audio'})
 
@@ -1432,9 +1401,8 @@ class Webserver:
                 {second_info_block}
             </alert>
             """
-            filenameXML = f"{queue_folder}/{sent.replace(':', '_')}I{res}.xml"
-            print(f"[Webserver]: Creating alert: {filenameXML}")
-            write_file(finalXML, filenameXML)
+            print(f"[Webserver]: Creating alert: {sent.replace(':', '_')}I{res}")
+            CAP_QUEUE.append(finalXML)
             return """<!DOCTYPE html><html><head><title>QuantumENDEC Web Interface</title><link rel="stylesheet" href="./style.css"></head><body><h1>Alert sent.</h1><a class="button" href="/">OK</a></body></html>"""
 
         @self.QEWEB_flaskapp.route('/submit_config', methods=['POST'])
@@ -1465,7 +1433,7 @@ class Webserver:
             HOST = new_config["webserver_host"]
             if HOST == "": HOST = "0.0.0.0"
             new_config["webserver_host"] = HOST
-            write_json(f"{assets_folder}/config.json", new_config)
+            write_json(config_file, new_config)
             return """<!DOCTYPE html><html><head><title>QuantumENDEC Web Interface</title><link rel="stylesheet" href="./style.css"></head><body><h1>Your settings has been saved.</h1><a class="button" href="/">OK</a></body></html>"""
         
     def Start(self):
@@ -1581,37 +1549,51 @@ class Logger:
         except Exception as e: print("[LOGGER]: Email failure. ", e)
 
 class Capture:
-    def SaveCAP(self, OutputFolder, InputXML, Source=None):
-        CapturedSent = re.search(r'<sent>\s*(.*?)\s*</sent>', InputXML, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1).replace("-", "_").replace("+", "p").replace(":", "_")
-        CapturedIdent = re.search(r'<identifier>\s*(.*?)\s*</identifier>', InputXML, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1).replace("-", "_").replace("+", "p").replace(":", "_")
-        filename = f"{CapturedSent}I{CapturedIdent}.xml"
-        write_file(InputXML, f"{OutputFolder}/{filename}")
-        print(f"[Capture]: Captured an XML, and saved it to: {OutputFolder}/{filename} | From: {Source}")
+    def SaveCAP(self, InputXML, Source=None):
+        global CAP_QUEUE
+
+        AlertListXML = re.findall(r'<alert\s*(.*?)\s*</alert>', InputXML, re.MULTILINE | re.IGNORECASE | re.DOTALL)
+        if len(AlertListXML) > 1:
+            print(f"[Capture]: Captured an XML from: {Source}")
+            print("[Capture]: WHY THE F*** IS THERE 2 ALERT ELEMENTS IN A SINGLE XML FILE?!!?")
+            for AlertXML in AlertListXML:
+                AlertXML = f"<alert {AlertXML}</alert>"
+                CAP_QUEUE.append(AlertXML)
+        else:
+            CapturedSent = re.search(r'<sent>\s*(.*?)\s*</sent>', InputXML, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1).replace("-", "_").replace("+", "p").replace(":", "_")
+            CapturedIdent = re.search(r'<identifier>\s*(.*?)\s*</identifier>', InputXML, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1).replace("-", "_").replace("+", "p").replace(":", "_")
+            filename = f"{CapturedSent}I{CapturedIdent}.xml"
+            if filename in list_folder(history_folder): pass
+            else:
+                print(f"[Capture]: Captured an XML from: {Source}")
+                CAP_QUEUE.append(InputXML)
 
     def realTCPcapture(self, host, port, buffer=1024, delimiter="</alert>", StatName=None):
         print(f"[TCP Capture]: Connecting to: {host} at {port}")
         while qe_status() == 0:
-            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                try:
-                    s.connect((host, int(port)))
-                    s.settimeout(100)
-                    if StatName is not None: set_status(StatName, f"Connected to {host}")
-                    print(f"[TCP Capture]: Connected to {host}")
-                    data_received = ""
-                    try:
-                        while qe_status() == 0:
-                            chunk = str(s.recv(buffer), encoding='utf-8', errors='ignore')
-                            data_received += chunk
-                            if delimiter in chunk:
-                                try: self.SaveCAP(queue_folder, data_received, host)
-                                except: print(f"[TCP Capture]: {StatName}, failed to save XML!")
-                                data_received = ""
-                    except socket.timeout:
-                        print(f"[TCP Capture]: Connection timed out for {host}")
-                        if StatName is not None: set_status(StatName, f"Timed out: {host}")
-                except Exception as e:
-                    print(f"[TCP Capture]: Something broke when connecting to {host}: {e}")
-                    if StatName is not None: set_status(StatName, f"Connection error to: {host}")
+            try:
+                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                        s.connect((host, int(port)))
+                        s.settimeout(100)
+                        if StatName is not None: set_status(StatName, f"Connected to {host}")
+                        print(f"[TCP Capture]: Connected to {host}")
+                        data_received = ""
+                        try:
+                            while qe_status() == 0:
+                                chunk = str(s.recv(buffer), encoding='utf-8', errors='ignore')
+                                data_received += chunk
+                                if delimiter in chunk:
+                                    try: self.SaveCAP(data_received, host)
+                                    except: print(f"[TCP Capture]: {StatName}, failed to save XML!")
+                                    data_received = ""
+                        except socket.timeout:
+                            print(f"[TCP Capture]: Connection timed out for {host}")
+                            if StatName is not None: set_status(StatName, f"Timed out: {host}")
+            except Exception as e:
+                print(f"[TCP Capture]: Something broke when connecting to {host}: {e}. Resting...")
+                if StatName is not None: set_status(StatName, f"Connection error to: {host}")
+                time.sleep(5)
+
         exit()
 
     def TCP(self, host, port, buffer=1024, delimiter="</alert>", StatName=None):
@@ -1635,15 +1617,16 @@ class Capture:
                     CAP = re.findall(r'<alert\s*(.*?)\s*</alert>', CAP, re.MULTILINE | re.IGNORECASE | re.DOTALL)
                     for alert in CAP:
                         alert = f"<alert {alert}</alert>"
-                        try: self.SaveCAP(queue_folder, alert, CAP_URL)
+                        try: self.SaveCAP(alert, CAP_URL)
                         except: print("[Capture]: Failed to save XML!")
-                    time.sleep(30)
+                    special_sleep(30)
                 except Exception as e:
                     print("[HTTP Capture] Something went wrong.", e)
                     set_status(f"HTTPCAPcapture{instance}", f"HTTP CAP Capture {instance} error.")
-                    time.sleep(30)
+                    special_sleep(30)
 
     def NWS(self, ATOM_LINK):
+        global CAP_QUEUE
         # Goddamnit americans, you have to have every single alert source in their own goddamn way!
         # Why can't you use a centerlized TCP server?!!?!
         print("[NWS CAP Capture]: Activating NWS CAP Capture with: ", ATOM_LINK)
@@ -1669,19 +1652,19 @@ class Capture:
                             else: filename = CAP_LINK 
                             filename = filename.replace("-", "_").replace("+", "p").replace(":", "_").replace("\n", "")
                             filename = filename + ".xml"
-                            if filename in os.listdir(f"{history_folder}"): pass #print("already downloaded")
-                            elif filename in os.listdir(f"{queue_folder}"): pass #print("already downloaded")
+                            if filename in list_folder(f"{history_folder}"): pass #print("already downloaded")
                             else:
                                 # print(filename, expires)
                                 NWSCAP_REQUEST = Request(url = CAP_LINK)
                                 NWSCAP_XML = urlopen(NWSCAP_REQUEST).read()
                                 NWSCAP_XML = NWSCAP_XML.decode('utf-8')
-                                write_file(NWSCAP_XML, f"{queue_folder}/{filename}")
+                                #write_file(NWSCAP_XML, f"{queue_folder}/{filename}")
+                                CAP_QUEUE.append(NWSCAP_XML)
                     except: pass
             except Exception as e:
                 print("[NWS CAP Capture]: An error occured.", e)
                 set_status("NWSCAPcapture", "An error occured.")
-            time.sleep(120) # To put less strain on the network
+            special_sleep(120) # To put less strain on the network
 
 class Monitor_Stream:
     def __init__(self, monitorName, streamURL, ConfigData={}):
@@ -1693,6 +1676,8 @@ class Monitor_Stream:
     def is_stream_online(self):
         try:
             response = requests.get(self.streamURL, stream=True, timeout=10)
+            if response.status_code == 403: response = requests.get(self.streamURL, stream=True, timeout=10, headers={'User-Agent': 'Mozilla/5.0'})
+            #print("[Monitor_Stream]", self.streamURL, response.status_code)
             return response.status_code == 200
         except requests.RequestException as e:
             print(f"[{self.monitorName}] Error checking stream URL: {e}")
@@ -1779,18 +1764,18 @@ class Monitor_Stream:
             if self.is_stream_online() is False:
                 print(f"[{self.monitorName}] Stream URL {self.streamURL} is offline or unreachable.")
                 set_status(self.monitorName, f"Stream URL {self.streamURL} is offline or unreachable.")
-                time.sleep(30)
+                special_sleep(30)
             else:
                 try:
                     decodeThread = threading.Thread(target=self.decodeStream)
                     decodeThread.daemon = True
                     decodeThread.start()
                     while qe_status() == 0:
-                        time.sleep(30)
+                        special_sleep(30)
                         if self.is_stream_online() is False:
                             print(f"[{self.monitorName}] Stream URL {self.streamURL} is offline or unreachable.")
                             set_status(self.monitorName, f"Stream URL {self.streamURL} is offline or unreachable.")
-                            time.sleep(30)
+                            special_sleep(30)
                             break
                         else: pass
                     if qe_status() != 0:
@@ -1954,18 +1939,22 @@ class Generate_AlertMap:
         ax.add_feature(cfeature.OCEAN, facecolor='#002255')
         ax.add_feature(cfeature.LAKES, facecolor='#002255')
 
-        if os.path.exists("./map_addons/counties/ne_10m_admin_2_counties.shp"):
+        counties_shapefile = "./map_addons/counties/ne_10m_admin_2_counties.shp"
+        roads_shapefile = "./map_addons/roads/ne_10m_roads.shp"
+        population_shapefile = "./map_addons/populations/ne_10m_populated_places.shp"
+
+        if os.path.exists(counties_shapefile):
             print("counties shapefile detected")
             countines = cfeature.ShapelyFeature(
-                shpreader.Reader("./map_addons/counties/ne_10m_admin_2_counties.shp").geometries(),
+                shpreader.Reader(counties_shapefile).geometries(),
                 ccrs.PlateCarree(),
                 facecolor='none', edgecolor='black' )
             ax.add_feature(countines)
 
-        if os.path.exists("./map_addons/roads/ne_10m_roads.shp"):
+        if os.path.exists(roads_shapefile):
             print("roads shapefile detected")
             roads = cfeature.ShapelyFeature(
-                shpreader.Reader("./map_addons/roads/ne_10m_roads.shp").geometries(),
+                shpreader.Reader(roads_shapefile).geometries(),
                 ccrs.PlateCarree(),
                 facecolor='none', edgecolor='white' )
             ax.add_feature(roads)
@@ -1977,11 +1966,11 @@ class Generate_AlertMap:
             self.fill_polygon(ax, lats, lons, color=polygon_color, alpha=0.6)
             self.overlay_polygon(ax, lats, lons, label=self.headline, color=polygon_color)  # For outlined polygon
 
-        if os.path.exists("./map_addons/populations/ne_10m_populated_places.shp"):
+        if os.path.exists(population_shapefile):
             print("population shapefiles detected")
             label_field = "NAME"
             color = "black"
-            reader = shpreader.Reader("./map_addons/populations/ne_10m_populated_places.shp")
+            reader = shpreader.Reader(population_shapefile)
             
             # Function to check if a point is within the bounding box
             def is_within_bbox(x, y, bbox):
@@ -2031,11 +2020,11 @@ class Generate_Text:
                 AreaDesc = ', '.join(AreaDesc) + '.'
             except: AreaDesc = None
 
-            try: Headline = f"{self.INFODICT.get("headline")}."
+            try: Headline = f"{self.INFODICT.get('headline')}."
             except: Headline = None
-            try: Description = self.INFODICT.get("description")
+            try: Description = self.INFODICT.get('description')
             except: Description = None
-            try: Instruction = self.INFODICT.get("instruction")
+            try: Instruction = self.INFODICT.get('instruction')
             except: Instruction = None
 
             if Description is None: Description = ""
@@ -2071,8 +2060,11 @@ class Generate_Text:
                 if isinstance(areas, dict): areas = [areas]
                 for area in areas:
                     geocodes = area.get("geocode")
-                    x = get_cap_value(geocodes, "valueName", "profile:CAP-CP:Location:0.3")
-                    if x is not None: GeocodeList.append(str(x.get("value")))
+                    if isinstance(geocodes, dict): geocodes = [geocodes]
+                    for geocode in geocodes:
+                        x = get_cap_value(geocode, "valueName", "profile:CAP-CP:Location:0.3")
+                        if x is not None:
+                            GeocodeList.append(str(x.get("value")))
                 geocode2clc = grab_geotoclc()
                 locationcodes_list = []
                 for geocode in GeocodeList:
@@ -2131,7 +2123,7 @@ class Generate_Text:
         return { "zczc":SAME, "headline":HEADLINE, "text":BROADCAST_TEXT}
 
 class Generate_Media:
-    def __init__(self, CONFIG_DATA={}, INFO_DICT={}, ALERT_DETAILS={}, ALERT_COLORS={}):
+    def __init__(self, CONFIG_DATA={}, INFO_DICT={}, ALERT_DETAILS={}, ALERT_COLORS={}, ALERT_ID=""):
         self.config_data = CONFIG_DATA
         self.info_dict = INFO_DICT
         self.alert_details = ALERT_DETAILS
@@ -2142,9 +2134,10 @@ class Generate_Media:
         alert_color = ALERT_COLORS.get("background_color")
         if alert_color is None: self.alert_color = "#000000"
         else: self.alert_color = f"#{alert_color}"
+        self.alert_id = ALERT_ID
 
     def generate_tts(self):
-        audio_file_path = f"{tmp_folder}/audio.wav"
+        audio_file_path = f"{tmp_folder}/{self.alert_id}.wav"
         alert_text = str(self.alert_details["text"])
         try: delete_file(audio_file_path)
         except: pass
@@ -2153,7 +2146,7 @@ class Generate_Media:
             if self.config_data["tts_service"] == "flite":
                 alert_text = alert_text.replace("\n", " ")
                 subprocess.run([ "flite", "-t", alert_text, "-o", audio_file_path ], check=True)
-
+            
             elif self.config_data["tts_service"] == "maki":
                 alert_text = alert_text.replace("\n", " ")
                 if (get_platform() == "win") and os.path.exists("./Maki.exe"):
@@ -2162,6 +2155,16 @@ class Generate_Media:
                     else: ActiveVoice = self.config_data["maki_en"]
                     maki_syntax = f"{ActiveVoice}|{alert_text}|{audio_file_path}"
                     subprocess.run([ app_command, "--voice-syntax-wav", maki_syntax ], check=True)
+                
+            elif self.config_data["tts_service"] == "piper":
+                alert_text = alert_text.replace("\n", " ")
+                if self.Language == "FR": ActiveVoice = self.config_data["piper_fr"]
+                else: ActiveVoice = self.config_data["piper_en"]
+                result = subprocess.run(['./piper/piper', '--model', ActiveVoice, '--output_file', audio_file_path], input=alert_text.encode('utf-8'), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                if result.returncode != 0:
+                    print("Piper TTS: Error:", result.stderr.decode())
+                    raise Exception
+                else: print("Piper TTS generated at", audio_file_path)
             
             elif (self.config_data["tts_service"] == "ElevenLabs") and (elevenlabs_available is True):
                 ElevenLabs_apiKey = str(self.config_data["ElevenLabs_apiKey"])
@@ -2175,26 +2178,18 @@ class Generate_Media:
                 audio = client.text_to_speech.convert( text=alert_text, voice_id=ElevenLabs_voiceID, model_id=ElevenLabs_modelID, )
                 save(audio, audio_file_path)
             else:
-                try: pythoncom.CoInitialize()
-                except: pass
-                engine = pyttsx3.init()
-                if self.config_data["pyttsx3_defaultTTS"] is False:
-                    if self.Language == "FR": ActiveVoice = self.config_data["pyttsx3_fr"]
-                    else: ActiveVoice = self.config_data["pyttsx3_en"]
-                    print("[GENERATE_MEDIA]: pyttsx3 TTS using: ", ActiveVoice)
-                    voices = engine.getProperty('voices')
-                    ActiveVoice = next((voice for voice in voices if voice.name == ActiveVoice), None)
-                    if ActiveVoice: engine.setProperty('voice', ActiveVoice.id)
-                    engine.setProperty('voice', ActiveVoice)
-                engine.save_to_file(alert_text, audio_file_path)
-                engine.runAndWait()
-        except:
-            print("[GENERATE_MEDIA]: Something went wrong generating TTS. Falling back to pyttsx3 defaults.")
-            try: pythoncom.CoInitialize()
-            except: pass
-            engine = pyttsx3.init()
-            engine.save_to_file(alert_text, audio_file_path)
-            engine.runAndWait()
+                raise Exception
+            
+        except:            
+            if self.Language == "FR": ActiveVoice = self.config_data["espeakNG_fr"]
+            else: ActiveVoice = self.config_data["espeakNG_en"]
+            alert_text = alert_text.replace("\n", " ")
+
+            if ActiveVoice == "": result = subprocess.run(["espeak-ng", "-w", audio_file_path, alert_text], stdout=subprocess.PIPE, stderr=subprocess.PIPE) # make with default voice if none is selected
+            else: result = subprocess.run(["espeak-ng", "-w", audio_file_path, "-v", ActiveVoice, alert_text], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+            if result.returncode != 0: print("eSpeak TTS: Error:", result.stderr.decode())
+            else: print("eSpeak TTS generated at", audio_file_path)
         
     def generate_same(self):
         print("[GENERATE_MEDIA]: Generating S.A.M.E header...")
@@ -2204,15 +2199,15 @@ class Generate_Media:
         EASGen.export_wav(f"{tmp_folder}/eom.wav", SAMEeom)
 
     def generate_image(self):
-        final_alert_image_path = f"{tmp_folder}/alert_image.png"
-        try: delete_file(final_alert_image_path)
-        except: pass
+        final_alert_image_path = f"{tmp_folder}/{self.alert_id}.png"
+        #try: delete_file(final_alert_image_path)
+        #except: pass
 
         resources = self.info_dict.get("resource")
         if "image/jpeg" in str(resources): resource = get_cap_value(resources, "mimeType", "image/jpeg")
         elif "image/png" in str(resources): resource = get_cap_value(resources, "mimeType", "image/png")
         else:
-            if mapGeneration_available is True:
+            if (mapGeneration_available is True) and (self.config_data["generate_mapImage"] is True):
                 areas = self.info_dict.get("area")
                 if isinstance(areas, dict): areas = [areas]
                 polygons = []
@@ -2221,8 +2216,7 @@ class Generate_Media:
                 Generate_AlertMap(final_alert_image_path, self.alert_color, self.info_dict["headline"], polygons).generate_map()
             return None
 
-        try: delete_file(f"{tmp_folder}/pre_image")
-        except: pass
+        pre_image = f"{tmp_folder}/{self.alert_id}.pre_image"
 
         mime_type = resource.get("mimeType")
         dref_uri = resource.get("derefUri")
@@ -2231,13 +2225,15 @@ class Generate_Media:
         if dref_uri is not None:
             dref_uri = bytes(dref_uri, 'utf-8')
             decode = "base64"
-            get_media(dref_uri, f"{tmp_folder}/pre_image", decode)
+            get_media(dref_uri, pre_image, decode)
         else:
             uri = resource.get("uri")
             decode = "url_download"
-            get_media(uri, f"{tmp_folder}/pre_image", decode)
+            get_media(uri, pre_image, decode)
         
-        convert_media(f"{tmp_folder}/pre_image", final_alert_image_path)
+        convert_media(pre_image, final_alert_image_path)
+        try: delete_file(pre_image)
+        except: pass
 
     def generate_audio(self):
         resources = self.info_dict.get("resource")
@@ -2249,9 +2245,9 @@ class Generate_Media:
         else:
             self.generate_tts()
             return None
-
-        try: delete_file(f"{tmp_folder}/pre_audio")
-        except: pass
+        
+        pre_audio = f"{tmp_folder}/{self.alert_id}.pre_audio"
+        audio_file_path = f"{tmp_folder}/{self.alert_id}.wav"
 
         mime_type = resource.get("mimeType")
         dref_uri = resource.get("derefUri")
@@ -2260,23 +2256,25 @@ class Generate_Media:
         if dref_uri is not None:
             dref_uri = bytes(dref_uri, 'utf-8')
             decode = "base64"
-            get_media(dref_uri, f"{tmp_folder}/pre_audio", decode)
+            get_media(dref_uri, pre_audio, decode)
         else:
             uri = resource.get("uri")
             decode = "url_download"
-            get_media(uri, f"{tmp_folder}/pre_audio", decode)
+            get_media(uri, pre_audio, decode)
 
-        convert_media(f"{tmp_folder}/pre_audio", f"{tmp_folder}/audio.wav")
+        convert_media(pre_audio, audio_file_path)
+        try: delete_file(pre_audio)
+        except: pass
 
     def Generate(self):
         print("[GENERATE_MEDIA]: Generating alert media...")
-        if self.config_data['SAME'] is True: self.generate_same()
+        #if self.config_data['SAME'] is True: self.generate_same()
         
         try: self.generate_audio()
         except: print("[GENERATE_MEDIA]: Audio generation failed!")
 
         if self.config_data['force_120'] is True:
-            try: trim_audio(f"{tmp_folder}/audio.wav")
+            try: trim_audio(f"{tmp_folder}/{self.alert_id}.wav")
             except: print("[GENERATE_MEDIA]: Failed to trim broadcast audio.")
 
         if self.config_data['produce_alertimage'] is True:
@@ -2284,22 +2282,36 @@ class Generate_Media:
             except: print("[GENERATE_MEDIA]: Image generation failed!")
 
 class Playout:
-    def __init__(self, CONFIG_DATA={}, ALERT_REGION=None):
+    def __init__(self, CONFIG_DATA={}, ALERT_REGION=None, ZCZC=None, AUDIO_WAV=None):
         if CONFIG_DATA["attn_basedoncountry"] is True:
             if "CANADA" in str(ALERT_REGION): self.attn_file = f"{assets_folder}/attns/AttnCAN.wav"
             elif "USA" in str(ALERT_REGION): self.attn_file = f"{assets_folder}/attns/AttnEBS.wav"
-            else: self.attn_file = f"{assets_folder}/attns/{CONFIG_DATA["attn_tone"]}"
-        else: self.attn_file = f"{assets_folder}/attns/{CONFIG_DATA["attn_tone"]}"
+            else: self.attn_file = f"{assets_folder}/attns/{CONFIG_DATA['attn_tone']}"
+        else: self.attn_file = f"{assets_folder}/attns/{CONFIG_DATA['attn_tone']}"
         self.play_pre = CONFIG_DATA["enable_leadin"]
         self.play_post = CONFIG_DATA["enable_leadout"]
-        self.pre_file = f"{assets_folder}/pre.wav"
-        self.post_file = f"{assets_folder}/post.wav"
+        self.pre_file = f"./{assets_folder}/pre.wav"
+        self.post_file = f"./{assets_folder}/post.wav"
         self.same_file = f"{tmp_folder}/same.wav"
         self.audio_file = f"{tmp_folder}/audio.wav"
         self.eom_file = f"{tmp_folder}/eom.wav"
         self.use_specific_audio_output = CONFIG_DATA["use_specifiedaudiooutput"]
         self.use_specific_audio_output_deviceID = CONFIG_DATA["use_audiodevice_id"]
         self.specific_audio_output = CONFIG_DATA["specifiedaudiooutput"]
+
+        if ZCZC == "": pass
+        elif ZCZC is not None:
+            print("[Playout]: Generating S.A.M.E header...", ZCZC)
+            SAMEheader = EASGen.genEAS(header=ZCZC, attentionTone=False, endOfMessage=False)
+            SAMEeom = EASGen.genEAS(header="NNNN", attentionTone=False, endOfMessage=False)
+            EASGen.export_wav(f"{tmp_folder}/same.wav", SAMEheader)
+            EASGen.export_wav(f"{tmp_folder}/eom.wav", SAMEeom)
+
+        if (AUDIO_WAV is not None) or (AUDIO_WAV != ""):
+            try: delete_file(self.audio_file)
+            except: pass
+            try: copy_file(AUDIO_WAV, self.audio_file)
+            except: pass
     
     def playout(self, audio_file):
         time.sleep(0.5)
@@ -2349,7 +2361,6 @@ class Playout:
 def Setup():
     print("[INFO]: Now setting up QuantumENDEC...")
     check_folder(history_folder, True)
-    check_folder(queue_folder, True)
     check_folder(tmp_folder, True)
     check_folder("./stats", True)
 
@@ -2357,98 +2368,287 @@ def Setup():
         print("[WARNING]: Could not find the assets folder! Can't function without it!")
         return False
     
-    if os.path.isfile(f"{assets_folder}/config.json") is True:
+    if os.path.isfile(config_file) is True:
         try:
-            ConfigData = load_json(f"{assets_folder}/config.json")
+            ConfigData = load_json(config_file)
             if ConfigData['quantumendec_version'] == QuantumENDEC_Version: pass
             else: print(f"[ATTENTION!]: Your configuration file is out of date! Go to the web interface and save (overwrite) a new one.")
         except:
-            write_json(f"{assets_folder}/config.json", default_config)
-    else: write_json(f"{assets_folder}/config.json", default_config)
+            write_json(config_file, default_config)
+    else: write_json(config_file, default_config)
 
-    if os.path.isfile(f"./{assets_folder}/GeoToCLC.csv") is True: pass
+    if os.path.isfile(f"{assets_folder}/GeoToCLC.csv") is True: pass
     else: print("[INFO]: The GeoToCLC CSV file is missing, you don't have to worry about this if you're not using Canada's CAP and relaying in S.A.M.E. If you are using Canada's CAP and relaying in S.A.M.E, all CAP-CP alerts will have a 000000 location (FIPS/CLC) code.")
 
     return True
 
+def Expiry():
+    """ Removes expired alerts """
+    global ACTIVE_ALERTS, RELAYED_SAMES
+    print("[Expiry]: Running")
+    for alert in ACTIVE_ALERTS:
+        infos = alert.get("info")
+        info_amount = len(infos)
+        expired_amount = 0
+        files_to_delete = []
+        same_to_remove = []
+        for info in infos:
+            expires = info.get("expires")
+            zczc = info.get("zczc")
+            if is_expired(expires) is True:
+                same_to_remove.append(zczc)
+                expired_amount += 1
+            files_to_delete.append(info.get("image_png"))
+            files_to_delete.append(info.get("audio_wav"))
+        
+        if info_amount == expired_amount:
+            qe_id = alert.get("qe_id")
+            ACTIVE_ALERTS.remove(alert)
+            
+            for zczc in same_to_remove:
+                if (zczc is not None) and (zczc in RELAYED_SAMES): RELAYED_SAMES.remove(zczc)
+
+            for i in files_to_delete:
+                if i == "": pass
+                if i is not None:
+                    try: delete_file(i)
+                    except: pass
+            if qe_id is not None: delete_file(f"{history_folder}/{qe_id}.xml")
+            print("[Expiry]: Removed expired alert and deleted expired files", qe_id)
+
 def Relay():
+    global ALERT_QUEUE_STATUS, ALERT_QUEUE, ACTIVE_ALERTS, ALERT_NOW, RELAYED_SAMES
     update_cgen(alert_status=False)
     while True:
-        try: CONFIG_DATA = load_json(f"{assets_folder}/config.json")
-        except: CONFIG_DATA = default_config
-        print(f"[RELAY]: Last refreshed: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-        if CONFIG_DATA["CGEN_clear_after_relay"] is True: update_cgen(alert_status=False)
         set_status("relay", "Waiting for alert")
-        alert_file = watch_notify(queue_folder, history_folder) # watch notify will only pass if detected new file
+        print(f"[RELAY]: Waiting for alerts. Last refreshed: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        ALERT_QUEUE_STATUS = "No alerts to play"
+        
+        while len(ALERT_QUEUE) == 0:
+            time.sleep(1.5) # if queue is empty, wait
+            if qe_status() != 0: break
         if qe_status() != 0: break
-        if alert_file is None: continue
-        print(f"[RELAY]: Captured alert {alert_file}")
-        set_status("relay", "Processing alert...")
-        AlertXML = read_file(f"{queue_folder}/{alert_file}")
-        AlertDICT = xmltodict.parse(AlertXML)
-        AlertDICT = AlertDICT.get("alert", {})
+        
+        try: CONFIG_DATA = load_json(config_file)
+        except: CONFIG_DATA = default_config
 
-        # write_json("./test.json", AlertDICT) # TEST/DEBUG
+        if "timed" in CONFIG_DATA.get("relay_mode", ""):
+            countdown_to_relay = 15
+            print(f"[RELAY]: Alerts in queue, playout in {countdown_to_relay} seconds")
+            while countdown_to_relay != 0:
+                countdown_to_relay -= 1
+                ALERT_QUEUE_STATUS = f"Playing alerts in {countdown_to_relay} second(s)"
+                time.sleep(1)
+                if qe_status() != 0: break
+        
+        ALERT_QUEUE_STATUS = "Playing alerts"
+        print(f"[RELAY]: {ALERT_QUEUE_STATUS}")
+        if qe_status() != 0: break
 
-        alert_sender = AlertDICT.get("sender")
-        if "NAADS-Heartbeat" in alert_sender:
-            print("[RELAY]: NAADS heartbeat detected")
-            References = re.search(r'<references>\s*(.*?)\s*</references>', AlertXML, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)
-            process_heartbeat(References, queue_folder, history_folder)
-            delete_file(f"{queue_folder}/{alert_file}")
-        else:
-            print("[RLAY]: Alert detected")
-            alert_status = AlertDICT.get("status")
-            message_type = AlertDICT.get("msgType")
-            alert_sent = AlertDICT.get("sent")
+        while len(ALERT_QUEUE) != 0:
+            alert = ALERT_QUEUE.pop(0)
+            ALERT_NOW = [alert]
+            infos = alert.get("info")
+            intro_played = False
+            played_sames = []
+            for info in infos:
+                if CONFIG_DATA["SAME"] is True:
+                    if not filter_check_SAME(CONFIG_DATA, info['zczc']): continue
+                    if info['zczc'] in RELAYED_SAMES: continue
+                    else: RELAYED_SAMES.append(info['zczc'])
 
-            if CONFIG_DATA[f"status{alert_status}"] and CONFIG_DATA[f"messagetype{message_type}"]:
-                intro_played = False
-                alert_region = get_alert_region(AlertDICT)
-
-                MultipleInfoDICT = AlertDICT.get("info")
-                if isinstance(MultipleInfoDICT, dict): MultipleInfoDICT = [MultipleInfoDICT]
-                for InfoDICT in MultipleInfoDICT:
-                    if filter_check_CAP(CONFIG_DATA, InfoDICT) is True:
-                        BroadcastContent = Generate_Text(CONFIG_DATA, InfoDICT, message_type, alert_sent).Generate()
+                print(f"\n[RELAY]: NEW ALERT TO RELAY...")
+                print(info['headline'])
+                print(info['broadcast_text'])
+                print("ZCZC:", info['zczc'])
                 
-                        if CONFIG_DATA["SAME"] is True:
-                            if not filter_check_SAME(CONFIG_DATA, BroadcastContent['zczc']): continue
+                try: delete_file(f"{tmp_folder}/alert_image.png")
+                except: pass
+                try: copy_file(info["image_png"], f"{tmp_folder}/alert_image.png")
+                except:pass
 
-                        alert_colors = get_alert_colors(CONFIG_DATA, BroadcastContent["zczc"])
-                        Generate_Media(CONFIG_DATA, InfoDICT, BroadcastContent, alert_colors).Generate()
-
-                        print(f"\n[RELAY]: NEW ALERT TO RELAY...")
-                        print(BroadcastContent['headline'])
-                        print(BroadcastContent['text'])
-                        print("ZCZC:", BroadcastContent['zczc'])
-                        set_status("relay", "Transmitting alert...")
-                        Logger(CONFIG_DATA, BroadcastContent["headline"], BroadcastContent["text"], alert_colors["background_color"], "TX", BroadcastContent["zczc"]).SendLog()
-                        if CONFIG_DATA["enable_plugins"] is True: run_plugins("before_relay", BroadcastContent['zczc'], BroadcastContent["text"], AlertXML, InfoDICT)
-                        update_cgen(BroadcastContent["headline"], BroadcastContent["text"], alert_colors["background_color"], alert_colors["text_color"])
-                        playout = Playout(CONFIG_DATA, alert_region)
-
-                        if (CONFIG_DATA["SAME"] is True):
-                            if intro_played is False:
-                                playout.Play_Pre()
-                                intro_played = True
-                            playout.Play_SAME()
-                            playout.Play_Attn()
-                        else:
-                            if intro_played is False:
-                                playout.Play_Pre()
-                                playout.Play_Attn()
-                                intro_played = True
-
-                        playout.Play_Audio()
-
-                        if CONFIG_DATA["SAME"] is True: playout.Play_EOM()
-
-                if intro_played is True:
-                    playout.Play_Post()
-                    if CONFIG_DATA["enable_plugins"] is True: run_plugins("after_relay", "", "", AlertXML, {})
+                alert_colors = get_alert_colors(CONFIG_DATA, info["zczc"])
+                set_status("relay", "Transmitting alert...")
+                if CONFIG_DATA["enable_plugins"] is True: run_plugins("before_relay", info['zczc'], info["broadcast_text"])
+                update_cgen(info["headline"], info["broadcast_text"], alert_colors["background_color"], alert_colors["text_color"])
+                playout = Playout(CONFIG_DATA, alert["alert_region"], info['zczc'], info["audio_wav"])
+                Logger(CONFIG_DATA, info["headline"], info["broadcast_text"], alert_colors["background_color"], "TX", info["zczc"]).SendLog()
                 
-            move_file(f"{queue_folder}/{alert_file}", f"{history_folder}/{alert_file}")
+                if (CONFIG_DATA["SAME"] is True):
+                    if intro_played is False:
+                        playout.Play_Pre()
+                        intro_played = True
+                    playout.Play_SAME()
+                    playout.Play_Attn()
+                else:
+                    if intro_played is False:
+                        playout.Play_Pre()
+                        playout.Play_Attn()
+                        intro_played = True
+
+                playout.Play_Audio()
+
+                if CONFIG_DATA["SAME"] is True:
+                    playout.Play_EOM()
+                    played_sames.append(info['zczc'])
+
+                if qe_status() != 0: break
+
+            if intro_played is True:
+                playout.Play_Post()
+                if CONFIG_DATA["enable_plugins"] is True: run_plugins("after_relay")
+                alert['amount_played'] += 1
+                for same in played_sames: RELAYED_SAMES.append(same)
+            
+            ACTIVE_ALERTS.append(alert)
+            ALERT_NOW = []
+            if qe_status() != 0: break
+        
+        if CONFIG_DATA["CGEN_clear_after_relay"] is True: update_cgen(alert_status=False)
+
+def AlertQueuer():
+    global CAP_QUEUE, ALERT_QUEUE
+    while True:
+        try:
+            print("[AlertQueuer]: Ready")
+            try: CONFIG_DATA = load_json(config_file)
+            except: CONFIG_DATA = default_config
+
+            while len(CAP_QUEUE) == 0:
+                if qe_status() != 0: break
+                time.sleep(2)
+            if qe_status() != 0: break
+
+            alert_immediately = []
+            alert_normal = []
+            alert_monitors = []
+            while len(CAP_QUEUE) > 0:
+                AlertXML = CAP_QUEUE.pop(0)
+                AlertDICT = xmltodict.parse(AlertXML)
+                AlertDICT = AlertDICT.get("alert")
+                if AlertDICT is None: continue
+                alert_sent = str(AlertDICT.get("sent"))
+                alert_identifier = str(AlertDICT.get("identifier"))
+                alert_sender = AlertDICT.get("sender")
+                alert_source = str(AlertDICT.get("source"))
+                alert_id = alert_sent.replace("-", "_").replace("+", "p").replace(":", "_") + "I" + alert_identifier.replace("-", "_").replace("+", "p").replace(":", "_")
+                print(f"[AlertQueuer]: Captured alert {alert_id}")
+                
+                if f"{alert_id}.xml" in list_folder(history_folder): continue
+
+
+                if "NAADS-Heartbeat" in alert_sender:
+                    print("[AlertQueuer]: NAADS heartbeat detected")
+                    References = re.search(r'<references>\s*(.*?)\s*</references>', AlertXML, re.MULTILINE | re.IGNORECASE | re.DOTALL).group(1)
+                    process_heartbeat(References, history_folder)
+                    continue
+                
+                if "QuantumENDEC Internal Monitor" in alert_source: # <source>QuantumENDEC Internal Monitor</source>
+                    print("[AlertQueuer]: Alert detected, SAME Monitor")
+                    InfoDICT = AlertDICT.get("info")
+                    info_count = 0
+                    BroadcastContent = Generate_Text(CONFIG_DATA, InfoDICT, "Alert", alert_sent).Generate()
+                    
+                    if CONFIG_DATA["SAME"] is True:
+                        if not filter_check_SAME(CONFIG_DATA, BroadcastContent['zczc']):
+                            continue
+                    
+                    alert_colors = get_alert_colors(CONFIG_DATA, BroadcastContent["zczc"])
+                    Generate_Media(CONFIG_DATA, InfoDICT, BroadcastContent, alert_colors, f"{alert_id}-{info_count}").Generate()
+                    info = {}
+                    info["language"] = InfoDICT.get("language")
+                    info["event"] = InfoDICT.get("event")
+                    info["headline"] = BroadcastContent["headline"]
+                    info["broadcast_text"] = BroadcastContent["text"]
+                    info["zczc"] = BroadcastContent["zczc"]
+                    info["audio_wav"] = f"{tmp_folder}/{alert_id}-{info_count}.wav"
+                    info["image_png"] = f"{tmp_folder}/{alert_id}-{info_count}.png"
+                    alert_expires = InfoDICT.get("expires")
+                    if alert_expires is not None: info["expires"] = alert_expires
+                    info["broadcast_immediately"] = False # maybe set to ture if an EAN?
+                    alert_region = None
+                    alert_to_queue = { "qe_id":alert_id, "identifier":alert_identifier, "sender":alert_sender, "sent":alert_sent, "alert_region":alert_region, "amount_played":0, "info":[info] }
+                    alert_monitors.append(alert_to_queue)
+                    print("[AlertQueuer]: Saving... ", f"{history_folder}/{alert_id}.xml")
+                    write_file(AlertXML, f"{history_folder}/{alert_id}.xml")
+
+                else:
+                    print("[AlertQueuer]: Alert detected, CAP")
+                    alert_status = AlertDICT.get("status")
+                    message_type = AlertDICT.get("msgType")
+                    alert_region = get_alert_region(AlertDICT)
+                    alert_queue_infos = []
+                    queue_alert = False
+                    overall_Broadcast_Immediately = False
+                    if CONFIG_DATA[f"status{alert_status}"] and CONFIG_DATA[f"messagetype{message_type}"]:
+                        MultipleInfoDICT = AlertDICT.get("info")
+                        if isinstance(MultipleInfoDICT, dict): MultipleInfoDICT = [MultipleInfoDICT]
+                        info_count = 0
+                        for InfoDICT in MultipleInfoDICT:
+                            if filter_check_CAP(CONFIG_DATA, InfoDICT) is True:
+                                BroadcastContent = Generate_Text(CONFIG_DATA, InfoDICT, message_type, alert_sent).Generate()
+                        
+                                if CONFIG_DATA["SAME"] is True:
+                                    if not filter_check_SAME(CONFIG_DATA, BroadcastContent['zczc']): continue
+
+                                alert_colors = get_alert_colors(CONFIG_DATA, BroadcastContent["zczc"])
+                                
+                                Generate_Media(CONFIG_DATA, InfoDICT, BroadcastContent, alert_colors, f"{alert_id}-{info_count}").Generate()
+
+                                info = {}
+                                info["language"] = InfoDICT.get("language")
+                                info["event"] = InfoDICT.get("event")
+                                info["headline"] = BroadcastContent["headline"]
+                                info["broadcast_text"] = BroadcastContent["text"]
+                                info["zczc"] = BroadcastContent["zczc"]
+                                info["audio_wav"] = f"{tmp_folder}/{alert_id}-{info_count}.wav"
+                                info["image_png"] = f"{tmp_folder}/{alert_id}-{info_count}.png"
+
+                                alert_expires = InfoDICT.get("expires")
+                                if alert_expires is not None: info["expires"] = alert_expires
+
+                                parameter = InfoDICT.get("parameter")
+                                if parameter is not None:
+                                    Broadcast_Immediately = "no"
+                                    x = get_cap_value(parameter, "valueName", "layer:SOREM:1.0:Broadcast_Immediately")
+                                    if x is not None: Broadcast_Immediately = str(x.get("value"))
+                                    if "yes" in Broadcast_Immediately.lower(): Broadcast_Immediately = True
+                                    else: Broadcast_Immediately = False
+                                else: Broadcast_Immediately = False
+                                info["broadcast_immediately"] = Broadcast_Immediately
+                                
+                                if Broadcast_Immediately is True: overall_Broadcast_Immediately = True
+
+                                alert_queue_infos.append(info)
+                                info_count += 1
+                                queue_alert = True
+                    
+                    if queue_alert is True:      
+                        alert_to_queue = {
+                            "qe_id":alert_id,
+                            "identifier":alert_identifier,
+                            "sender":alert_sender,
+                            "sent":alert_sent,
+                            "alert_region":alert_region,
+                            "amount_played":0,
+                            "info":alert_queue_infos,    
+                        }
+                        if overall_Broadcast_Immediately is True: alert_immediately.append(alert_to_queue)
+                        else: alert_normal.append(alert_to_queue)
+
+                    print("[AlertQueuer]: Saving... ", f"{history_folder}/{alert_id}.xml")
+                    write_file(AlertXML, f"{history_folder}/{alert_id}.xml")
+
+            alerts_to_queue = alert_immediately + alert_normal + alert_monitors
+            if "manual" in CONFIG_DATA.get("relay_mode", ""):
+                for alert in alerts_to_queue: ACTIVE_ALERTS.append(alert)
+            else:
+                for alert in alerts_to_queue: ALERT_QUEUE.append(alert)
+
+            Expiry()
+        
+        except Exception as e:
+            print("[AlertQueuer]: Error, ", e)
 
 def MonitorsCaptures(CONFIG_DATA):
     """ Set up and return the threads for all Captures and Monitors """
@@ -2510,7 +2710,7 @@ def MonitorsCaptures(CONFIG_DATA):
         if CONFIG_DATA["SAME_AudioStream_Monitor4"] != "":
             IPmonitor_thread = threading.Thread(target=Monitor_Stream("SAME_AudioStream_Monitor4", CONFIG_DATA["SAME_AudioStream_Monitor4"], CONFIG_DATA).Start)
             THREADSLIST.append(IPmonitor_thread)
-    
+
     return THREADSLIST
 
 if __name__ == "__main__":
@@ -2538,7 +2738,7 @@ if __name__ == "__main__":
         print("Starting QuantumENDEC...")
         set_status("QuantumENDEC", "Starting up...")
 
-        CONFIG_DATA = load_json(f"{assets_folder}/config.json")
+        CONFIG_DATA = load_json(config_file)
         THREADSLIST = []
 
         if CONFIG_DATA["enable_plugins"] is True: run_plugins("on_start")
@@ -2549,16 +2749,24 @@ if __name__ == "__main__":
 
         RelayThread = threading.Thread(target=Relay)
         THREADSLIST.append(RelayThread)
+        
+        # AlertQueuer
+        AlertQueuerThread = threading.Thread(target=AlertQueuer)
+        THREADSLIST.append(AlertQueuerThread)
+
         MONITOR_THREADS = MonitorsCaptures(CONFIG_DATA)
 
         for thread in THREADSLIST: thread.start()
         for thread in MONITOR_THREADS: thread.start()
         
         set_status("QuantumENDEC", "Ready and Running")
+        print("QuantumENDEC is running!")
 
         while qe_status() == 0:
-            try: time.sleep(0.5) # keep-alive
-            except KeyboardInterrupt: qe_status("set", 2)
+            try:
+                time.sleep(0.5) # keep-alive
+            except KeyboardInterrupt:
+                qe_status("set", 2)
 
         if qe_status() == 1:
             print("QuantumENDEC is restarting... (please wait)")
@@ -2571,5 +2779,5 @@ if __name__ == "__main__":
         for thread in THREADSLIST: thread.join()
         
         if qe_status() == 2:
-            os.kill(os.getpid(), signal.SIGINT) # This is one way to do it
-            exit()
+            os.kill(os.getpid(), signal.SIGTERM) # This is one way to do it
+            break

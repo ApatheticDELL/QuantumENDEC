@@ -33,7 +33,8 @@
             }
             .outline_container {
                 border: 3px solid rgb(255, 255, 255); padding: 10px;
-                margin-bottom: 10px;
+                margin-bottom: 25px;
+                margin-top: 25px;
             }
             a, a:visited, a:link { color: white; text-decoration: none; }
 
@@ -85,6 +86,7 @@
             </div>
             <div class="topnav">
                 <a href="./index.html">Dashboard</a>
+                <a href="./alerts.html">Alerts</a>
                 <a class="active" href="./configuration.html">Configuration</a>
                 <a href="./send.html">Send Alert</a>
                 <a href="./alertLog.html">Alert Log</a>
@@ -107,7 +109,8 @@
 
                 <h3>Alert Presentation</h3>
                 <input type="checkbox" id="force_120" name="force_120"><label for="force_120"> Force 120 seconds of broadcast audio</label><br />
-                <input type="checkbox" id="produce_alertimage" name="produce_alertimage"><label for="produce_alertimage"> Produce images (and alert maps)</label><br />
+                <input type="checkbox" id="produce_alertimage" name="produce_alertimage"><label for="produce_alertimage"> Produce images </label><br />
+                <input type="checkbox" id="generate_mapImage" name="generate_mapImage"><label for="generate_mapImage"> Generate alert maps (produce images must be enabled) </label><br />
                 <input type="checkbox" id="enable_plugins" name="enable_plugins"><label for="enable_plugins"> Enable plugins</label><br />
 
                 <div class="outline_container">
@@ -115,6 +118,17 @@
                     <input type="checkbox" id="enable_leadin" name="enable_leadin"><label for="enable_leadin"> Enable lead in (pre-roll)</label><br />
                     <input type="checkbox" id="enable_leadout" name="enable_leadout"><label for="enable_leadout"> Enable lead out (post/after alert)</label><br />
                     <a class="button" href="./manage_lead_inout.html">Manage lead in/out</a>
+                </div>
+
+                <div class="outline_container">
+                    <label for="relay_mode_select">Relay mode</label>
+                    <select id="relay_mode_select" onchange="updateTextBox('relay_mode_select', 'relay_mode')">
+                        <option value="automatic">Automatic</option>
+                        <option value="timed">Timed</option>
+                        <option value="manual">Manual</option>
+                    </select>
+                    <label for="relay_mode">Selected value</label>
+                    <input type="text" id="relay_mode" name="relay_mode" readonly>
                 </div>
 
                 <div class="outline_container">
@@ -156,50 +170,36 @@
                 </div>
 
                 <h4>TTS configuration</h4>
-                <!--<div class="outline_container">
-                    <h4>PYTTSX3 configuration</h4>
-                    <input type="checkbox" id="use_defaultTTS" name="use_defaultTTS"><label for="use_defaultTTS"> Use default TTS voice.</label><br />
-                    <div class="outline_container">
-                        <label for="TTS_en_select">English voice: </label>
-                        <select id="TTS_en_select" onchange="updateTextBox('TTS_en_select', 'TTS_en')"></select><br />
-                        <label for="TTS_en">Selected value:</label><input type="text" id="TTS_en" name="TTS_en" readonly>
-                    </div>
-                    <div class="outline_container">
-                        <label for="TTS_fr_select">French voice: </label>
-                        <select id="TTS_fr_select" onchange="updateTextBox('TTS_fr_select', 'TTS_fr')"></select><br />
-                        <label for="TTS_fr">Selected value:</label><input type="text" id="TTS_fr" name="TTS_fr" readonly>
-                    </div>
-                </div>-->
-
                 <div class="outline_container">
                     <label for="tts_service_select">TTS service</label>
                     <select id="tts_service_select" onchange="updateTextBox('tts_service_select', 'tts_service')">
-                        <option value="pyttsx3">PYTTSX3 (default)</option>
+                        <option value="espeak-ng">eSpeak NG (default)</option>
                         <option value="flite">Flite</option>
                         <option value="maki">Maki</option>
+                        <option value="piper">Piper</option>
                         <option value="ElevenLabs">ElevenLabs (Online API)</option>
                     </select>
                     <label for="tts_service">Selected value</label>
                     <input type="text" id="tts_service" name="tts_service" readonly>
-                    <p>PYTTSX3 can be used with Windows or Linux</p>
-                    <p>Flite must be installed on your system in order to use. (Windows: and added to path)</p>
-                    <p>Maki is Windows only. It's included within QuantumENDEC.</p>
-                    <p>ElevenLabs is an online TTS API, you must be connected to the internet and have a valid API key in order to use it.</p>
-                    <p>Flite has no additional configuration settings, we just have it for specific aesthetic reasons.</p>
+                    <p><strong>eSpeak NG</strong> can be used on Windows or Linux. It must be installed for it to work.</p>
+                    <p><strong>Flite</strong> must be installed on your system in order to use. (Windows: and added to path). Flite has no additional configuration settings, we just have it for specific aesthetic reasons.</p>
+                    <p><strong>Maki</strong> is Windows only. It's included within QuantumENDEC.</p>
+                    <p><strong>Piper</strong> can be used on Windows or Linux. Piper's folder must placed in the root of the QuantumENDEC folder.</p>
+                    <p><strong>ElevenLabs</strong> is an online TTS API, you must be connected to the internet and have a valid API key in order to use it.</p>
                 </div>
                 
                 <div class="outline_container">
-                    <h4>PYTTSX3 configuration</h4>
-                    <input type="checkbox" id="pyttsx3_defaultTTS" name="pyttsx3_defaultTTS"><label for="pyttsx3_defaultTTS"> Use default TTS voice.</label><br />
+                    <h4>eSpeak NG TTS configuration</h4>
+                    <p>Note, you may need to install additional voices dispite them being listed in the dropdowns.</p>
                     <div class="outline_container">
-                        <label for="pyttsx3_en_select">English voice: </label>
-                        <select id="pyttsx3_en_select" onchange="updateTextBox('pyttsx3_en_select', 'pyttsx3_en')"></select><br />
-                        <label for="pyttsx3_en">Selected value:</label><input type="text" id="pyttsx3_en" name="pyttsx3_en" readonly>
+                        <label for="espeakNG_en_select">English voice: </label>
+                        <select id="espeakNG_en_select" onchange="updateTextBox('espeakNG_en_select', 'espeakNG_en')"><option value="...">...</option></select><br />
+                        <label for="espeakNG_en">Selected value:</label><input type="text" id="espeakNG_en" name="espeakNG_en" readonly>
                     </div>
                     <div class="outline_container">
-                        <label for="pyttsx3_fr_select">French voice: </label>
-                        <select id="pyttsx3_fr_select" onchange="updateTextBox('pyttsx3_fr_select', 'pyttsx3_fr')"></select><br />
-                        <label for="pyttsx3_fr">Selected value:</label><input type="text" id="pyttsx3_fr" name="pyttsx3_fr" readonly>
+                        <label for="espeakNG_fr_select">French voice: </label>
+                        <select id="espeakNG_fr_select" onchange="updateTextBox('espeakNG_fr_select', 'espeakNG_fr')"><option value="...">...</option></select><br />
+                        <label for="espeakNG_fr">Selected value:</label><input type="text" id="espeakNG_fr" name="espeakNG_fr" readonly>
                     </div>
                 </div>
 
@@ -208,13 +208,29 @@
                     <p><strong>Windows only.</strong> Maki allows the use of 32bit voices.</p>
                     <div class="outline_container">
                         <label for="maki_en_select">English voice: </label>
-                        <select id="maki_en_select" onchange="updateTextBox('maki_en_select', 'maki_en')"></select><br />
+                        <select id="maki_en_select" onchange="updateTextBox('maki_en_select', 'maki_en')"><option value="...">...</option></select><br />
                         <label for="maki_en">Selected value:</label><input type="text" id="maki_en" name="maki_en" readonly>
                     </div>
                     <div class="outline_container">
                         <label for="maki_fr_select">French voice: </label>
-                        <select id="maki_fr_select" onchange="updateTextBox('maki_fr_select', 'maki_fr')"></select><br />
+                        <select id="maki_fr_select" onchange="updateTextBox('maki_fr_select', 'maki_fr')"><option value="...">...</option></select><br />
                         <label for="maki_fr">Selected value:</label><input type="text" id="maki_fr" name="maki_fr" readonly>
+                    </div>
+                </div>
+
+                <div class="outline_container">
+                    <h4>Piper TTS configuration</h4>
+                    <p><strong>Works on both, Windows and Linux!</strong> Piper is a pretty neat local neural text to speech system. For piper to work, you need the binary in the QuantumENDEC folder as: './piper/piper(.exe)', this applies for both Windows and Linux.</p>
+                    <p>The voices for piper must be located in the QuantumENDEC folder in the 'piper_voices' folder.</p>
+                    <div class="outline_container">
+                        <label for="piper_en_select">English voice: </label>
+                        <select id="piper_en_select" onchange="updateTextBox('piper_en_select', 'piper_en')"><option value="...">...</option></select><br />
+                        <label for="piper_en">Selected value:</label><input type="text" id="piper_en" name="piper_en" readonly>
+                    </div>
+                    <div class="outline_container">
+                        <label for="piper_fr_select">French voice: </label>
+                        <select id="piper_fr_select" onchange="updateTextBox('piper_fr_select', 'piper_fr')"><option value="...">...</option></select><br />
+                        <label for="piper_fr">Selected value:</label><input type="text" id="piper_fr" name="piper_fr" readonly>
                     </div>
                 </div>
 
@@ -238,7 +254,7 @@
                 <p>The field below will not have any effect if the box is not selected.</p>
                 <div class="outline_container">
                     <label for="specifiedaudiooutput_select">Specified Audio Output Device: </label>
-                    <select id="specifiedaudiooutput_select" onchange="updateTextBox('specifiedaudiooutput_select', 'specifiedaudiooutput')"></select><br />
+                    <select id="specifiedaudiooutput_select" onchange="updateTextBox('specifiedaudiooutput_select', 'specifiedaudiooutput')"><option value="...">...</option></select><br />
                     <label for="specifiedaudiooutput">Selected value:</label><input type="text" id="specifiedaudiooutput" name="specifiedaudiooutput" readonly>
                     <input type="checkbox" id="use_audiodevice_id" name="use_audiodevice_id"><label for="use_audiodevice_id"> Use audio device ID (unchecked: use device name).</label><br />
                 </div>
@@ -301,7 +317,7 @@
 
                 <h4>Location code filters for CAP</h4>
                 <p>No spaces, seprate the codes by a comma (,).</p>
-                <label for="CAPCP_geocodefilter">Allowed FIPS/CLC: </label><input type="text" id="CAPCP_geocodefilter" name="CAPCP_geocodefilter">
+                <label for="CAPCP_geocodefilter">Allowed CAP-CP Geocodes: </label><input type="text" id="CAPCP_geocodefilter" name="CAPCP_geocodefilter">
                 <p>(Won't work on American CAP.)</p>
 
                 <h3>S.A.M.E configuration</h3>
@@ -408,7 +424,7 @@
 
                 // Populate TTS voice selects
                 // Helper function to populate a pair of <select> elements
-                    function populateSelects(url, enSelectId, frSelectId) {
+                function populateSelects(url, enSelectId, frSelectId) {
                     const enSelect = document.getElementById(enSelectId);
                     const frSelect = document.getElementById(frSelectId);
 
@@ -424,6 +440,18 @@
                                 enSelect.innerHTML = '';
                                 frSelect.innerHTML = '';
 
+                                // Create and append the default "None selected" option
+                                const defaultOptionEn = document.createElement('option');
+                                defaultOptionEn.textContent = '...';
+                                defaultOptionEn.value = '';
+                                enSelect.appendChild(defaultOptionEn);
+
+                                const defaultOptionFr = document.createElement('option');
+                                defaultOptionFr.textContent = '...';
+                                defaultOptionFr.value = '';
+                                frSelect.appendChild(defaultOptionFr);
+
+                                // Populate with voice options
                                 voices.forEach(voice => {
                                     const enOption = document.createElement('option');
                                     enOption.textContent = voice;
@@ -443,10 +471,13 @@
                     }
                 }
 
+
                 // Populate all three TTS sets
-                populateSelects('/tts_voices', 'TTS_en_select', 'TTS_fr_select');
-                populateSelects('/tts_voices', 'pyttsx3_en_select', 'pyttsx3_fr_select');
+                //populateSelects('/tts_voices', 'TTS_en_select', 'TTS_fr_select');
+                //populateSelects('/tts_voices', 'pyttsx3_en_select', 'pyttsx3_fr_select');
+                populateSelects('/espeakng_voices', 'espeakNG_en_select', 'espeakNG_fr_select');
                 populateSelects('/maki_voices', 'maki_en_select', 'maki_fr_select');
+                populateSelects('/piper_voices', 'piper_en_select', 'piper_fr_select');
 
                 // Load the current config
                 fetch('/config_data')
