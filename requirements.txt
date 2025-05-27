@@ -10,7 +10,6 @@ EAS2Text-Remastered
 requests
 xmltodict
 ffmpeg-python
-pyttsx3
 numpy
 sounddevice
 soundfile
