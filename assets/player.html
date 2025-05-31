@@ -1,0 +1,31 @@
+<!-- player.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Audio Player</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <h2>Alert Audio</h2>
+  <!--<p id="alertText"></p>-->
+  <audio id="player" controls autoplay></audio><br />
+  <a class="button" href="javascript:history.back()">Go Back</a>
+
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const audioSrc = urlParams.get('src');
+    //const alertTxt = urlParams.get('text');
+    if (audioSrc) {
+      document.getElementById('player').src = decodeURIComponent(audioSrc);
+    } else {
+      document.body.innerHTML += "<p>No audio file specified.</p>";
+    }
+
+    //if (alertTxt) {
+    //  document.getElementById('alertText') = decodeURIComponent(alertTxt);
+    //}
+  </script>
+</body>
+</html>

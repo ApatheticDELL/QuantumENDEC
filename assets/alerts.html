@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>QuantumENDEC Web Interface</title>
+        <link rel="stylesheet" href="./style.css">
+        <style>
+            .queueStatus{
+                background-color: #32cd32;
+                color: black;
+                padding: 1px;
+                text-align: center;
+                font-weight: bold;
+            }
+
+            .abort_button {
+                background-color: red;
+                color: white;
+                text-decoration: none;
+                padding: 10px;
+                border-radius: 6px;
+                font-weight: bold;
+            }
+            .abort_button:hover { background-color: rgb(255, 83, 83); }
+            .abort_button:active { background-color: rgb(83, 17, 17); }
+
+            .play_button {
+                background-color: rgb(45, 108, 255);
+                color: white;
+                text-decoration: none;
+                padding: 10px;
+                border-radius: 6px;
+                font-weight: bold;
+                display: inline-block;
+            }
+            .play_button:hover { background-color: rgb(58, 117, 255); }
+            .play_button:active { background-color: rgb(10, 36, 97); }
+        </style>
+    </head>
+    <body>
+        <header>
+            <div class="header_logo">
+                <img src="./logo.png" />
+                <h1>QuantumENDEC Web Interface</h1>
+            </div>
+            <div class="topnav">
+                <a href="./index.html">Dashboard</a>
+                <a class="active" href="./alerts.html">Alerts</a>
+                <a href="./configuration.html">Configuration</a>
+                <a href="./send.html">Send Alert</a>
+                <a href="./alertLog.html">Alert Log</a>
+                <a href="./change_password.html">Change Access Password</a>
+            </div>
+        </header>
+        
+        <main>
+            <!--<div class="activeAlerts-container">
+                <ul class="activeAlerts-list" id="alertsList">
+                </ul>
+            </div>-->
+
+            <h2>Alerts</h2>
+            
+            <div class="queueStatus"><p id="queueStatus" >...</p></div>
+            
+            <h3>Now playing:</h3>
+
+            <div class="activeAlerts-container">
+                <ul class="activeAlerts-list" id="AlertNowPlaying"></ul>
+            </div>
+
+            <!-- <a href="" class="abort_button">Abort</a> -->
+            <!-- <a href="" class="abort_button">Delete</a> -->
+            <!-- <a href="" class="play_button">Relay alert</a> -->
+
+            <h3>Alert queue:</h3>
+
+            <div class="activeAlerts-container">
+                <ul class="activeAlerts-list" id="AlertQueueList"></ul>
+            </div>
+
+            <h3>Active alerts:</h3>
+
+            <div class="activeAlerts-container">
+                <ul class="activeAlerts-list" id="ActiveAlertsList"></ul>
+            </div>
+
+            <!-- <script>
+                async function updateAlerts() {
+                    try {
+                        const response = await fetch('/alert_info');
+                        if (!response.ok) throw new Error('Failed to fetch alert info');
+                
+                        const data = await response.json();
+                
+                        // Update queueStatus
+                        document.getElementById('queueStatus').textContent = data.alert_queue_status || 'Unknown';
+                
+                        // Helper to format each alert into a list item
+                        
+                        // maybe...
+                        //<img src="${info.image_png}" alt="Alert image" style="max-width: 100%; height: auto;"><br>
+                        //<audio controls src="${info.audio_wav}" style="margin-top: 0.5em;"></audio>
+
+                        function formatAlert(alert) {
+                            const time = new Date(alert.sent).toLocaleString();
+                            const listItems = alert.info.map(info => `
+                                <div style="margin-bottom: 1em; border: 1px solid #ccc; padding: 0.5em; border-radius: 5px;">
+                                    <strong>${info.headline}</strong> <em>(${info.language})</em><br>
+                                    <small><strong>Expires:</strong> ${new Date(info.expires).toLocaleString()}</small><br>
+                                    <small><strong>Event:</strong> ${info.event}</small><br>
+                                    <small><strong>ZCZC:</strong> ${info.zczc}</small><br>
+                                    <p>${info.broadcast_text}</p>
+                                </div>
+                            `).join('');
+                
+                            return `
+                                <li class="activeAlert-item">
+                                    <div style="margin-bottom: 1em;">
+                                        <strong>Region:</strong> ${alert.alert_region}<br>
+                                        <strong>Sender:</strong> ${alert.sender}<br>
+                                        <strong>Identifier:</strong> ${alert.identifier}<br>
+                                        <strong>Sent:</strong> ${time}<br>
+                                        <strong>Amount played:</strong> ${alert.amount_played}<br>
+                                        ${listItems}
+                                    </div>
+                                </li>
+                            `;
+                        }
+                        
+                        // Handle now playing
+                        const AlertNowPlaying = document.getElementById('AlertNowPlaying');
+                        if (Array.isArray(data.now_playing) && data.now_playing.length > 0) {
+                            AlertNowPlaying.innerHTML = data.now_playing.map(formatAlert).join('');
+                        } else {
+                            AlertNowPlaying.innerHTML = '<li class="activeAlert-item" >Nothing</li>';
+                        }
+
+                        // Handle Alert Queue
+                        const alertQueueList = document.getElementById('AlertQueueList');
+                        if (Array.isArray(data.alert_queue) && data.alert_queue.length > 0) {
+                            alertQueueList.innerHTML = data.alert_queue.map(formatAlert).join('');
+                        } else {
+                            alertQueueList.innerHTML = '<li class="activeAlert-item" >No alerts</li>';
+                        }
+
+                        // Handle Active Alerts
+                        const activeAlertsList = document.getElementById('ActiveAlertsList');
+                        if (Array.isArray(data.active_alerts) && data.active_alerts.length > 0) {
+                            activeAlertsList.innerHTML = data.active_alerts.map(formatAlert).join('');
+                        } else {
+                            activeAlertsList.innerHTML = '<li class="activeAlert-item" >No alerts</li>';
+                        }
+                
+                    } catch (error) {
+                        console.error('Error updating alerts:', error);
+                        document.getElementById('queueStatus').textContent = 'Error loading alert data';
+                    }
+                }
+                
+                updateAlerts();
+                setInterval(updateAlerts, 2000);
+            </script> -->
+            <script>
+                async function updateAlerts() {
+                    try {
+                        const response = await fetch('/alert_info');
+                        if (!response.ok) throw new Error('Failed to fetch alert info');
+
+                        const data = await response.json();
+
+                        // Update queue status
+                        document.getElementById('queueStatus').textContent = data.alert_queue_status || 'Unknown';
+
+                        // Function to format alert info blocks
+                        function formatAlertInfo(info) {
+                            return info.map(i => `
+                                <div style="margin-bottom: 1em; border: 1px solid #ccc; padding: 0.5em; border-radius: 5px;">
+                                    <strong>${i.headline}</strong> <em>(${i.language})</em><br>
+                                    <small><strong>Expires:</strong> ${new Date(i.expires).toLocaleString()}</small><br>
+                                    <small><strong>Event:</strong> ${i.event || 'N/A'}</small><br>
+                                    <small><strong>ZCZC:</strong> ${i.zczc}</small><br>
+                                    <p>${i.broadcast_text}</p>
+                                    <a class="play_button" href="player.html?src=${i.audio_wav.replace("assets/", "")}">Listen to audio</a>
+                                </div>
+                            `).join('');
+                        }
+
+                        // Base formatter for any alert
+                        function baseAlertMarkup(alert) {
+                            const time = new Date(alert.sent).toLocaleString();
+                            return `
+                                <div style="margin-bottom: 1em;">
+                                    <strong>Region:</strong> ${alert.alert_region}<br />
+                                    <strong>Sender:</strong> ${alert.sender}<br />
+                                    <strong>Identifier:</strong> ${alert.identifier}<br />
+                                    <strong>Sent:</strong> ${time}<br />
+                                    <strong>Amount played:</strong> ${alert.amount_played ?? 'N/A'}<br />
+                                    <br />
+                                    ${formatAlertInfo(alert.info)}
+                                </div>
+                            `;
+                        }
+
+                        // Formatters for specific lists
+                        function formatQueueAlert(alert) {
+                            return `
+                                <li class="activeAlert-item">
+                                    ${baseAlertMarkup(alert)}
+                                    <a href="/abort?identifier=${encodeURIComponent(alert.qe_id)}" class="abort_button">Abort</a>
+                                </li>
+                            `;
+                        }
+
+                        function formatActiveAlert(alert) {
+                            return `
+                                <li class="activeAlert-item">
+                                    ${baseAlertMarkup(alert)}
+                                    <!-- <a href="/delete?identifier=${encodeURIComponent(alert.qe_id)}" class="abort_button">Delete</a> -->
+                                    <a href="/relay?identifier=${encodeURIComponent(alert.qe_id)}" class="play_button">Play alert</a>
+                                </li>
+                            `;
+                        }
+
+                        function formatNowPlaying(alert) {
+                            return `
+                                <li class="activeAlert-item">
+                                    ${baseAlertMarkup(alert)}
+                                </li>
+                            `;
+                        }
+
+                        // Handle now playing
+                        const AlertNowPlaying = document.getElementById('AlertNowPlaying');
+                        if (Array.isArray(data.now_playing) && data.now_playing.length > 0) {
+                            AlertNowPlaying.innerHTML = data.now_playing.map(formatNowPlaying).join('');
+                        } else {
+                            AlertNowPlaying.innerHTML = '<li class="activeAlert-item">Nothing</li>';
+                        }
+
+                        // Alert Queue
+                        const alertQueueList = document.getElementById('AlertQueueList');
+                        if (Array.isArray(data.alert_queue) && data.alert_queue.length > 0) {
+                            alertQueueList.innerHTML = data.alert_queue.map(formatQueueAlert).join('');
+                        } else {
+                            alertQueueList.innerHTML = '<li class="activeAlert-item">No alerts</li>';
+                        }
+
+                        // Active Alerts
+                        const activeAlertsList = document.getElementById('ActiveAlertsList');
+                        if (Array.isArray(data.active_alerts) && data.active_alerts.length > 0) {
+                            activeAlertsList.innerHTML = data.active_alerts.map(formatActiveAlert).join('');
+                        } else {
+                            activeAlertsList.innerHTML = '<li class="activeAlert-item">No alerts</li>';
+                        }
+
+                    } catch (error) {
+                        console.error('Error updating alerts:', error);
+                        document.getElementById('queueStatus').textContent = 'Error loading alert data';
+                    }
+                }
+
+                updateAlerts();
+                setInterval(updateAlerts, 2000);
+            </script>
+        </main>
+    </body>
+</html>
