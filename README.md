@@ -39,12 +39,13 @@ Not all of them needs to be installed. You can choose what TTS service you want 
 - [eSpeak NG](https://github.com/espeak-ng/espeak-ng) (Windows and Linux.)
 - [Piper](https://github.com/rhasspy/piper) (Windows and Linux.)
 - [flite](https://github.com/festvox/flite) (Linux. You MAY be able to use it on Windows if you can find a Windows binary and add it to the PATH)
+- [Maki](https://bunnytub.com/Maki.html) (Windows only.)
 
 #### Some things to account for
 - Note, that eSpeak NG is selected by default.
 - To use Piper with QuantumENDEC in Windows and Linux, you must place the Piper folder with it's binary within the root of the QuantumENDEC folder.
 - Piper voices and their JSON must be placed in a folder called piper_voices in the root of the QuantumENDEC folder.
-- Maki is Windows only, and it's binary is already included. Maki allows the use of 32bit and 64bit TTS voices on Windows.
+- Maki is Windows only, and it's binary is already included. Maki allows the use of 32-bit and 64-bit TTS voices on Windows.
 - ElevenLabs voices uses a python module, you may already have it if you installed all the python modules from (requirements.txt)
 
 ### Required python modules
