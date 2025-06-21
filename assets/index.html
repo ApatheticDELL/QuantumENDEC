@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>QuantumENDEC Web Interface</title>
+        <title>QDEC Web Interface</title>
         <link rel="stylesheet" href="./style.css">
         <style>
             table {
@@ -33,7 +33,7 @@
         <header>
             <div class="header_logo">
                 <img src="./logo.png" />
-                <h1>QuantumENDEC Web Interface</h1>
+                <h1>QDEC Web Interface</h1>
             </div>
             <div class="topnav">
                 <a class="active" href="./index.html">Dashboard</a>
@@ -50,8 +50,8 @@
             <h3>Quick Actions</h3>
             <div class="grouped_buttons">
                 <form id="logoutForm" action="/logout" method="post"><button class="button" type="submit">Logout</button></form>
-                <button class="button" type="button" onclick="RestartQE()">Restart QuantumENDEC</button>
-                <a href="/shutdown" class="button">Shutdown QuantumENDEC</a>
+                <button class="button" type="button" onclick="RestartQE()">Restart QDEC</button>
+                <a href="/shutdown" class="button">Shutdown QDEC</a>
             </div>
             
             <h3>Access CGEN(s)</h3>
@@ -69,7 +69,7 @@
                 </tr>
                 
                 <tr>
-                    <td>QuantumENDEC</td>
+                    <td>QDEC</td>
                     <td id="QuantumENDEC_status">...</td>
                 </tr>
 
@@ -150,7 +150,7 @@
         </main>
         
         <footer>
-            <p id="version">QuantumENDEC ?</p><p>&copy; 2025 ApatheticDELL</p><script>function fetchText() {fetch('/version') .then(response => response.text()) .then(data => {document.getElementById('version').innerText = `QuantumENDEC ${data}`;}) .catch(error => {console.error('Error fetching text:', error);});} document.addEventListener('DOMContentLoaded', fetchText);</script>
+            <p id="version">QDEC ?</p><p>&copy; 2025 ApatheticDELL</p><script>function fetchText() {fetch('/version') .then(response => response.text()) .then(data => {document.getElementById('version').innerText = `QDEC ${data}`;}) .catch(error => {console.error('Error fetching text:', error);});} document.addEventListener('DOMContentLoaded', fetchText);</script>
         </footer>
 
     <script>
@@ -165,7 +165,7 @@
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Failed to restart QuantumENDEC.');
+                alert('Failed to restart QDEC.');
             });
         }
 

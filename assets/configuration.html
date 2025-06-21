@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>QuantumENDEC Web Interface</title>
+        <title>QDEC Web Interface</title>
         <link rel="stylesheet" href="./style.css">
         <style>
             form {
@@ -82,7 +82,7 @@
         <header>
             <div class="header_logo">
                 <img src="./logo.png" />
-                <h1>QuantumENDEC Web Interface</h1>
+                <h1>QDEC Web Interface</h1>
             </div>
             <div class="topnav">
                 <a href="./index.html">Dashboard</a>
@@ -96,7 +96,7 @@
 
         <main>
             <h2>Configuration</h2>
-            <p>Configure QuantumENDEC on this page. Changed some settings may require a restart of QuantumENDEC to take effect.</p>
+            <p>Configure QDEC on this page. Changed some settings may require a restart of QDEC to take effect.</p>
             
             <form action="/submit_config" method="POST">
                 <h3>Web server settings</h3>
@@ -142,7 +142,7 @@
                     </select>
                     <label for="attn_tone">Selected value</label>
                     <input type="text" id="attn_tone" name="attn_tone" readonly>
-                    <p>If QuantumENDEC can't detect what attention tone to use, it will revert to the one selected in Attention tone flavour.</p>
+                    <p>If QDEC can't detect what attention tone to use, it will revert to the one selected in Attention tone flavour.</p>
                     <input type="checkbox" id="attn_basedoncountry" name="attn_basedoncountry"><label for="attn_basedoncountry"> Attention tones based on alert's country (only works with CAP)</label><br />
                 </div>
 
@@ -183,8 +183,8 @@
                     <input type="text" id="tts_service" name="tts_service" readonly>
                     <p><strong>eSpeak NG</strong> can be used on Windows or Linux. It must be installed for it to work.</p>
                     <p><strong>Flite</strong> must be installed on your system in order to use. (Windows: and added to path). Flite has no additional configuration settings, we just have it for specific aesthetic reasons.</p>
-                    <p><strong>Maki</strong> is Windows only. It's included within QuantumENDEC.</p>
-                    <p><strong>Piper</strong> can be used on Windows or Linux. Piper's folder must placed in the root of the QuantumENDEC folder.</p>
+                    <p><strong>Maki</strong> is Windows only. It's included within QDEC.</p>
+                    <p><strong>Piper</strong> can be used on Windows or Linux. Piper's folder must placed in the root of the QDEC folder.</p>
                     <p><strong>ElevenLabs</strong> is an online TTS API, you must be connected to the internet and have a valid API key in order to use it.</p>
                 </div>
                 
@@ -220,8 +220,8 @@
 
                 <div class="outline_container">
                     <h4>Piper TTS configuration</h4>
-                    <p><strong>Works on both, Windows and Linux!</strong> Piper is a pretty neat local neural text to speech system. For piper to work, you need the binary in the QuantumENDEC folder as: './piper/piper(.exe)', this applies for both Windows and Linux.</p>
-                    <p>The voices for piper must be located in the QuantumENDEC folder in the 'piper_voices' folder.</p>
+                    <p><strong>Works on both, Windows and Linux!</strong> Piper is a pretty neat local neural text to speech system. For piper to work, you need the binary in the QDEC folder as: './piper/piper(.exe)', this applies for both Windows and Linux.</p>
+                    <p>The voices for piper must be located in the QDEC folder in the 'piper_voices' folder.</p>
                     <div class="outline_container">
                         <label for="piper_en_select">English voice: </label>
                         <select id="piper_en_select" onchange="updateTextBox('piper_en_select', 'piper_en')"><option value="...">...</option></select><br />
@@ -322,7 +322,7 @@
 
                 <h3>S.A.M.E configuration</h3>
                 <input type="checkbox" id="SAME" name="SAME"><label for="SAME"> Relay with SAME</label><br />
-                <p>Your SAME callsign must be 8 characters, no more, no less. There also cannot be any dashes (-). If you put an invalid SAME callsign, QuantumENDEC will use a default SAME callsign. If relaying with S.A.M.E is disabled, these settings will be ignored. This config section will affect both S.A.M.E audio monitors and CAP monitors.</p>
+                <p>Your SAME callsign must be 8 characters, no more, no less. There also cannot be any dashes (-). If you put an invalid SAME callsign, QDEC will use a default SAME callsign. If relaying with S.A.M.E is disabled, these settings will be ignored. This config section will affect both S.A.M.E audio monitors and CAP monitors.</p>
                 <label for="SAME_callsign">Callsign: </label><input type="text" id="SAME_callsign" name="SAME_callsign" maxlength="8">
                 <p>No spaces, for multiple codes, seprate the codes by a comma (,). This applies to setting the event codes, originator codes and FIPS/CLC. Simply leave the box blank to not use the filter!</p>
                 <label for="SAME_filterORG">Allowed originator codes: </label><input type="text" id="SAME_filterORG" name="SAME_filterORG">
@@ -354,13 +354,13 @@
 
                 <div class="outline_container">
                     <h4>NWS CAP Capture</h4>
-                    <p>NWS CAP has a different way of getting alerts, you can set that up here. QuantumENDEC is programmed to grab from the api.weather.gov <strong>ATOM</strong> feed. You should research the NWS CAP ATOM API to narrow down to your area.</p>
+                    <p>NWS CAP has a different way of getting alerts, you can set that up here. QDEC is programmed to grab from the api.weather.gov <strong>ATOM</strong> feed. You should research the NWS CAP ATOM API to narrow down to your area.</p>
                     <input type="checkbox" id="NWS_CAP" name="NWS_CAP"><label for="NWS_CAP"> Enable NWS CAP Capture</label><br />
                     <label for="NWS_CAP_AtomLink">NWS CAP URL: </label><input type="text" id="NWS_CAP_AtomLink" name="NWS_CAP_AtomLink">
                 </div>
 
                 <h3>S.A.M.E Monitor Settings</h3>
-                <p>QuantumENDEC can monitor SAME alerts from a physical audio source or from an IP audio stream.</p>
+                <p>QDEC can monitor SAME alerts from a physical audio source or from an IP audio stream.</p>
                 
                 <div class="outline_container">
                     <h4>SAME Audio Device Monitor</h4>

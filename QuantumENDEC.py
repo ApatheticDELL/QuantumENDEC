@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# QuantumENDEC v5
+# QDEC v5
 # Devloped by ApatheticDELL alongside Aaron and BunnyTub
 
 # IMPORTS
@@ -185,7 +185,7 @@ def write_json(filename, new_data={}):
         json.dump(new_data, file, indent=4)
 
 def qe_status(mode="read", new_data=0):
-    """ 'set' or 'read' the status of QuantumENDEC. 0=Normal, 1=Restart, 2=Shutdown. """
+    """ 'set' or 'read' the status of QDEC. 0=Normal, 1=Restart, 2=Shutdown. """
     new_data = int(new_data)
     mode = str(mode)
     mode = mode.lower()
@@ -1004,7 +1004,7 @@ def CreateXML_from_MonitorSAME(SAME, audioInput, monitorName):
             <sent>{sent}</sent>
             <status>Actual</status>
             <msgType>Alert</msgType>
-            <source>QuantumENDEC Internal Monitor</source>
+            <source>QDEC Internal Monitor</source>
             <scope>Public</scope>
             <info>
                 <language>en-US</language>
@@ -1139,29 +1139,29 @@ class Webserver:
         @self.QEWEB_flaskapp.route('/restart', methods=['GET'])
         def RestartQE():
             if qe_status() == 1:
-                return "QuantumENDEC is already in the process of restarting!"
+                return "QDEC is already in the process of restarting!"
 
             if qe_status() == 2:
-                return "QuantumENDEC is already in the process of shutting down!"
+                return "QDEC is already in the process of shutting down!"
             
             if qe_status() == 0:
                 qe_status("set", 1)
-                return "Now restarting QuantumENDEC... Check the status tab for QuantumENDEC's condition. The restart may take a while."
+                return "Now restarting QDEC... Check the status tab for QDEC's condition. The restart may take a while."
         
         @self.QEWEB_flaskapp.route('/shutdown', methods=['GET'])
         def ShutdownQE():
             if qe_status() == 0:
                 qe_status("set", 2)
-                return """<!DOCTYPE html><html><head><style>body { background-color: #161616; color: white; font-family: sans-serif; padding: 2em; }</style></head><body><h2>Now shutting down QuantumENDEC...</h2></body></html>"""
+                return """<!DOCTYPE html><html><head><style>body { background-color: #161616; color: white; font-family: sans-serif; padding: 2em; }</style></head><body><h2>Now shutting down QDEC...</h2></body></html>"""
             
             if qe_status() == 1:
                 qe_status("set", 2)
-                return """<!DOCTYPE html><html><head><style>body { background-color: #161616; color: white; font-family: sans-serif; padding: 2em; }</style></head><body><h2>QuantumENDEC was already restarting, now shutting down...</h2></body></html>"""
+                return """<!DOCTYPE html><html><head><style>body { background-color: #161616; color: white; font-family: sans-serif; padding: 2em; }</style></head><body><h2>QDEC was already restarting, now shutting down...</h2></body></html>"""
             
             if qe_status() == 2:
-                return """<!DOCTYPE html><html><head><style>body { background-color: #161616; color: white; font-family: sans-serif; padding: 2em; }</style></head><body><h2>QuantumENDEC is already in the process of shutting down...</h2></body></html>"""
+                return """<!DOCTYPE html><html><head><style>body { background-color: #161616; color: white; font-family: sans-serif; padding: 2em; }</style></head><body><h2>QDEC is already in the process of shutting down...</h2></body></html>"""
             
-            #return """Now shutting down QuantumENDEC..."""
+            #return """Now shutting down QDEC..."""
         
         @self.QEWEB_flaskapp.route('/alertText')
         def GetAlertText():
@@ -1363,7 +1363,7 @@ class Webserver:
                     <effective>{sent}</effective>
                     <expires>{expire}</expires>
                     <eventCode><valueName>SAME</valueName><value>{same_event}</value></eventCode>
-                    <senderName>QuantumENDEC Internal</senderName>
+                    <senderName>QDEC Internal</senderName>
                     <headline>{lolz.evntText}</headline>
                     <description>{send_alert_dict['secondlanguage_broadcasttext']}</description>
                     <parameter><valueName>layer:SOREM:1.0:Broadcast_Text</valueName><value>{send_alert_dict['secondlanguage_broadcasttext']}</value></parameter>
@@ -1375,11 +1375,11 @@ class Webserver:
             finalXML = f"""
             <alert>
                 <identifier>{res}</identifier>
-                <sender>QuantumENDEC Internal</sender>
+                <sender>QDEC Internal</sender>
                 <sent>{sent}</sent>
                 <status>Actual</status>
                 <msgType>Alert</msgType>
-                <source>QuantumENDEC Self Alert Orginator</source>
+                <source>QDEC Self Alert Orginator</source>
                 <scope>Public</scope>
                 <info>
                     <language>{send_alert_dict['primarylanguage_language']}</language>
@@ -1391,7 +1391,7 @@ class Webserver:
                     <effective>{sent}</effective>
                     <expires>{expire}</expires>
                     <eventCode><valueName>SAME</valueName><value>{same_event}</value></eventCode>
-                    <senderName>QuantumENDEC Internal</senderName>
+                    <senderName>QDEC Internal</senderName>
                     <headline>{lolz.evntText}</headline>
                     <description>{send_alert_dict['primarylanguage_broadcasttext']}</description>
                     <parameter><valueName>layer:SOREM:1.0:Broadcast_Text</valueName><value>{send_alert_dict['primarylanguage_broadcasttext']}</value></parameter>
@@ -1403,7 +1403,7 @@ class Webserver:
             """
             print(f"[Webserver]: Creating alert: {sent.replace(':', '_')}I{res}")
             CAP_QUEUE.append(finalXML)
-            return """<!DOCTYPE html><html><head><title>QuantumENDEC Web Interface</title><link rel="stylesheet" href="./style.css"></head><body><h1>Alert sent.</h1><a class="button" href="/">OK</a></body></html>"""
+            return """<!DOCTYPE html><html><head><title>QDEC Web Interface</title><link rel="stylesheet" href="./style.css"></head><body><h1>Alert sent.</h1><a class="button" href="/">OK</a></body></html>"""
 
         @self.QEWEB_flaskapp.route('/submit_config', methods=['POST'])
         def submit():
@@ -1434,7 +1434,7 @@ class Webserver:
             if HOST == "": HOST = "0.0.0.0"
             new_config["webserver_host"] = HOST
             write_json(config_file, new_config)
-            return """<!DOCTYPE html><html><head><title>QuantumENDEC Web Interface</title><link rel="stylesheet" href="./style.css"></head><body><h1>Your settings has been saved.</h1><a class="button" href="/">OK</a></body></html>"""
+            return """<!DOCTYPE html><html><head><title>QDEC Web Interface</title><link rel="stylesheet" href="./style.css"></head><body><h1>Your settings has been saved.</h1><a class="button" href="/">OK</a></body></html>"""
         
     def Start(self):
         print("[Webserver]: Starting webserver... ", f"HOST: {self.HOST} PORT: {self.PORT}")
@@ -1472,8 +1472,8 @@ class Logger:
         date = date.astimezone()
         date = date.strftime("%H:%M%z %d/%m/%Y")
 
-        subject = f"QuantumENDEC Email Log: {headline}"
-        body = f"""QuantumENDEC Email Log\n{date}\n\nStation: {callsign}\n\n{headline}\n\n{description}\n\n{zczc}"""
+        subject = f"QDEC Email Log: {headline}"
+        body = f"""QDEC Email Log\n{date}\n\nStation: {callsign}\n\n{headline}\n\n{description}\n\n{zczc}"""
 
         msg = MIMEMultipart()
         msg['From'] = sender_email
@@ -1531,7 +1531,7 @@ class Logger:
             embed.add_embed_field(name="", value=alert_zczc, inline=False)
         
         embed.set_author(name=webhook_author_name, url=webhook_author_URL, icon_url=webhook_author_iconURL)
-        embed.set_footer(text="Powered by QuantumENDEC")
+        embed.set_footer(text="Powered by QDEC")
         embed.set_timestamp()
         webhook.add_embed(embed)
         webhook.execute()
@@ -2359,7 +2359,7 @@ class Playout:
 # MAJOR FUNCTIONS
 
 def Setup():
-    print("[INFO]: Now setting up QuantumENDEC...")
+    print("[INFO]: Now setting up QDEC...")
     check_folder(history_folder, True)
     check_folder(tmp_folder, True)
     check_folder("./stats", True)
@@ -2543,7 +2543,7 @@ def AlertQueuer():
                     process_heartbeat(References, history_folder)
                     continue
                 
-                if "QuantumENDEC Internal Monitor" in alert_source: # <source>QuantumENDEC Internal Monitor</source>
+                if "QDEC Internal Monitor" in alert_source: # <source>QDEC Internal Monitor</source>
                     print("[AlertQueuer]: Alert detected, SAME Monitor")
                     InfoDICT = AlertDICT.get("info")
                     info_count = 0
@@ -2714,16 +2714,16 @@ def MonitorsCaptures(CONFIG_DATA):
     return THREADSLIST
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='QuantumENDEC')
+    parser = argparse.ArgumentParser(description='QDEC')
     parser.add_argument('-v', '--version', action='store_true', help='Displays QuantumENDECs version and exits.')
-    parser.add_argument('-H', '--headless', action='store_true', help='Start QuantumENDEC without starting the webserver.')
+    parser.add_argument('-H', '--headless', action='store_true', help='Start QDEC without starting the webserver.')
     QEARGS = parser.parse_args()
 
     if QEARGS.version is True:
-        print("QuantumENDEC", QuantumENDEC_Version)
+        print("QDEC", QuantumENDEC_Version)
         exit()
 
-    print(f"-- Welcome to QuantumENDEC --\n{QuantumENDEC_Version}\n\nDevloped by ApatheticDELL alongside Aaron and BunnyTub\n")
+    print(f"-- Welcome to QDEC --\n{QuantumENDEC_Version}\n\nDevloped by ApatheticDELL alongside Aaron and BunnyTub\n")
 
     WebserverThread = None
 
@@ -2735,8 +2735,8 @@ if __name__ == "__main__":
             print("[WARNING]: Setup failed. Exiting...")
             exit()
 
-        print("Starting QuantumENDEC...")
-        set_status("QuantumENDEC", "Starting up...")
+        print("Starting QDEC...")
+        set_status("QDEC", "Starting up...")
 
         CONFIG_DATA = load_json(config_file)
         THREADSLIST = []
@@ -2759,8 +2759,8 @@ if __name__ == "__main__":
         for thread in THREADSLIST: thread.start()
         for thread in MONITOR_THREADS: thread.start()
         
-        set_status("QuantumENDEC", "Ready and Running")
-        print("QuantumENDEC is running!")
+        set_status("QDEC", "Ready and Running")
+        print("QDEC is running!")
 
         while qe_status() == 0:
             try:
@@ -2769,11 +2769,11 @@ if __name__ == "__main__":
                 qe_status("set", 2)
 
         if qe_status() == 1:
-            print("QuantumENDEC is restarting... (please wait)")
-            set_status("QuantumENDEC", "Restarting... (please wait)")
+            print("QDEC is restarting... (please wait)")
+            set_status("QDEC", "Restarting... (please wait)")
         elif qe_status() == 2:
-            print("QuantumENDEC is shutting down... (please wait)")
-            set_status("QuantumENDEC", "Shutting down... (please wait)")
+            print("QDEC is shutting down... (please wait)")
+            set_status("QDEC", "Shutting down... (please wait)")
 
         for thread in MONITOR_THREADS: thread.join()
         for thread in THREADSLIST: thread.join()

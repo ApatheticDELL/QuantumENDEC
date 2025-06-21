@@ -1,9 +1,9 @@
-# The following are requirements for QuantumENDEC v5
+# The following are requirements for QDEC v5
 # You can quickly install these modules by running: py -m pip install -r requirements.txt
 # Linux might be a different story and it's all over the place... Let's assume that if you're using Linux, you already know what you're doing. Good luck!
 
 # --- Mandatory requirements ---
-# The following modules listed are mandatory. QuantumENDEC will not work if not installed.
+# The following modules listed are mandatory. QDEC will not work if not installed.
 flask
 EASGen-Remastered
 EAS2Text-Remastered
