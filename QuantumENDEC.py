@@ -669,14 +669,14 @@ def get_alert_colors(ConfigData, ZCZC=None):
     
     return { "background_color":background_color, "text_color":text_color }
 
-def is_expired(expires_iso):
+def is_expired(expires_iso, fallback=True):
     """ Input ISO time from any timezone. Returns True or False depending on if expired """
     Expired = False
     try:
         current_time = datetime.now(timezone.utc)
         expires = datetime.fromisoformat(datetime.fromisoformat(expires_iso).astimezone(timezone.utc).isoformat())
         if current_time > expires: Expired = True
-    except: Expired = True
+    except: Expired = fallback
     return Expired
 
 def filter_check_CAP(config_data={}, info_dict={}):
@@ -684,7 +684,7 @@ def filter_check_CAP(config_data={}, info_dict={}):
     Urgency = info_dict.get("urgency")
     Severity = info_dict.get("severity")
     Expires = info_dict.get("expires", None)
-    Expired = is_expired(Expires)
+    Expired = is_expired(Expires, False)
     
     parameter = info_dict.get("parameter")
     if parameter is not None:
@@ -1619,7 +1619,7 @@ class Capture:
                         alert = f"<alert {alert}</alert>"
                         try: self.SaveCAP(alert, CAP_URL)
                         except: print("[Capture]: Failed to save XML!")
-                    special_sleep(30)
+                    special_sleep(10)
                 except Exception as e:
                     print("[HTTP Capture] Something went wrong.", e)
                     set_status(f"HTTPCAPcapture{instance}", f"HTTP CAP Capture {instance} error.")
@@ -2469,7 +2469,7 @@ def Relay():
 
                 alert_colors = get_alert_colors(CONFIG_DATA, info["zczc"])
                 set_status("relay", "Transmitting alert...")
-                if CONFIG_DATA["enable_plugins"] is True: run_plugins("before_relay", info['zczc'], info["broadcast_text"])
+                if CONFIG_DATA["enable_plugins"] is True: run_plugins("before_relay", info['zczc'], info["broadcast_text"], info_dict=info)
                 update_cgen(info["headline"], info["broadcast_text"], alert_colors["background_color"], alert_colors["text_color"])
                 playout = Playout(CONFIG_DATA, alert["alert_region"], info['zczc'], info["audio_wav"])
                 Logger(CONFIG_DATA, info["headline"], info["broadcast_text"], alert_colors["background_color"], "TX", info["zczc"]).SendLog()
