@@ -18,6 +18,8 @@ ChatGPT ... chat.openai.com
 ## Description
 QDEC is a Emergency Alerting Software. It has the ability to grab alerts from Canadian CAP, American CAP, and SAME.
 
+(Previously known as QuantumENDEC)
+
 ## Install
 Installing the QDEC is quite easy.
 
