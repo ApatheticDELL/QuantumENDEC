@@ -15,6 +15,9 @@ AC ... AC5230
 ChatGPT ... chat.openai.com
 ```
 
+> [!WARNING]
+> QDEC is no longer receiving updates.
+
 ## Description
 QDEC is a Emergency Alerting Software. It has the ability to grab alerts from Canadian CAP, American CAP, and SAME.
 
@@ -108,3 +111,4 @@ Emergency information does come from official resources (by default, unless chan
 Finally, even though this was coded from (mostly) the ground up, I'd still like to credit Libmarleu's BashENDEC (which no longer exists on their page) for starting the QDEC journey in 2021...
 
 And thanks to all who worked on this one, hell of an ENDEC...
+
