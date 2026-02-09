@@ -12,23 +12,23 @@ BunnyTub ... bunnytub.com
 Assisted by...
 ```
 AC ... AC5230
-ChatGPT ... chat.openai.com
+ChatGPT ... chatgpt.com
 ```
 
 ## Description
-QDEC is a Emergency Alerting Software. It has the ability to grab alerts from Canadian CAP, American CAP, and SAME.
+QDEC is a Python-based piece of emergency alerting software. It has the ability to grab alerts from Canadian NAADS feeds, American CAP feeds, and SAME audio inputs.
 
 (Previously known as QuantumENDEC)
 
 ## Install
-Installing the QDEC is quite easy.
+Installing QDEC is relatively easy.
 
 > [!CAUTION]
-> QDEC must be run on a system with one or more audio output devices. It will most likely not function in an online environment, thus, issues with QDEC inside of online environments such as github.dev may be ignored and closed.
+> Please note that QDEC must be run on a system with one or more audio output devices. It will most likely not function in an online environment, thus, issues with QDEC inside of online environments such as github.dev may be ignored and closed.
 
 ### Required software
 You will also require the following software...
-- [Python](https://www.python.org/) (At least 3.13+)
+- [Python](https://www.python.org/) (3.13+ required)
 - [FFmpeg](https://ffmpeg.org/)
 
 ### Optional software
@@ -37,21 +37,20 @@ You will also require the following software...
 ...to be installed
 
 ### Software for TTS generation
-Not all of them needs to be installed. You can choose what TTS service you want to use in the QDEC web interface.
-- [eSpeak NG](https://github.com/espeak-ng/espeak-ng) (Windows and Linux.)
+At least one TTS service must be installed. eSpeak NG is the default, but can be changed to any of the following in the QDEC web interface.
+- [eSpeak NG (default)](https://github.com/espeak-ng/espeak-ng) (Windows and Linux.)
 - [Piper](https://github.com/rhasspy/piper) (Windows and Linux.)
-- [flite](https://github.com/festvox/flite) (Linux. You MAY be able to use it on Windows if you can find a Windows binary and add it to the PATH)
+- [flite](https://github.com/festvox/flite) (Linux only. It may be possible to use it on Windows if you can find a Windows binary and add it to the system's PATH.)
 - [Maki](https://bunnytub.com/Maki.html) (Windows only.)
 
 #### Some things to account for
-- Note, that eSpeak NG is selected by default.
 - To use Piper with QDEC in Windows and Linux, you must place the Piper folder with it's binary within the root of the QDEC folder.
 - Piper voices and their JSON must be placed in a folder called piper_voices in the root of the QDEC folder.
-- Maki is Windows only, and it's binary is already included. Maki allows the use of 32-bit and 64-bit TTS voices on Windows.
+- Maki is Windows only, and its binary is already included. Maki allows the use of 32-bit and 64-bit TTS voices on Windows.
 - ElevenLabs voices uses a python module, you may already have it if you installed all the python modules from (requirements.txt)
 
 ### Required python modules
-All the required Python modules are in the 'requirements.txt' text file.
+All the required Python modules are in the 'requirements.txt' text file. Run ```py -m pip install -r requirements.txt``` in the QDEC root folder to install all the requirements automatically.
 
 ## Setup
 Before doing anything, you need to have some knowledge of the Canadian public alerting system... more precisely, Pelmorex and its CAP-CP XML files.
@@ -59,14 +58,16 @@ You can read about it on this PDF from Pelmorex: https://alerts.pelmorex.com/wp-
 You may not need this if you are just using QDEC with S.A.M.E audio monitors.
 
 Just run ```py QDEC.py``` or whatever to run the main QDEC.py script to start QDEC and the web interface server.
-The python command may be different depending on your python installation... (it could be py, or python3)
+The python command may be different depending on your Python installation... (it could be py, or python3)
 
-QDEC will already be running.
-The web interface server by default will be running on port 8050, to access, simply open a web browser and go to http://localhost:5000 or http://{ip_of_device}:5000
+QDEC will then be running.
+The web interface server by default will be running on port 5000. To access it, simply open a web browser and go to http://localhost:5000 or http://{ip_of_device}:5000
 You can change this in the configuration section of the web interface server, or in the config.json file.
 
-The default password to access the web interface server is ```hackme```
-The first thing you should do is change that default password, it's just asking people to hack your QDEC web interface.
+The default password to access the web interface server is ```hackme```.
+
+> [!WARNING]
+> When you log in for the first time, you should **IMMEDIATELY** change your password. It is a major security risk to run QDEC with the default password.
 
 You can change the password in the "Change Access Password" tab in the QDEC web interface.
 Make sure you press the "Change Password" button to set your passwords.
@@ -95,7 +96,7 @@ After you're done configuring, make sure you save your changes by pressing "Save
 
 The web interface has the ability to load the current configuration when you access the page.
 
-You can run QDEC with arguments, run it with "-h" for more info.
+It's possible to run QDEC with arguments. You can run ```py QDEC.py -h``` for more info.
 
 Everything should work on its own!
 
@@ -103,8 +104,9 @@ If you see anything about matches or match files, it just means that the softwar
 
 ## Additional Information
 
-Emergency information does come from official resources (by default, unless changed), though one shouldn't fully rely on QDEC itself for emergency information as errors could still occur
+Emergency information does come from official resources (by default, unless changed), though one shouldn't fully rely on QDEC itself for emergency information as errors could still occur.
 
-Finally, even though this was coded from (mostly) the ground up, I'd still like to credit Libmarleu's BashENDEC (which no longer exists on their page) for starting the QDEC journey in 2021...
+Finally, even though this was coded from (mostly) the ground up, I'd still like to credit Libmarleu's BashENDEC (which no longer exists on their page) for starting the QDEC journey in 2021.
 
 And thanks to all who worked on this one, hell of an ENDEC...
+
