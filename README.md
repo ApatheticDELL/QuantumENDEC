@@ -46,12 +46,12 @@ Installing QDEC is straightforward, but some external software is required.
 
 ### Optional Software
 
--   multimon-ng - https://github.com/EliasOenal/multimon-ng\
+-   multimon-ng - https://github.com/EliasOenal/multimon-ng/ \
     Required on Linux when using SAME monitoring features.\
     (Windows binary already included.)
 
 -   Microsoft Visual C++ Redistributable -
-    https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist\
+    https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist/ \
     Required for map generation on Windows.
 
 ------------------------------------------------------------------------
